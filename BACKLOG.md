@@ -72,7 +72,7 @@ A prioridade é entregar primeiro a estrutura essencial do sistema e depois avan
 - Product
 - Client
 - ClientProduct
-- ClientProductPrice
+- ClientProduct.currentUnitPrice
 - CentralStock ou estrutura equivalente
 - ConsignedStock
 - Visit
