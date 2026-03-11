@@ -1,0 +1,687 @@
+{
+  "info": {
+    "_postman_id": "7fd72cf7-e931-4908-a2ef-b5884c93f4d2",
+    "name": "Jamval Backend",
+    "description": "Coleção enxuta para os endpoints já implementados do backend Jamval.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Get Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Create Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.environment.set('productId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"PM-SKU-{{$timestamp}}\",\n  \"name\": \"Kit Cabo USB-C Postman\",\n  \"category\": \"Cabos\",\n  \"brand\": \"Jamval Lab\",\n  \"model\": \"PM-01\",\n  \"color\": \"Preto\",\n  \"connectorType\": \"USB-C\",\n  \"basePrice\": 19.9,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?search=cabo&isActive=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "cabo"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kit Cabo USB-C Postman Atualizado\",\n  \"basePrice\": 21.5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Product",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "deactivate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate Product",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "activate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clients",
+      "item": [
+        {
+          "name": "Create Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.environment.set('clientId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tradeName\": \"Cliente Postman {{$timestamp}}\",\n  \"legalName\": \"Cliente Postman Teste Ltda\",\n  \"documentNumber\": \"PM-{{$timestamp}}\",\n  \"contactName\": \"Equipe QA\",\n  \"phone\": \"(81) 99999-0000\",\n  \"addressLine\": \"Rua de Teste, 100\",\n  \"addressCity\": \"Caruaru\",\n  \"addressState\": \"PE\",\n  \"addressZipcode\": \"55000-000\",\n  \"visitCycleDays\": 7,\n  \"requiresInvoice\": false,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Clients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clients?search=postman&isActive=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "postman"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Client By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{clientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Client",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactName\": \"Equipe QA Atualizada\",\n  \"visitCycleDays\": 10,\n  \"notes\": \"Cliente criado para validar fluxo manual no Postman.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{clientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client Catalog",
+      "item": [
+        {
+          "name": "Create Client Catalog Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.environment.set('clientProductId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"currentUnitPrice\": 24.9,\n  \"idealQuantity\": 8,\n  \"displayOrder\": 1,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{clientId}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientId}}",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Client Catalog",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{clientId}}/products?isActive=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientId}}",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Client Catalog Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentUnitPrice\": 26.5,\n  \"idealQuantity\": 10,\n  \"displayOrder\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{clientId}}/products/{{clientProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientId}}",
+                "products",
+                "{{clientProductId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Error Duplicate Client Catalog Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"currentUnitPrice\": 26.5,\n  \"idealQuantity\": 10,\n  \"displayOrder\": 2,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{clientId}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientId}}",
+                "products"
+              ]
+            },
+            "description": "Espera 409 CONFLICT por duplicar o par clientId + productId."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Visits Draft",
+      "item": [
+        {
+          "name": "Create Draft Visit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.environment.set('visitId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"visitedAt\": \"2026-03-11T14:00:00.000Z\",\n  \"notes\": \"Visita criada pelo Postman para testar fluxo draft.\",\n  \"receivedAmountOnVisit\": 0,\n  \"dueDate\": \"2026-03-20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Visits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits?clientId={{clientId}}&status=DRAFT",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits"
+              ],
+              "query": [
+                {
+                  "key": "clientId",
+                  "value": "{{clientId}}"
+                },
+                {
+                  "key": "status",
+                  "value": "DRAFT"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Visit By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Draft Visit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Visita draft ajustada antes do lançamento dos itens.\",\n  \"dueDate\": \"2026-03-22\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk Upsert Draft Visit Items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const firstItem = json.data.items && json.data.items[0];",
+                  "if (firstItem) pm.environment.set('itemId', firstItem.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"clientProductId\": \"{{clientProductId}}\",\n      \"quantityPrevious\": 8,\n      \"quantityGoodRemaining\": 3,\n      \"quantityDefectiveReturn\": 1,\n      \"quantityLoss\": 0,\n      \"unitPrice\": 26.5,\n      \"suggestedRestockQuantity\": 5,\n      \"restockedQuantity\": 4,\n      \"notes\": \"Expositor do caixa.\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/items/bulk-upsert",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "items",
+                "bulk-upsert"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Patch Draft Visit Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantityGoodRemaining\": 2,\n  \"restockedQuantity\": 5,\n  \"notes\": \"Reposição ajustada após segunda contagem.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "items",
+                "{{itemId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Error Inconsistent Draft Visit Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"clientProductId\": \"{{clientProductId}}\",\n      \"quantityPrevious\": 5,\n      \"quantityGoodRemaining\": 6,\n      \"quantityDefectiveReturn\": 0,\n      \"quantityLoss\": 0,\n      \"unitPrice\": 26.5,\n      \"suggestedRestockQuantity\": 1,\n      \"restockedQuantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/items/bulk-upsert",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "items",
+                "bulk-upsert"
+              ]
+            },
+            "description": "Espera 400 INVALID_VISIT_ITEM por gerar quantitySold negativo."
+          }
+        },
+        {
+          "name": "Delete Draft Visit Item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "items",
+                "{{itemId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Draft Visit",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "cancel"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Error Edit Cancelled Visit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Esta edição deve falhar porque a visita já foi cancelada.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}"
+              ]
+            },
+            "description": "Espera 409 VISIT_NOT_EDITABLE porque somente visitas DRAFT podem ser editadas."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": []
+}
