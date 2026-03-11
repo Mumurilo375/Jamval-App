@@ -6,6 +6,7 @@ import {
   completeVisitBodySchema,
   createVisitBodySchema,
   patchVisitItemBodySchema,
+  putVisitSignatureBodySchema,
   updateVisitBodySchema,
   visitDraftItemInputSchema,
   visitItemParamsSchema,
@@ -15,6 +16,7 @@ import {
 export type CreateVisitInput = z.infer<typeof createVisitBodySchema>;
 export type UpdateVisitInput = z.infer<typeof updateVisitBodySchema>;
 export type CompleteVisitInput = z.infer<typeof completeVisitBodySchema>;
+export type PutVisitSignatureInput = z.infer<typeof putVisitSignatureBodySchema>;
 export type VisitListQuery = z.infer<typeof visitListQuerySchema>;
 export type VisitDraftItemInput = z.infer<typeof visitDraftItemInputSchema>;
 export type BulkUpsertVisitItemsInput = z.infer<typeof bulkUpsertVisitItemsBodySchema>;

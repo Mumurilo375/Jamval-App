@@ -31,6 +31,31 @@ export function ensureVisitCanBeCompleted(visit: Pick<Visit, "id" | "status"> & 
   }
 }
 
+export function ensureVisitCanBeSigned(visit: Pick<Visit, "id" | "status">): void {
+  if (visit.status === VisitStatus.CANCELLED) {
+    throw new AppError(409, "VISIT_NOT_SIGNABLE", "Cancelled visits cannot receive signatures", {
+      visitId: visit.id,
+      status: visit.status
+    });
+  }
+}
+
+export function ensureVisitSignatureCanBeRemoved(visit: Pick<Visit, "id" | "status">): void {
+  if (visit.status === VisitStatus.CANCELLED) {
+    throw new AppError(409, "VISIT_NOT_SIGNABLE", "Cancelled visits cannot remove signatures", {
+      visitId: visit.id,
+      status: visit.status
+    });
+  }
+
+  if (visit.status === VisitStatus.COMPLETED) {
+    throw new AppError(409, "SIGNATURE_REMOVAL_NOT_ALLOWED", "Completed visits cannot remove signatures", {
+      visitId: visit.id,
+      status: visit.status
+    });
+  }
+}
+
 export function generateVisitCode(): string {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = crypto.randomUUID().slice(0, 8).toUpperCase();

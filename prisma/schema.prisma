@@ -56,6 +56,19 @@ enum StockReferenceType {
   ADJUSTMENT
 }
 
+model User {
+  id               String    @id @default(uuid()) @db.Uuid
+  name             String    @db.VarChar(160)
+  email            String    @unique @db.VarChar(200)
+  passwordHash     String    @db.VarChar(255)
+  isActive         Boolean   @default(true)
+  sessionTokenHash String?   @unique @db.VarChar(128)
+  sessionExpiresAt DateTime?
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
 model Product {
   id                   String                  @id @default(uuid()) @db.Uuid
   sku                  String                  @unique @db.VarChar(120)

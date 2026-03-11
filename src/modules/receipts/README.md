@@ -1,1 +1,1 @@
-Future module for receipt generation and document storage.
+Receipt generation and local document storage module.

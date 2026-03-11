@@ -2,6 +2,7 @@ import {
   Prisma,
   type ClientProduct,
   type Product,
+  type SignatureStatus,
   type Visit,
   type VisitItem
 } from "@prisma/client";
@@ -58,6 +59,22 @@ export class VisitRepository {
   }
 
   async updateMetadata(id: string, data: UpdateVisitInput, db: DbClient = prisma): Promise<Visit> {
+    return db.visit.update({
+      where: { id },
+      data
+    });
+  }
+
+  async updateSignature(
+    id: string,
+    data: {
+      signatureStatus: SignatureStatus;
+      signatureName: string | null;
+      signatureImageKey: string | null;
+      signedAt: Date | null;
+    },
+    db: DbClient = prisma
+  ): Promise<Visit> {
     return db.visit.update({
       where: { id },
       data

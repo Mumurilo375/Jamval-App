@@ -122,3 +122,13 @@ export const completeVisitBodySchema = z
   })
   .strict()
   .default({});
+
+const supportedSignatureMimeTypeSchema = z.enum(["image/png", "image/jpeg", "image/jpg"]);
+
+export const putVisitSignatureBodySchema = z
+  .object({
+    signatureName: z.string().trim().min(1).max(160),
+    mimeType: supportedSignatureMimeTypeSchema,
+    signatureImageBase64: z.string().trim().min(1)
+  })
+  .strict();

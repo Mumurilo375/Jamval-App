@@ -6,6 +6,7 @@ import {
   completeVisitBodySchema,
   createVisitBodySchema,
   patchVisitItemBodySchema,
+  putVisitSignatureBodySchema,
   updateVisitBodySchema,
   visitIdParamSchema,
   visitItemParamsSchema,
@@ -76,6 +77,21 @@ export class VisitController {
     const params = parseWithZod(visitIdParamSchema, request.params);
     const body = parseWithZod(completeVisitBodySchema, request.body);
     const visit = await this.completionService.complete(params.id, body);
+
+    reply.send({ data: visit });
+  };
+
+  putSignature = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const params = parseWithZod(visitIdParamSchema, request.params);
+    const body = parseWithZod(putVisitSignatureBodySchema, request.body);
+    const visit = await this.service.putSignature(params.id, body);
+
+    reply.send({ data: visit });
+  };
+
+  deleteSignature = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const params = parseWithZod(visitIdParamSchema, request.params);
+    const visit = await this.service.removeSignature(params.id);
 
     reply.send({ data: visit });
   };

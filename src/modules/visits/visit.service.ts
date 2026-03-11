@@ -1,12 +1,16 @@
 import { Prisma, type VisitItem } from "@prisma/client";
+import path from "node:path";
 
 import { prisma } from "../../db/prisma";
 import { AppError } from "../../shared/errors/app-error";
 import { NotFoundError } from "../../shared/errors/not-found-error";
+import { removeStorageFile, writeStorageFile } from "../../shared/utils/local-storage";
+import { normalizeSignatureImage } from "../../shared/utils/signature-image";
 import type {
   BulkUpsertVisitItemsInput,
   CreateVisitInput,
   PatchVisitItemInput,
+  PutVisitSignatureInput,
   UpdateVisitInput,
   VisitDraftItemInput,
   VisitListQuery,
@@ -16,6 +20,8 @@ import {
   computeDraftVisitItem,
   ensureClientProductMatchesVisit,
   ensureReceivedAmountWithinTotal,
+  ensureVisitCanBeSigned,
+  ensureVisitSignatureCanBeRemoved,
   ensureVisitIsDraft,
   generateVisitCode,
   mergeEditableVisitItemFields
@@ -178,6 +184,67 @@ export class VisitService {
   async cancel(id: string): Promise<VisitWithItems> {
     await this.ensureDraftVisit(id);
     await this.repository.cancel(id);
+    return this.getById(id);
+  }
+
+  async putSignature(id: string, input: PutVisitSignatureInput): Promise<VisitWithItems> {
+    const visit = await this.repository.findById(id);
+
+    if (!visit) {
+      throw new NotFoundError("Visit not found", { id });
+    }
+
+    ensureVisitCanBeSigned(visit);
+
+    const normalizedImage = normalizeSignatureImage({
+      mimeType: input.mimeType,
+      signatureImageBase64: input.signatureImageBase64
+    });
+
+    const nextStorageKey = path.posix.join("signatures", "visits", visit.id, `signature.${normalizedImage.extension}`);
+    const previousStorageKey = visit.signatureImageKey;
+
+    await writeStorageFile(nextStorageKey, normalizedImage.buffer);
+
+    try {
+      await this.repository.updateSignature(visit.id, {
+        signatureStatus: "SIGNED",
+        signatureName: input.signatureName,
+        signatureImageKey: nextStorageKey,
+        signedAt: new Date()
+      });
+    } catch (error) {
+      await removeStorageFile(nextStorageKey);
+      throw error;
+    }
+
+    if (previousStorageKey && previousStorageKey !== nextStorageKey) {
+      await removeStorageFile(previousStorageKey);
+    }
+
+    return this.getById(id);
+  }
+
+  async removeSignature(id: string): Promise<VisitWithItems> {
+    const visit = await this.repository.findById(id);
+
+    if (!visit) {
+      throw new NotFoundError("Visit not found", { id });
+    }
+
+    ensureVisitSignatureCanBeRemoved(visit);
+
+    const previousStorageKey = visit.signatureImageKey;
+
+    await this.repository.updateSignature(visit.id, {
+      signatureStatus: "PENDING",
+      signatureName: null,
+      signatureImageKey: null,
+      signedAt: null
+    });
+
+    await removeStorageFile(previousStorageKey);
+
     return this.getById(id);
   }
 
