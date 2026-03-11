@@ -3,6 +3,7 @@ import type { z } from "zod";
 
 import {
   bulkUpsertVisitItemsBodySchema,
+  completeVisitBodySchema,
   createVisitBodySchema,
   patchVisitItemBodySchema,
   updateVisitBodySchema,
@@ -13,6 +14,7 @@ import {
 
 export type CreateVisitInput = z.infer<typeof createVisitBodySchema>;
 export type UpdateVisitInput = z.infer<typeof updateVisitBodySchema>;
+export type CompleteVisitInput = z.infer<typeof completeVisitBodySchema>;
 export type VisitListQuery = z.infer<typeof visitListQuerySchema>;
 export type VisitDraftItemInput = z.infer<typeof visitDraftItemInputSchema>;
 export type BulkUpsertVisitItemsInput = z.infer<typeof bulkUpsertVisitItemsBodySchema>;

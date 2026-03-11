@@ -3,6 +3,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { parseWithZod } from "../../shared/validation/parse-with-zod";
 import {
   bulkUpsertVisitItemsBodySchema,
+  completeVisitBodySchema,
   createVisitBodySchema,
   patchVisitItemBodySchema,
   updateVisitBodySchema,
@@ -10,10 +11,14 @@ import {
   visitItemParamsSchema,
   visitListQuerySchema
 } from "./visit.schema";
+import { VisitCompletionService } from "./visit-completion.service";
 import { VisitService } from "./visit.service";
 
 export class VisitController {
-  constructor(private readonly service = new VisitService()) {}
+  constructor(
+    private readonly service = new VisitService(),
+    private readonly completionService = new VisitCompletionService()
+  ) {}
 
   create = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const body = parseWithZod(createVisitBodySchema, request.body);
@@ -63,6 +68,14 @@ export class VisitController {
   deleteItem = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const params = parseWithZod(visitItemParamsSchema, request.params);
     const visit = await this.service.deleteItem(params.id, params.itemId);
+
+    reply.send({ data: visit });
+  };
+
+  complete = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const params = parseWithZod(visitIdParamSchema, request.params);
+    const body = parseWithZod(completeVisitBodySchema, request.body);
+    const visit = await this.completionService.complete(params.id, body);
 
     reply.send({ data: visit });
   };

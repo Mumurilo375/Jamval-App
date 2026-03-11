@@ -1,4 +1,4 @@
-import { VisitStatus } from "@prisma/client";
+import { PaymentMethod, VisitStatus } from "@prisma/client";
 import { z } from "zod";
 
 const nonNegativeIntSchema = z.coerce.number().int().min(0);
@@ -107,3 +107,18 @@ export const patchVisitItemBodySchema = z
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one field must be provided"
   });
+
+const initialPaymentSchema = z
+  .object({
+    paymentMethod: z.nativeEnum(PaymentMethod),
+    reference: z.string().trim().optional(),
+    notes: z.string().trim().optional()
+  })
+  .strict();
+
+export const completeVisitBodySchema = z
+  .object({
+    initialPayment: initialPaymentSchema.optional()
+  })
+  .strict()
+  .default({});

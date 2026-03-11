@@ -1,4 +1,4 @@
-import { Prisma, VisitStatus, type ClientProduct, type Product, type Visit } from "@prisma/client";
+import { Prisma, VisitStatus, type ClientProduct, type Product, type Visit, type VisitItem } from "@prisma/client";
 
 import { AppError } from "../../shared/errors/app-error";
 import type {
@@ -12,6 +12,21 @@ export function ensureVisitIsDraft(visit: Pick<Visit, "id" | "status">): void {
     throw new AppError(409, "VISIT_NOT_EDITABLE", "Only DRAFT visits can be edited", {
       visitId: visit.id,
       status: visit.status
+    });
+  }
+}
+
+export function ensureVisitCanBeCompleted(visit: Pick<Visit, "id" | "status"> & { items?: unknown[] }): void {
+  if (visit.status !== VisitStatus.DRAFT) {
+    throw new AppError(409, "VISIT_NOT_COMPLETABLE", "Only DRAFT visits can be completed", {
+      visitId: visit.id,
+      status: visit.status
+    });
+  }
+
+  if (visit.items && visit.items.length === 0) {
+    throw new AppError(400, "VISIT_WITHOUT_ITEMS", "Cannot complete a visit without items", {
+      visitId: visit.id
     });
   }
 }
@@ -143,7 +158,10 @@ export function ensureClientProductMatchesVisit(
   }
 }
 
-export function ensureReceivedAmountWithinTotal(receivedAmountOnVisit: Prisma.Decimal | number, totalAmount: Prisma.Decimal | number): void {
+export function ensureReceivedAmountWithinTotal(
+  receivedAmountOnVisit: Prisma.Decimal | number,
+  totalAmount: Prisma.Decimal | number
+): void {
   const received = new Prisma.Decimal(receivedAmountOnVisit);
   const total = new Prisma.Decimal(totalAmount);
 
@@ -162,6 +180,58 @@ export function ensureReceivedAmountWithinTotal(receivedAmountOnVisit: Prisma.De
       }
     );
   }
+}
+
+export function recomputeVisitItemForCompletion(
+  item: Pick<
+    VisitItem,
+    | "id"
+    | "productId"
+    | "quantityPrevious"
+    | "quantityGoodRemaining"
+    | "quantityDefectiveReturn"
+    | "quantityLoss"
+    | "restockedQuantity"
+    | "unitPrice"
+  >
+): {
+  quantitySold: number;
+  subtotalAmount: Prisma.Decimal;
+  resultingClientQuantity: number;
+} {
+  assertNonNegative("quantityPrevious", item.quantityPrevious);
+  assertNonNegative("quantityGoodRemaining", item.quantityGoodRemaining);
+  assertNonNegative("quantityDefectiveReturn", item.quantityDefectiveReturn);
+  assertNonNegative("quantityLoss", item.quantityLoss);
+  assertNonNegative("restockedQuantity", item.restockedQuantity);
+
+  const unitPrice = new Prisma.Decimal(item.unitPrice);
+
+  if (unitPrice.lessThan(0)) {
+    throw new AppError(400, "INVALID_VISIT_ITEM", "unitPrice cannot be negative", {
+      itemId: item.id,
+      productId: item.productId
+    });
+  }
+
+  const quantitySold =
+    item.quantityPrevious -
+    item.quantityGoodRemaining -
+    item.quantityDefectiveReturn -
+    item.quantityLoss;
+
+  if (quantitySold < 0) {
+    throw new AppError(400, "INVALID_VISIT_ITEM", "Visit item results in a negative quantitySold", {
+      itemId: item.id,
+      productId: item.productId
+    });
+  }
+
+  return {
+    quantitySold,
+    subtotalAmount: unitPrice.mul(quantitySold).toDecimalPlaces(2),
+    resultingClientQuantity: item.quantityGoodRemaining + item.restockedQuantity
+  };
 }
 
 function assertNonNegative(field: string, value: number): void {

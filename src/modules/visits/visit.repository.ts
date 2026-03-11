@@ -92,6 +92,20 @@ export class VisitRepository {
     });
   }
 
+  async findClientProductsByIds(ids: string[], db: DbClient = prisma): Promise<ClientProduct[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return db.clientProduct.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    });
+  }
+
   async findProductById(id: string, db: DbClient = prisma): Promise<Product | null> {
     return db.product.findUnique({ where: { id } });
   }
@@ -128,6 +142,17 @@ export class VisitRepository {
     });
   }
 
+  async updateItemComputedFields(
+    itemId: string,
+    data: Pick<Prisma.VisitItemUncheckedUpdateInput, "quantitySold" | "subtotalAmount" | "resultingClientQuantity">,
+    db: DbClient = prisma
+  ): Promise<VisitItem> {
+    return db.visitItem.update({
+      where: { id: itemId },
+      data
+    });
+  }
+
   async deleteItem(itemId: string, db: DbClient = prisma): Promise<void> {
     await db.visitItem.delete({
       where: { id: itemId }
@@ -152,6 +177,27 @@ export class VisitRepository {
         totalAmount
       }
     });
+  }
+
+  async markAsCompleted(
+    visitId: string,
+    totalAmount: Prisma.Decimal,
+    completedAt: Date,
+    db: DbClient = prisma
+  ): Promise<number> {
+    const result = await db.visit.updateMany({
+      where: {
+        id: visitId,
+        status: "DRAFT"
+      },
+      data: {
+        status: "COMPLETED",
+        totalAmount,
+        completedAt
+      }
+    });
+
+    return result.count;
   }
 }
 
