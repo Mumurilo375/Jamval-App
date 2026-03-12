@@ -28,6 +28,11 @@ export type VisitItemDraftPayload = {
 };
 
 export type VisitItemPatchPayload = Partial<VisitItemDraftPayload>;
+export type VisitInitialPaymentPayload = {
+  paymentMethod: "CASH" | "PIX" | "CARD" | "BANK_TRANSFER" | "OTHER";
+  reference?: string;
+  notes?: string;
+};
 
 function buildQuery(filters: VisitListFilters): string {
   const params = new URLSearchParams();
@@ -74,4 +79,8 @@ export function deleteVisitItem(visitId: string, itemId: string) {
 
 export function cancelVisit(visitId: string) {
   return api.post<VisitDetail>(`/visits/${visitId}/cancel`);
+}
+
+export function completeVisit(visitId: string, initialPayment?: VisitInitialPaymentPayload) {
+  return api.post<VisitDetail>(`/visits/${visitId}/complete`, initialPayment ? { initialPayment } : {});
 }

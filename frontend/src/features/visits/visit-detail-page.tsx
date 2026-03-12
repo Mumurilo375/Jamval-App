@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, EmptyState, PageHeader, PageLoader, ToneBadge } from "../../components/ui";
 import { formatCurrency, formatDate } from "../../lib/format";
 import { getClient } from "../clients/clients-api";
+import { VisitCompletionPanel } from "./visit-completion-panel";
 import { cancelVisit, deleteVisitItem, getVisit } from "./visits-api";
 import { visitStatusLabel, visitStatusTone } from "./visit-utils";
 
@@ -54,37 +55,40 @@ export function VisitDetailPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        eyebrow="Visita"
         title={clientName}
         subtitle={visit.visitCode}
         action={<ToneBadge label={visitStatusLabel(visit.status)} tone={visitStatusTone(visit.status)} />}
       />
 
-      <Card className="space-y-4 bg-[linear-gradient(145deg,#2f1b0d_0%,#8a4316_100%)] text-white">
+      <Card className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-amber-200/80">Total da visita</p>
-            <p className="mt-2 font-display text-3xl font-bold">{formatCurrency(visit.totalAmount)}</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Total da visita</p>
+            <p className="mt-1 font-display text-3xl font-semibold text-[var(--jam-ink)]">{formatCurrency(visit.totalAmount)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-amber-200/80">Recebido no local</p>
-            <p className="mt-2 font-display text-3xl font-bold">{formatCurrency(visit.receivedAmountOnVisit)}</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Recebido no local</p>
+            <p className="mt-1 font-display text-3xl font-semibold text-[var(--jam-ink)]">{formatCurrency(visit.receivedAmountOnVisit)}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm text-amber-50/90">
+        <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-amber-200/80">Visitada em</p>
-            <p className="mt-1 font-semibold">{formatDate(visit.visitedAt)}</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Visitada em</p>
+            <p className="mt-1 font-medium text-[var(--jam-ink)]">{formatDate(visit.visitedAt)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-amber-200/80">Vencimento</p>
-            <p className="mt-1 font-semibold">{formatDate(visit.dueDate)}</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Vencimento</p>
+            <p className="mt-1 font-medium text-[var(--jam-ink)]">{formatDate(visit.dueDate)}</p>
           </div>
         </div>
       </Card>
 
+      <VisitCompletionPanel visit={visit} />
+
       <Card className="space-y-3">
-        <p className="text-xs uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Metadados do draft</p>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Metadados do draft</p>
         <p className="text-sm text-[var(--jam-subtle)]">{visit.notes || "Sem observacoes registradas."}</p>
         {isDraft ? (
           <Link to={`/visits/${visit.id}/edit`}>
@@ -97,7 +101,7 @@ export function VisitDetailPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-display text-xl font-bold">Itens da visita</p>
+          <p className="font-display text-xl font-semibold">Itens da visita</p>
           <p className="text-sm text-[var(--jam-subtle)]">{visit.items.length} item(ns) no draft</p>
         </div>
         {isDraft ? (
@@ -125,13 +129,13 @@ export function VisitDetailPage() {
         {visit.items.map((item) => (
           <Card key={item.id} className="space-y-4">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display text-lg font-bold">{item.productSnapshotName}</p>
-                <p className="text-sm text-[var(--jam-subtle)]">{item.productSnapshotSku}</p>
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold text-[var(--jam-ink)]">{item.productSnapshotName}</p>
+                <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{item.productSnapshotSku}</p>
               </div>
-              <div className="rounded-2xl bg-[rgba(190,93,25,0.1)] px-3 py-2 text-right">
+              <div className="rounded-xl bg-[var(--jam-panel-strong)] px-3 py-2 text-right">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Subtotal</p>
-                <p className="text-base font-bold text-[var(--jam-ink)]">{formatCurrency(item.subtotalAmount)}</p>
+                <p className="text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(item.subtotalAmount)}</p>
               </div>
             </div>
 
@@ -178,7 +182,7 @@ export function VisitDetailPage() {
 
       {isDraft ? (
         <Card className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Acoes do draft</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Acoes do draft</p>
           <div className="grid gap-3">
             <Button
               variant="danger"
@@ -201,9 +205,9 @@ export function VisitDetailPage() {
 
 function Metric({ label, value, highlight = false }: { label: string; value: string | number; highlight?: boolean }) {
   return (
-    <div className={highlight ? "rounded-2xl bg-[rgba(245,158,11,0.16)] p-3" : "rounded-2xl bg-white/80 p-3"}>
+    <div className={highlight ? "rounded-xl bg-[rgba(180,83,9,0.08)] p-3" : "rounded-xl bg-[var(--jam-panel-strong)] p-3"}>
       <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
-      <p className="mt-1 font-display text-xl font-bold text-[var(--jam-ink)]">{value}</p>
+      <p className="mt-1 font-display text-lg font-semibold text-[var(--jam-ink)]">{value}</p>
     </div>
   );
 }
