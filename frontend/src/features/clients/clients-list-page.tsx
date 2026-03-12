@@ -25,8 +25,9 @@ export function ClientsListPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        eyebrow="Cadastros"
         title="Clientes"
-        subtitle="Cadastre lojas e mantenha o cadastro comercial pronto para a operacao."
+        subtitle="Pontos de venda, contato e acesso ao catalogo configurado por cliente."
         action={
           <Link to="/clients/new">
             <Button>Novo</Button>
@@ -70,9 +71,9 @@ export function ClientsListPage() {
         {clientsQuery.data?.map((client) => (
           <Card key={client.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display text-lg font-bold">{client.tradeName}</p>
-                <p className="text-sm text-[var(--jam-subtle)]">{client.contactName ?? client.phone ?? "Sem contato principal"}</p>
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold text-[var(--jam-ink)]">{client.tradeName}</p>
+                <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{client.contactName ?? client.phone ?? "Sem contato principal"}</p>
               </div>
               <StatusBadge active={client.isActive} />
             </div>
@@ -80,11 +81,11 @@ export function ClientsListPage() {
             <div className="grid grid-cols-2 gap-3 text-sm text-[var(--jam-subtle)]">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em]">Cidade</p>
-                <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">{client.addressCity ?? "-"}</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{client.addressCity ?? "-"}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.18em]">Ciclo</p>
-                <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">
+                <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">
                   {client.visitCycleDays ? `${client.visitCycleDays} dias` : "-"}
                 </p>
               </div>

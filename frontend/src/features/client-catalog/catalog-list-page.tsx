@@ -28,8 +28,9 @@ export function CatalogListPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        eyebrow="Cadastros"
         title="Catalogo do cliente"
-        subtitle={clientQuery.data.tradeName}
+        subtitle={`${clientQuery.data.tradeName} · produtos ativos e preco atual`}
         action={
           <Link to={`/clients/${clientId}/catalog/new`}>
             <Button>Novo</Button>
@@ -53,9 +54,9 @@ export function CatalogListPage() {
         {catalogQuery.data.map((item) => (
           <Card key={item.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display text-lg font-bold">{item.product.name}</p>
-                <p className="text-sm text-[var(--jam-subtle)]">{item.product.sku}</p>
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold text-[var(--jam-ink)]">{item.product.name}</p>
+                <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{item.product.sku}</p>
               </div>
               <StatusBadge active={item.isActive} />
             </div>
@@ -63,11 +64,11 @@ export function CatalogListPage() {
             <div className="grid grid-cols-2 gap-3 text-sm text-[var(--jam-subtle)]">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em]">Preco atual</p>
-                <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">{formatCurrency(item.currentUnitPrice)}</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(item.currentUnitPrice)}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.18em]">Ideal</p>
-                <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">{item.idealQuantity ?? "-"}</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{item.idealQuantity ?? "-"}</p>
               </div>
             </div>
 

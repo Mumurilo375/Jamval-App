@@ -1,28 +1,27 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
   font-family: "IBM Plex Sans", sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #1f2937;
-  background:
-    radial-gradient(circle at top, rgba(217, 119, 6, 0.22), transparent 32%),
-    linear-gradient(180deg, #f8f2e8 0%, #f4eee2 42%, #efe5d5 100%);
+  color: #111827;
+  background: #f3f6f9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --jam-bg: #f6efe3;
-  --jam-panel: rgba(255, 251, 245, 0.92);
-  --jam-panel-strong: rgba(255, 247, 237, 0.98);
-  --jam-border: rgba(120, 53, 15, 0.14);
-  --jam-ink: #312012;
-  --jam-subtle: #8a6a48;
-  --jam-accent: #be5d19;
-  --jam-accent-soft: #f59e0b;
-  --jam-success: #227857;
-  --jam-danger: #b63b32;
+  --jam-bg: #f3f6f9;
+  --jam-panel: #ffffff;
+  --jam-panel-strong: #f8fafc;
+  --jam-border: #d9e2ec;
+  --jam-ink: #111827;
+  --jam-subtle: #5b6472;
+  --jam-accent: #1d4ed8;
+  --jam-accent-soft: #dbeafe;
+  --jam-success: #0f766e;
+  --jam-danger: #b42318;
+  --jam-warning: #b45309;
 }
 
 * {
@@ -36,7 +35,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: transparent;
+  background: var(--jam-bg);
   color: var(--jam-ink);
 }
 
@@ -57,14 +56,7 @@ a {
 }
 
 .font-display {
-  font-family: "Space Grotesk", sans-serif;
-}
-
-.app-grid {
-  background-image:
-    linear-gradient(rgba(120, 53, 15, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 53, 15, 0.045) 1px, transparent 1px);
-  background-size: 18px 18px;
+  font-family: "IBM Plex Sans Condensed", sans-serif;
 }
 
 .page-fade {

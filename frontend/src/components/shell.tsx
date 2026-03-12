@@ -1,52 +1,40 @@
 import { NavLink, Outlet } from "react-router-dom";
 
-import { useLogout, useSessionUser } from "../features/auth/auth";
+import { useSessionUser } from "../features/auth/auth";
 import { cx } from "../lib/cx";
-import { Button } from "./ui";
 
 const navigationItems = [
-  { to: "/", label: "Inicio", icon: "⌂" },
-  { to: "/visits", label: "Visitas", icon: "◌" },
-  { to: "/products", label: "Produtos", icon: "◫" },
-  { to: "/clients", label: "Clientes", icon: "◎" }
+  { to: "/", label: "Operacao", icon: "◎" },
+  { to: "/pendencias", label: "Pendencias", icon: "◔" },
+  { to: "/cadastros", label: "Cadastros", icon: "▤" },
+  { to: "/mais", label: "Mais", icon: "⋯" }
 ];
 
 export function MobileShell() {
   const user = useSessionUser();
-  const logoutMutation = useLogout();
+  const firstName = user?.name.split(" ")[0] ?? "Admin";
 
   return (
-    <div className="app-grid min-h-screen px-3 py-3 text-[var(--jam-ink)]">
-      <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[460px] flex-col rounded-[36px] border border-[var(--jam-border)] bg-[rgba(255,251,245,0.76)] shadow-[0_30px_80px_rgba(120,53,15,0.1)] backdrop-blur-sm">
-        <header className="border-b border-[var(--jam-border)] px-4 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-display text-xl font-bold">Jamval</p>
-              <p className="text-sm text-[var(--jam-subtle)]">Operacao de consignado no celular</p>
-            </div>
-            <Button
-              variant="ghost"
-              className="px-0 text-xs"
-              onClick={() => {
-                void logoutMutation.mutateAsync();
-              }}
-              disabled={logoutMutation.isPending}
-            >
-              Sair
-            </Button>
+    <div className="min-h-screen bg-[var(--jam-bg)] text-[var(--jam-ink)]">
+      <header className="sticky top-0 z-20 border-b border-[var(--jam-border)] bg-[rgba(243,246,249,0.96)] backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[460px] items-center justify-between gap-3 px-4 py-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
+            <p className="font-display text-lg font-semibold text-[var(--jam-ink)]">Operacao de campo</p>
           </div>
-          <div className="mt-4 rounded-3xl bg-[linear-gradient(135deg,#2f1b0d_0%,#7c3f12_100%)] p-4 text-white">
-            <p className="text-xs uppercase tracking-[0.24em] text-amber-200/80">Sessao ativa</p>
-            <p className="mt-1 font-display text-xl font-bold">{user?.name}</p>
-            <p className="text-sm text-amber-100/80">{user?.email}</p>
+          <div className="rounded-full border border-[var(--jam-border)] bg-white px-3 py-2 text-right">
+            <p className="text-sm font-medium text-[var(--jam-ink)]">{firstName}</p>
+            <p className="text-[11px] text-[var(--jam-subtle)]">Sessao ativa</p>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="page-fade flex-1 px-4 py-5">
+      <main className="page-fade mx-auto w-full max-w-[460px] px-4 py-4 pb-24">
           <Outlet />
-        </main>
+      </main>
 
-        <nav className="sticky bottom-0 grid grid-cols-4 gap-2 border-t border-[var(--jam-border)] bg-[rgba(255,248,241,0.96)] px-3 py-3">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--jam-border)] bg-[rgba(255,255,255,0.98)] backdrop-blur">
+        <div className="mx-auto grid w-full max-w-[460px] grid-cols-4 gap-1 px-2 py-2">
           {navigationItems.map((item) => (
             <NavLink
               key={item.to}
@@ -54,17 +42,17 @@ export function MobileShell() {
               end={item.to === "/"}
               className={({ isActive }) =>
                 cx(
-                  "flex flex-col items-center justify-center rounded-2xl px-3 py-2 text-xs font-semibold transition",
-                  isActive ? "bg-[rgba(190,93,25,0.14)] text-[var(--jam-ink)]" : "text-[var(--jam-subtle)]"
+                  "flex flex-col items-center justify-center rounded-xl px-2 py-2 text-[11px] font-semibold transition",
+                  isActive ? "bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]" : "text-[var(--jam-subtle)]"
                 )
               }
             >
-              <span className="text-base">{item.icon}</span>
+              <span className="text-sm leading-none">{item.icon}</span>
               <span className="mt-1">{item.label}</span>
             </NavLink>
           ))}
-        </nav>
-      </div>
+        </div>
+      </nav>
     </div>
   );
 }

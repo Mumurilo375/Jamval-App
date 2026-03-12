@@ -3,12 +3,15 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
 import { PublicOnlyRoute, ProtectedApp } from "../features/auth/route-guards";
 import { LoginPage } from "../features/auth/login-page";
+import { CadastrosPage } from "../features/cadastros/cadastros-page";
 import { CatalogCreatePage } from "../features/client-catalog/catalog-create-page";
 import { CatalogEditPage } from "../features/client-catalog/catalog-edit-page";
 import { CatalogListPage } from "../features/client-catalog/catalog-list-page";
 import { ClientCreatePage } from "../features/clients/client-create-page";
 import { ClientEditPage } from "../features/clients/client-edit-page";
 import { ClientsListPage } from "../features/clients/clients-list-page";
+import { MorePage } from "../features/more/more-page";
+import { PendingPage } from "../features/pending/pending-page";
 import { ProductCreatePage } from "../features/products/product-create-page";
 import { ProductEditPage } from "../features/products/product-edit-page";
 import { ProductsListPage } from "../features/products/products-list-page";
@@ -36,6 +39,18 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <DashboardPage />
+      },
+      {
+        path: "/pendencias",
+        element: <PendingPage />
+      },
+      {
+        path: "/cadastros",
+        element: <CadastrosPage />
+      },
+      {
+        path: "/mais",
+        element: <MorePage />
       },
       {
         path: "/products",

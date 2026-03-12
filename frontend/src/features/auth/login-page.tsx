@@ -32,18 +32,18 @@ export function LoginPage() {
   });
 
   return (
-    <div className="app-grid min-h-screen px-3 py-4">
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[460px] flex-col justify-center">
-        <Card className="overflow-hidden p-0">
-          <div className="bg-[linear-gradient(145deg,#2f1b0d_0%,#8a4316_100%)] px-5 py-6 text-white">
-            <p className="text-xs uppercase tracking-[0.24em] text-amber-200/80">Jamval V1</p>
-            <h1 className="font-display mt-2 text-3xl font-bold">Login rapido para operar no celular</h1>
-            <p className="mt-2 text-sm text-amber-50/80">
-              Entre com o usuario administrador para acessar produtos, clientes e catalogo.
-            </p>
-          </div>
+    <div className="min-h-screen bg-[var(--jam-bg)] px-4 py-8">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[420px] flex-col justify-center">
+        <div className="mb-6">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
+          <h1 className="font-display mt-2 text-4xl font-semibold text-[var(--jam-ink)]">Acesse a operacao</h1>
+          <p className="mt-2 text-sm text-[var(--jam-subtle)]">
+            Entre com o usuario administrador para abrir visitas, revisar rascunhos e manter os cadastros.
+          </p>
+        </div>
 
-          <form className="space-y-4 p-5" onSubmit={onSubmit}>
+        <Card className="space-y-4">
+          <form className="space-y-4" onSubmit={onSubmit}>
             {loginMutation.error instanceof ApiError ? <ErrorBanner message={loginMutation.error.message} /> : null}
 
             <Field label="E-mail" error={errors.email?.message}>
@@ -55,7 +55,7 @@ export function LoginPage() {
             </Field>
 
             <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-              {loginMutation.isPending ? "Entrando..." : "Entrar"}
+              {loginMutation.isPending ? "Entrando..." : "Entrar no Jamval"}
             </Button>
           </form>
         </Card>

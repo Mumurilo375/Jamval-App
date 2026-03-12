@@ -26,8 +26,9 @@ export function ProductsListPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        eyebrow="Cadastros"
         title="Produtos"
-        subtitle="Cadastre SKUs e mantenha o catalogo base limpo para a operacao."
+        subtitle="SKUs e base comercial para abastecer clientes e abrir visitas."
         action={
           <Link to="/products/new">
             <Button>Novo</Button>
@@ -71,29 +72,24 @@ export function ProductsListPage() {
         {productsQuery.data?.map((product) => (
           <Card key={product.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display text-lg font-bold">{product.name}</p>
-                <p className="text-sm text-[var(--jam-subtle)]">{product.sku}</p>
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold text-[var(--jam-ink)]">{product.name}</p>
+                <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{product.sku}</p>
               </div>
               <StatusBadge active={product.isActive} />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm text-[var(--jam-subtle)]">
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em]">Preco</p>
-                <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">{formatCurrency(product.basePrice)}</p>
+            <div className="grid grid-cols-[1fr_auto] items-center gap-3 text-sm">
+              <div className="min-w-0">
+                <p className="truncate text-sm text-[var(--jam-subtle)]">{product.brand ?? "Sem marca"} · {product.category ?? "Sem categoria"}</p>
+                <p className="mt-1 font-semibold text-[var(--jam-ink)]">{formatCurrency(product.basePrice)}</p>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em]">Marca</p>
-                <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">{product.brand ?? "-"}</p>
-              </div>
+              <Link to={`/products/${product.id}/edit`}>
+                <Button variant="secondary" className="min-h-10 px-3">
+                  Editar
+                </Button>
+              </Link>
             </div>
-
-            <Link to={`/products/${product.id}/edit`}>
-              <Button variant="secondary" className="w-full">
-                Editar produto
-              </Button>
-            </Link>
           </Card>
         ))}
       </div>
