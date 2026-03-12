@@ -39,26 +39,36 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${env.apiBaseUrl}${path}`, {
-    ...options,
-    headers,
-    body: body as BodyInit | null | undefined,
-    credentials: "include"
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${env.apiBaseUrl}${path}`, {
+      ...options,
+      headers,
+      body: body as BodyInit | null | undefined,
+      credentials: "include"
+    });
+  } catch {
+    throw new ApiError(0, "NETWORK_ERROR", "Nao foi possivel conectar ao backend.", null);
+  }
 
   const text = await response.text();
-  const payload = text.length > 0 ? (JSON.parse(text) as ApiEnvelope<T> & ApiErrorEnvelope) : null;
+  const payload = parseResponsePayload<T>(response, text);
 
   if (!response.ok) {
     throw new ApiError(
       response.status,
       payload?.error?.code ?? "HTTP_ERROR",
-      payload?.error?.message ?? response.statusText,
+      payload?.error?.message ?? getFallbackErrorMessage(response, text),
       payload?.error?.details ?? null
     );
   }
 
-  return (payload as ApiEnvelope<T>).data;
+  if (!payload || !("data" in payload)) {
+    throw new ApiError(response.status, "INVALID_RESPONSE", "Resposta invalida do backend.", text || null);
+  }
+
+  return payload.data;
 }
 
 export const api = {
@@ -68,3 +78,34 @@ export const api = {
   put: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: "PUT", body }),
   delete: <T>(path: string) => apiRequest<T>(path, { method: "DELETE" })
 };
+
+function parseResponsePayload<T>(response: Response, text: string): (ApiEnvelope<T> & ApiErrorEnvelope) | null {
+  const trimmed = text.trim();
+
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const looksLikeJson = contentType.includes("application/json") || contentType.includes("+json") || trimmed.startsWith("{") || trimmed.startsWith("[");
+
+  if (!looksLikeJson) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(trimmed) as ApiEnvelope<T> & ApiErrorEnvelope;
+  } catch {
+    return null;
+  }
+}
+
+function getFallbackErrorMessage(response: Response, text: string): string {
+  const trimmed = text.trim();
+
+  if (trimmed.length > 0) {
+    return trimmed;
+  }
+
+  return response.statusText || "Falha na requisicao.";
+}
