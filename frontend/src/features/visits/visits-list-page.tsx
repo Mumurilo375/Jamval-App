@@ -51,7 +51,7 @@ export function VisitsListPage() {
                 : "rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]"
             }
           >
-            {option}
+            {visitStatusLabel(option)}
           </button>
         ))}
       </div>
@@ -65,7 +65,7 @@ export function VisitsListPage() {
       {!visitsQuery.isPending && !visitsQuery.isError && visitsQuery.data?.length === 0 ? (
         <EmptyState
           title="Nenhuma visita nessa faixa"
-          message="Abra uma nova visita draft para comecar a conferencia do cliente."
+          message="Abra uma nova visita em rascunho para comecar a conferencia do cliente."
           action={
             <Link to="/visits/new">
               <Button>Criar visita</Button>

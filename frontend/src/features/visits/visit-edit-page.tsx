@@ -23,12 +23,12 @@ export function VisitEditPage() {
   }
 
   if (visitQuery.isError || !visitQuery.data || clientQuery.isError) {
-    return <EmptyState title="Visita nao encontrada" message="Volte para a lista e tente abrir o draft novamente." />;
+    return <EmptyState title="Visita nao encontrada" message="Volte para a lista e tente abrir o rascunho novamente." />;
   }
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Editar metadados" subtitle={visitQuery.data.visitCode} />
+      <PageHeader title="Editar dados da visita" subtitle={`${visitQuery.data.visitCode} · conferencia e financeiro ficam no detalhe`} />
       <VisitForm mode="edit" visit={visitQuery.data} client={clientQuery.data ?? null} />
     </div>
   );
