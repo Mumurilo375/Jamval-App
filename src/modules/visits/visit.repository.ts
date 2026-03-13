@@ -145,6 +145,20 @@ export class VisitRepository {
     return db.product.findUnique({ where: { id } });
   }
 
+  async findProductsByIds(ids: string[], db: DbClient = prisma): Promise<Product[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return db.product.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    });
+  }
+
   async findItemById(itemId: string, db: DbClient = prisma): Promise<VisitItem | null> {
     return db.visitItem.findUnique({ where: { id: itemId } });
   }
@@ -179,7 +193,10 @@ export class VisitRepository {
 
   async updateItemComputedFields(
     itemId: string,
-    data: Pick<Prisma.VisitItemUncheckedUpdateInput, "quantitySold" | "subtotalAmount" | "resultingClientQuantity">,
+    data: Pick<
+      Prisma.VisitItemUncheckedUpdateInput,
+      "quantitySold" | "subtotalAmount" | "resultingClientQuantity" | "costPriceSnapshot"
+    >,
     db: DbClient = prisma
   ): Promise<VisitItem> {
     return db.visitItem.update({

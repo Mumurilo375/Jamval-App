@@ -52,6 +52,7 @@ export class VisitCompletionService {
       ensureVisitCanBeCompleted(visit);
 
       const clientProductsById = await this.loadClientProductsById(visit.items, tx);
+      const productsById = await this.loadProductsById(visit.items, tx);
       const validatedItems = visit.items.map((item) =>
         this.validateVisitItem(visit.clientId, item, clientProductsById)
       );
@@ -108,7 +109,8 @@ export class VisitCompletionService {
           {
             quantitySold: item.quantitySold,
             subtotalAmount: item.subtotalAmount,
-            resultingClientQuantity: item.resultingClientQuantity
+            resultingClientQuantity: item.resultingClientQuantity,
+            costPriceSnapshot: productsById.get(item.item.productId)?.costPrice ?? null
           },
           tx
         );
@@ -175,6 +177,16 @@ export class VisitCompletionService {
     const clientProducts = await this.visitRepository.findClientProductsByIds(clientProductIds, tx);
 
     return new Map(clientProducts.map((clientProduct) => [clientProduct.id, clientProduct]));
+  }
+
+  private async loadProductsById(
+    items: VisitWithItems["items"],
+    tx: Prisma.TransactionClient
+  ): Promise<Map<string, { id: string; costPrice: Prisma.Decimal | null }>> {
+    const productIds = Array.from(new Set(items.map((item) => item.productId)));
+    const products = await this.visitRepository.findProductsByIds(productIds, tx);
+
+    return new Map(products.map((product) => [product.id, { id: product.id, costPrice: product.costPrice }]));
   }
 
   private validateVisitItem(

@@ -2,6 +2,17 @@ import { z } from "zod";
 
 const nonEmptyString = z.string().trim().min(1);
 const optionalText = z.string().trim().min(1).optional();
+const optionalMoney = z.preprocess((value) => {
+  if (value === undefined || value === "") {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return value;
+}, z.coerce.number().min(0).nullable().optional());
 
 export const productIdParamSchema = z.object({
   id: z.string().uuid()
@@ -22,6 +33,7 @@ export const createProductBodySchema = z.object({
   voltage: optionalText,
   connectorType: optionalText,
   basePrice: z.coerce.number().min(0).default(0),
+  costPrice: optionalMoney,
   isActive: z.boolean().optional().default(true)
 });
 

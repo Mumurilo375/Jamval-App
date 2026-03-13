@@ -43,6 +43,7 @@ export type DraftVisitComputedItem = {
   quantityLoss: number;
   quantitySold: number;
   unitPrice: number;
+  costPriceSnapshot?: number | null;
   subtotalAmount: number;
   suggestedRestockQuantity: number;
   restockedQuantity: number;

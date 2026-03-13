@@ -16,6 +16,7 @@ type ProductSeed = {
   voltage?: string;
   connectorType?: string;
   basePrice: number;
+  costPrice?: number;
 };
 
 type ClientSeed = {
@@ -73,7 +74,8 @@ const productSeeds: ProductSeed[] = [
     model: "Fast Sync",
     color: "Preto",
     connectorType: "USB-C",
-    basePrice: 18.9
+    basePrice: 18.9,
+    costPrice: 10.4
   },
   {
     sku: "JMV-CABO-LIGHT-1M-WH",
@@ -83,7 +85,8 @@ const productSeeds: ProductSeed[] = [
     model: "Premium",
     color: "Branco",
     connectorType: "Lightning",
-    basePrice: 22.5
+    basePrice: 22.5,
+    costPrice: 12.9
   },
   {
     sku: "JMV-CARREG-20W-USBC",
@@ -94,7 +97,8 @@ const productSeeds: ProductSeed[] = [
     color: "Branco",
     voltage: "Bivolt",
     connectorType: "USB-C",
-    basePrice: 34.9
+    basePrice: 34.9,
+    costPrice: 20.6
   },
   {
     sku: "JMV-FONTE-12V-2A-P4",
@@ -105,7 +109,8 @@ const productSeeds: ProductSeed[] = [
     color: "Preto",
     voltage: "12V",
     connectorType: "P4",
-    basePrice: 27.4
+    basePrice: 27.4,
+    costPrice: 15.8
   },
   {
     sku: "JMV-FONE-P2-ESTEREO",
@@ -125,7 +130,8 @@ const productSeeds: ProductSeed[] = [
     model: "UC-AUX",
     color: "Cinza",
     connectorType: "USB-C",
-    basePrice: 14.7
+    basePrice: 14.7,
+    costPrice: 8.1
   },
   {
     sku: "JMV-CARREG-VEIC-2USB",
@@ -136,7 +142,8 @@ const productSeeds: ProductSeed[] = [
     color: "Preto",
     voltage: "12V/24V",
     connectorType: "USB-A",
-    basePrice: 21.3
+    basePrice: 21.3,
+    costPrice: 12.4
   },
   {
     sku: "JMV-POWERBANK-10K",
@@ -146,7 +153,8 @@ const productSeeds: ProductSeed[] = [
     model: "PN-951",
     color: "Preto",
     connectorType: "USB-C",
-    basePrice: 79.9
+    basePrice: 79.9,
+    costPrice: 52.3
   }
 ];
 
@@ -402,6 +410,7 @@ async function seedProducts(): Promise<Map<string, Product>> {
           voltage: seed.voltage,
           connectorType: seed.connectorType,
           basePrice: seed.basePrice,
+          costPrice: seed.costPrice ?? null,
           isActive: true
         },
         create: {
@@ -414,6 +423,7 @@ async function seedProducts(): Promise<Map<string, Product>> {
           voltage: seed.voltage,
           connectorType: seed.connectorType,
           basePrice: seed.basePrice,
+          costPrice: seed.costPrice ?? null,
           isActive: true
         }
       });

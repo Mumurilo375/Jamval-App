@@ -17,6 +17,7 @@ export type Product = {
   voltage: string | null;
   connectorType: string | null;
   basePrice: number;
+  costPrice: number | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
