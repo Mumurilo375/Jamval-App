@@ -71,6 +71,45 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return payload.data;
 }
 
+export async function downloadApiFile(path: string, fallbackFileName: string): Promise<void> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${env.apiBaseUrl}${path}`, {
+      credentials: "include"
+    });
+  } catch {
+    throw new ApiError(0, "NETWORK_ERROR", "Nao foi possivel conectar ao backend.", null);
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    const payload = parseResponsePayload<unknown>(response, text);
+
+    throw new ApiError(
+      response.status,
+      payload?.error?.code ?? "HTTP_ERROR",
+      payload?.error?.message ?? getFallbackErrorMessage(response, text),
+      payload?.error?.details ?? null
+    );
+  }
+
+  const blob = await response.blob();
+  const fileName = parseContentDisposition(response.headers.get("content-disposition")) ?? fallbackFileName;
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = objectUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.setTimeout(() => {
+    window.URL.revokeObjectURL(objectUrl);
+  }, 0);
+}
+
 export const api = {
   get: <T>(path: string) => apiRequest<T>(path),
   post: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: "POST", body }),
@@ -108,4 +147,19 @@ function getFallbackErrorMessage(response: Response, text: string): string {
   }
 
   return response.statusText || "Falha na requisicao.";
+}
+
+function parseContentDisposition(contentDisposition: string | null): string | null {
+  if (!contentDisposition) {
+    return null;
+  }
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1]);
+  }
+
+  const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+  return fileNameMatch?.[1] ?? null;
 }

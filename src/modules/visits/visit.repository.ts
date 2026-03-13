@@ -109,6 +109,24 @@ export class VisitRepository {
     });
   }
 
+  async createClientProduct(
+    data: Prisma.ClientProductUncheckedCreateInput,
+    db: DbClient = prisma
+  ): Promise<ClientProduct> {
+    return db.clientProduct.create({ data });
+  }
+
+  async updateClientProduct(
+    id: string,
+    data: Prisma.ClientProductUncheckedUpdateInput,
+    db: DbClient = prisma
+  ): Promise<ClientProduct> {
+    return db.clientProduct.update({
+      where: { id },
+      data
+    });
+  }
+
   async findClientProductsByIds(ids: string[], db: DbClient = prisma): Promise<ClientProduct[]> {
     if (ids.length === 0) {
       return [];

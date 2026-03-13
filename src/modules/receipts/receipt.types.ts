@@ -27,7 +27,20 @@ export type VisitReceiptSource = Prisma.VisitGetPayload<{
         createdAt: "asc";
       };
     };
-    receivable: true;
+    receivable: {
+      include: {
+        payments: {
+          orderBy: [
+            {
+              paidAt: "asc";
+            },
+            {
+              createdAt: "asc";
+            }
+          ];
+        };
+      };
+    };
     receiptDocument: true;
   };
 }>;

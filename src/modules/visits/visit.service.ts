@@ -1,4 +1,4 @@
-import { Prisma, type VisitItem } from "@prisma/client";
+import { Prisma, type ClientProduct, type VisitItem } from "@prisma/client";
 import path from "node:path";
 
 import { prisma } from "../../db/prisma";
@@ -286,11 +286,18 @@ export class VisitService {
     ensureClientProductMatchesVisit(visitClientId, item.productId, clientProduct);
 
     const unitPrice = item.unitPrice ?? Number(clientProduct?.currentUnitPrice ?? product.basePrice);
+    const resolvedClientProduct = await this.resolveClientProductForDraftItem(
+      visitClientId,
+      product.id,
+      unitPrice,
+      clientProduct,
+      db
+    );
 
     return computeDraftVisitItem({
       product,
-      clientProduct,
-      clientProductId: item.clientProductId ?? null,
+      clientProduct: resolvedClientProduct,
+      clientProductId: resolvedClientProduct?.id ?? item.clientProductId ?? null,
       quantityPrevious: item.quantityPrevious,
       quantityGoodRemaining: item.quantityGoodRemaining,
       quantityDefectiveReturn: item.quantityDefectiveReturn,
@@ -300,6 +307,39 @@ export class VisitService {
       restockedQuantity: item.restockedQuantity ?? 0,
       notes: item.notes
     });
+  }
+
+  private async resolveClientProductForDraftItem(
+    clientId: string,
+    productId: string,
+    unitPrice: number,
+    clientProduct: ClientProduct | null,
+    db: Prisma.TransactionClient
+  ) {
+    if (clientProduct && clientProduct.isActive) {
+      return clientProduct;
+    }
+
+    if (clientProduct && !clientProduct.isActive) {
+      return this.repository.updateClientProduct(
+        clientProduct.id,
+        {
+          currentUnitPrice: unitPrice,
+          isActive: true
+        },
+        db
+      );
+    }
+
+    return this.repository.createClientProduct(
+      {
+        clientId,
+        productId,
+        currentUnitPrice: unitPrice,
+        isActive: true
+      },
+      db
+    );
   }
 
   private async refreshVisitTotal(

@@ -1,10 +1,16 @@
 import PDFDocument from "pdfkit";
 
+import type { ReceiptCompanyProfile } from "./receipt-company-profile";
 import type { VisitReceiptSource } from "./receipt.types";
 
 type RenderReceiptPdfInput = {
   visit: VisitReceiptSource;
-  signatureImageBuffer: Buffer | null;
+  companyProfile: ReceiptCompanyProfile;
+  issuedAt: Date;
+  initialPayment: {
+    paymentMethod: string;
+    reference: string | null;
+  } | null;
 };
 
 export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Buffer> {
@@ -24,80 +30,71 @@ export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Bu
     doc.on("error", reject);
   });
 
+  const totalAmount = Number(input.visit.totalAmount);
+  const receivedAmount = Number(input.visit.receivedAmountOnVisit);
+  const pendingAmount = Math.max(totalAmount - receivedAmount, 0);
   let currentY = 40;
 
-  currentY = writeSectionTitle(doc, "Comprovante de Visita", currentY);
-  currentY = writeLabelValue(doc, "Codigo da visita", input.visit.visitCode, currentY);
+  currentY = drawHeader(doc, input.companyProfile, currentY);
+  currentY = writeSectionTitle(doc, "Comprovante de acerto e reposição", currentY + 12);
+  currentY = writeLabelValue(doc, "Código da visita", input.visit.visitCode, currentY);
   currentY = writeLabelValue(doc, "Data da visita", formatDateTime(input.visit.visitedAt), currentY);
-  currentY = writeLabelValue(doc, "Status da visita", input.visit.status, currentY);
+  currentY = writeLabelValue(doc, "Emitido em", formatDateTime(input.issuedAt), currentY);
 
-  currentY = writeSectionTitle(doc, "Cliente", currentY + 10);
-  currentY = writeLabelValue(doc, "Nome fantasia", input.visit.client.tradeName, currentY);
-  currentY = writeOptionalLabelValue(doc, "Razao social", input.visit.client.legalName, currentY);
-  currentY = writeOptionalLabelValue(doc, "Documento", input.visit.client.documentNumber, currentY);
+  currentY = writeSectionTitle(doc, "Dados da empresa", currentY + 8);
+  currentY = writeLabelValue(doc, "Empresa", input.companyProfile.name, currentY);
+  currentY = writeOptionalLabelValue(doc, "Documento/CNPJ", input.companyProfile.document, currentY);
+  currentY = writeOptionalLabelValue(doc, "Telefone", input.companyProfile.phone, currentY);
+  currentY = writeOptionalLabelValue(doc, "Endereço", input.companyProfile.address, currentY);
+  currentY = writeOptionalLabelValue(doc, "Contato", input.companyProfile.contactName, currentY);
+  currentY = writeOptionalLabelValue(doc, "Email", input.companyProfile.email, currentY);
+
+  currentY = writeSectionTitle(doc, "Dados do cliente", currentY + 8);
+  currentY = writeLabelValue(doc, "Cliente", input.visit.client.tradeName, currentY);
   currentY = writeOptionalLabelValue(doc, "Contato", input.visit.client.contactName, currentY);
   currentY = writeOptionalLabelValue(doc, "Telefone", input.visit.client.phone, currentY);
   currentY = writeOptionalLabelValue(
     doc,
-    "Endereco",
-    formatAddress(input.visit.client.addressLine, input.visit.client.addressCity, input.visit.client.addressState, input.visit.client.addressZipcode),
+    "Endereço",
+    formatAddress(
+      input.visit.client.addressLine,
+      input.visit.client.addressCity,
+      input.visit.client.addressState,
+      input.visit.client.addressZipcode
+    ),
     currentY
   );
 
-  currentY = writeSectionTitle(doc, "Itens", currentY + 10);
+  currentY = writeSectionTitle(doc, "Itens da visita", currentY + 8);
 
   for (const item of input.visit.items) {
-    currentY = ensurePageSpace(doc, currentY, 90);
-    doc.font("Helvetica-Bold").fontSize(11).text(item.productSnapshotLabel, 40, currentY);
-    currentY += 16;
-    doc.font("Helvetica").fontSize(10);
-    currentY = writeLabelValue(doc, "SKU", item.productSnapshotSku, currentY);
+    currentY = drawVisitItemBlock(doc, item, currentY);
+  }
+
+  currentY = ensurePageSpace(doc, currentY, 160);
+  currentY = writeSectionTitle(doc, "Resumo financeiro", currentY + 8);
+  currentY = writeLabelValue(doc, "Total a cobrar", formatCurrency(totalAmount), currentY);
+  currentY = writeLabelValue(doc, "Valor recebido nesta visita", formatCurrency(receivedAmount), currentY);
+  currentY = writeLabelValue(doc, "Saldo pendente após esta visita", formatCurrency(pendingAmount), currentY);
+
+  if (receivedAmount > 0 && input.initialPayment) {
     currentY = writeLabelValue(
       doc,
-      "Quantidades",
-      `anterior ${item.quantityPrevious} | boa ${item.quantityGoodRemaining} | defeito ${item.quantityDefectiveReturn} | perda ${item.quantityLoss} | reposta ${item.restockedQuantity} | vendida ${item.quantitySold}`,
+      "Forma de pagamento nesta visita",
+      formatPaymentMethod(input.initialPayment.paymentMethod),
       currentY
     );
-    currentY = writeLabelValue(doc, "Preco unitario", formatCurrency(item.unitPrice), currentY);
-    currentY = writeLabelValue(doc, "Subtotal", formatCurrency(item.subtotalAmount), currentY);
-    currentY += 6;
+    currentY = writeOptionalLabelValue(doc, "Referência do pagamento", input.initialPayment.reference, currentY);
+  } else if (receivedAmount === 0) {
+    currentY = writeLabelValue(doc, "Recebimento", "Nenhum pagamento recebido no momento da visita", currentY);
   }
 
-  currentY = ensurePageSpace(doc, currentY, 110);
-  currentY = writeSectionTitle(doc, "Financeiro", currentY + 10);
-  currentY = writeLabelValue(doc, "Total da visita", formatCurrency(input.visit.totalAmount), currentY);
-  currentY = writeLabelValue(doc, "Recebido na visita", formatCurrency(input.visit.receivedAmountOnVisit), currentY);
-
-  if (input.visit.receivable) {
-    currentY = writeLabelValue(doc, "Status do titulo", input.visit.receivable.status, currentY);
-    currentY = writeLabelValue(doc, "Valor original", formatCurrency(input.visit.receivable.originalAmount), currentY);
-    currentY = writeLabelValue(doc, "Valor recebido", formatCurrency(input.visit.receivable.amountReceived), currentY);
-    currentY = writeLabelValue(
-      doc,
-      "Valor em aberto",
-      formatCurrency(input.visit.receivable.amountOutstanding),
-      currentY
-    );
-    currentY = writeOptionalLabelValue(doc, "Vencimento", formatDate(input.visit.receivable.dueDate), currentY);
-  } else {
-    currentY = writeLabelValue(doc, "Receivable", "Nao gerado", currentY);
+  if (input.visit.notes) {
+    currentY = writeSectionTitle(doc, "Observações", currentY + 8);
+    currentY = writeParagraph(doc, input.visit.notes, currentY);
   }
 
-  currentY = ensurePageSpace(doc, currentY, input.signatureImageBuffer ? 180 : 80);
-  currentY = writeSectionTitle(doc, "Assinatura", currentY + 10);
-  currentY = writeLabelValue(doc, "Status", input.visit.signatureStatus, currentY);
-
-  if (!input.signatureImageBuffer) {
-    currentY = writeLabelValue(doc, "Assinatura", "ASSINATURA PENDENTE", currentY);
-  } else {
-    currentY = writeOptionalLabelValue(doc, "Assinante", input.visit.signatureName, currentY);
-    currentY = writeOptionalLabelValue(doc, "Assinado em", formatDateTime(input.visit.signedAt), currentY);
-    currentY += 8;
-    doc.image(input.signatureImageBuffer, 40, currentY, {
-      fit: [220, 100]
-    });
-    currentY += 110;
-  }
+  currentY = drawSignatureBlocks(doc, currentY + 16);
 
   doc.end();
 
@@ -105,15 +102,15 @@ export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Bu
 }
 
 function writeSectionTitle(doc: PDFKit.PDFDocument, title: string, y: number): number {
-  const nextY = ensurePageSpace(doc, y, 30);
-  doc.font("Helvetica-Bold").fontSize(14).text(title, 40, nextY);
+  const nextY = ensurePageSpace(doc, y, 34);
+  doc.font("Helvetica-Bold").fontSize(14).fillColor("#0f172a").text(title, 40, nextY);
   return nextY + 20;
 }
 
 function writeLabelValue(doc: PDFKit.PDFDocument, label: string, value: string, y: number): number {
   const nextY = ensurePageSpace(doc, y, 22);
-  doc.font("Helvetica-Bold").fontSize(10).text(`${label}:`, 40, nextY, { continued: true });
-  doc.font("Helvetica").text(` ${value}`, { width: 500 });
+  doc.font("Helvetica-Bold").fontSize(10).fillColor("#0f172a").text(`${label}:`, 40, nextY, { continued: true });
+  doc.font("Helvetica").fillColor("#0f172a").text(` ${value}`, { width: 500 });
   return doc.y + 4;
 }
 
@@ -143,18 +140,6 @@ function formatCurrency(value: unknown): string {
   }).format(numericValue);
 }
 
-function formatDate(value: Date | null | undefined): string | null {
-  if (!value) {
-    return null;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  }).format(value);
-}
-
 function formatDateTime(value: Date | null | undefined): string {
   if (!value) {
     return "-";
@@ -178,4 +163,104 @@ function formatAddress(
   const parts = [addressLine, city, state, zipcode].filter((value): value is string => Boolean(value));
 
   return parts.length > 0 ? parts.join(" | ") : null;
+}
+
+function drawHeader(doc: PDFKit.PDFDocument, companyProfile: ReceiptCompanyProfile, y: number): number {
+  const nextY = ensurePageSpace(doc, y, 72);
+  doc.roundedRect(40, nextY, 72, 42, 12).fill("#1d4ed8");
+  doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(18).text("J", 67, nextY + 9, { align: "center", width: 18 });
+  doc.fillColor("#0f172a").font("Helvetica-Bold").fontSize(18).text(companyProfile.name, 126, nextY + 3);
+  doc
+    .font("Helvetica")
+    .fontSize(10)
+    .fillColor("#475569")
+    .text("Comprovante operacional para impressão e assinatura manual.", 126, nextY + 28);
+  return nextY + 52;
+}
+
+function drawVisitItemBlock(
+  doc: PDFKit.PDFDocument,
+  item: VisitReceiptSource["items"][number],
+  y: number
+): number {
+  const nextY = ensurePageSpace(doc, y, 150);
+  const boxHeight = 132;
+
+  doc.roundedRect(40, nextY, 515, boxHeight, 12).stroke("#d6dde8");
+  doc.font("Helvetica-Bold").fontSize(11).fillColor("#0f172a").text(item.productSnapshotName, 56, nextY + 14, { width: 360 });
+  doc.font("Helvetica").fontSize(9).fillColor("#475569").text(item.productSnapshotSku, 56, nextY + 32);
+
+  let blockY = nextY + 50;
+  blockY = writeInlineMetric(doc, 56, blockY, "Anterior no cliente", String(item.quantityPrevious));
+  blockY = writeInlineMetric(doc, 220, blockY, "Restante na loja", String(item.quantityGoodRemaining));
+  blockY = writeInlineMetric(doc, 392, blockY, "Trocas", String(item.quantityDefectiveReturn));
+
+  blockY = writeInlineMetric(doc, 56, blockY + 8, "Vendido", String(item.quantitySold));
+  blockY = writeInlineMetric(doc, 220, blockY, "Preço unitário", formatCurrency(item.unitPrice));
+  blockY = writeInlineMetric(doc, 392, blockY, "Subtotal da cobrança", formatCurrency(item.subtotalAmount));
+
+  blockY = writeInlineMetric(doc, 56, blockY + 8, "Quantidade reposta", String(item.restockedQuantity));
+  writeInlineMetric(doc, 220, blockY, "Novo saldo no cliente", String(item.resultingClientQuantity));
+
+  return nextY + boxHeight + 10;
+}
+
+function writeInlineMetric(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  label: string,
+  value: string
+): number {
+  doc.font("Helvetica-Bold").fontSize(9).fillColor("#475569").text(label, x, y);
+  doc.font("Helvetica").fontSize(10).fillColor("#0f172a").text(value, x, y + 13);
+  return y;
+}
+
+function writeParagraph(doc: PDFKit.PDFDocument, value: string, y: number): number {
+  const nextY = ensurePageSpace(doc, y, 50);
+  doc.font("Helvetica").fontSize(10).fillColor("#0f172a").text(value, 40, nextY, {
+    width: 515,
+    align: "left"
+  });
+  return doc.y + 6;
+}
+
+function drawSignatureBlocks(doc: PDFKit.PDFDocument, y: number): number {
+  const nextY = ensurePageSpace(doc, y, 130);
+  const top = nextY + 38;
+
+  doc.moveTo(40, top).lineTo(250, top).stroke("#94a3b8");
+  doc.moveTo(345, top).lineTo(555, top).stroke("#94a3b8");
+
+  doc.font("Helvetica").fontSize(10).fillColor("#0f172a").text("Assinatura do cliente", 40, top + 8, {
+    width: 210,
+    align: "center"
+  });
+  doc.text("Assinatura do representante", 345, top + 8, {
+    width: 210,
+    align: "center"
+  });
+
+  return top + 40;
+}
+
+function formatPaymentMethod(paymentMethod: string): string {
+  if (paymentMethod === "BANK_TRANSFER") {
+    return "Transferência";
+  }
+
+  if (paymentMethod === "CASH") {
+    return "Dinheiro";
+  }
+
+  if (paymentMethod === "CARD") {
+    return "Cartão";
+  }
+
+  if (paymentMethod === "PIX") {
+    return "PIX";
+  }
+
+  return "Outro";
 }

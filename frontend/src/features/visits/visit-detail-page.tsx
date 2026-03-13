@@ -8,6 +8,7 @@ import { listClientCatalog } from "../client-catalog/catalog-api";
 import { getClient } from "../clients/clients-api";
 import { VisitCompletionPanel } from "./visit-completion-panel";
 import { VisitFinancialPanel } from "./visit-financial-panel";
+import { VisitReceiptCard } from "./visit-receipt-card";
 import {
   bulkUpsertVisitItems,
   cancelVisit,
@@ -350,6 +351,7 @@ export function VisitDetailPage() {
       </div>
 
       <VisitFinancialPanel visit={resolvedVisit} />
+      <VisitReceiptCard visit={resolvedVisit} />
 
       <VisitCompletionPanel visit={resolvedVisit} />
 

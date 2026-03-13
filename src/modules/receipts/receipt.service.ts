@@ -11,6 +11,7 @@ import {
   removeStorageFile,
   writeStorageFile
 } from "../../shared/utils/local-storage";
+import { getReceiptCompanyProfile } from "./receipt-company-profile";
 import { renderReceiptPdf } from "./receipt-pdf";
 import { ReceiptRepository } from "./receipt.repository";
 
@@ -25,30 +26,16 @@ export class ReceiptService {
     }
 
     ensureVisitCanGenerateReceipt(visit.id, visit.status);
-
-    let signatureImageBuffer: Buffer | null = null;
-
-    if (visit.signatureImageKey) {
-      try {
-        signatureImageBuffer = await readStorageFile(visit.signatureImageKey);
-      } catch (error) {
-        if (error instanceof AppError && error.code === "STORAGE_FILE_NOT_FOUND") {
-          throw new AppError(500, "SIGNATURE_FILE_NOT_FOUND", "The stored signature image could not be loaded", {
-            visitId,
-            signatureImageKey: visit.signatureImageKey
-          });
-        }
-
-        throw error;
-      }
-    }
+    const generatedAt = new Date();
 
     const pdfBuffer = await renderReceiptPdf({
       visit,
-      signatureImageBuffer
+      companyProfile: getReceiptCompanyProfile(),
+      issuedAt: generatedAt,
+      initialPayment: getInitialPaymentSummary(visit)
     });
 
-    const fileName = `receipt-${visit.visitCode}.pdf`;
+    const fileName = `comprovante-acerto-e-reposicao-${visit.visitCode}.pdf`;
     const storageKey = path.posix.join("receipts", "visits", visit.id, fileName);
     const checksum = crypto.createHash("sha256").update(pdfBuffer).digest("hex");
 
@@ -63,7 +50,7 @@ export class ReceiptService {
         fileName,
         mimeType: "application/pdf",
         checksum,
-        generatedAt: new Date()
+        generatedAt
       });
     } catch (error) {
       await removeStorageFile(storageKey);
@@ -92,7 +79,7 @@ export class ReceiptService {
       });
     }
 
-    return mapReceiptSummary(receiptDocument);
+    return mapReceiptSummary(receiptDocument, visit);
   }
 
   async getDownload(id: string) {
@@ -134,10 +121,15 @@ function ensureVisitCanGenerateReceipt(visitId: string, status: VisitStatus): vo
   }
 }
 
-function mapReceiptSummary(receiptDocument: Awaited<ReturnType<ReceiptRepository["findReceiptByVisitId"]>>) {
+function mapReceiptSummary(
+  receiptDocument: Awaited<ReturnType<ReceiptRepository["findReceiptByVisitId"]>>,
+  visit: NonNullable<Awaited<ReturnType<ReceiptRepository["findVisitByIdForReceipt"]>>>
+) {
   if (!receiptDocument) {
     throw new AppError(500, "RECEIPT_DOCUMENT_ERROR", "Receipt document could not be mapped");
   }
+
+  const initialPayment = getInitialPaymentSummary(visit);
 
   return {
     id: receiptDocument.id,
@@ -150,16 +142,30 @@ function mapReceiptSummary(receiptDocument: Awaited<ReturnType<ReceiptRepository
     createdAt: receiptDocument.createdAt,
     updatedAt: receiptDocument.updatedAt,
     visit: {
-      id: receiptDocument.visit.id,
-      visitCode: receiptDocument.visit.visitCode,
-      status: receiptDocument.visit.status,
-      visitedAt: receiptDocument.visit.visitedAt,
-      totalAmount: receiptDocument.visit.totalAmount,
-      receivedAmountOnVisit: receiptDocument.visit.receivedAmountOnVisit,
-      signatureStatus: receiptDocument.visit.signatureStatus,
-      signedAt: receiptDocument.visit.signedAt,
-      client: receiptDocument.visit.client
+      id: visit.id,
+      visitCode: visit.visitCode,
+      status: visit.status,
+      visitedAt: visit.visitedAt,
+      totalAmount: visit.totalAmount,
+      receivedAmountOnVisit: visit.receivedAmountOnVisit,
+      client: visit.client
     },
+    initialPayment,
     downloadUrl: `/receipt-documents/${receiptDocument.id}/download`
+  };
+}
+
+function getInitialPaymentSummary(
+  visit: NonNullable<Awaited<ReturnType<ReceiptRepository["findVisitByIdForReceipt"]>>>
+) {
+  const payment = visit.receivable?.payments[0];
+
+  if (!payment) {
+    return null;
+  }
+
+  return {
+    paymentMethod: payment.paymentMethod,
+    reference: payment.reference ?? null
   };
 }

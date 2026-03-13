@@ -1,4 +1,4 @@
-import { api } from "../../lib/api";
+import { api, downloadApiFile } from "../../lib/api";
 import type { Visit, VisitDetail } from "../../types/domain";
 
 export type VisitListFilters = {
@@ -36,6 +36,42 @@ export type VisitInitialPaymentPayload = {
 export type CentralStockBalanceSummary = {
   productId: string;
   currentQuantity: number;
+};
+
+export type VisitReceiptSummary = {
+  id: string;
+  visitId: string;
+  fileName: string;
+  mimeType: string;
+  checksum: string | null;
+  generatedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  downloadUrl: string;
+  visit: {
+    id: string;
+    visitCode: string;
+    status: "DRAFT" | "COMPLETED" | "CANCELLED";
+    visitedAt: string;
+    totalAmount: number;
+    receivedAmountOnVisit: number;
+    client: {
+      id: string;
+      tradeName: string;
+      legalName?: string | null;
+      documentNumber?: string | null;
+      contactName?: string | null;
+      phone?: string | null;
+      addressLine?: string | null;
+      addressCity?: string | null;
+      addressState?: string | null;
+      addressZipcode?: string | null;
+    };
+  };
+  initialPayment: {
+    paymentMethod: "CASH" | "PIX" | "CARD" | "BANK_TRANSFER" | "OTHER";
+    reference: string | null;
+  } | null;
 };
 
 function buildQuery(filters: VisitListFilters): string {
@@ -98,6 +134,18 @@ export function cancelVisit(visitId: string) {
 
 export function completeVisit(visitId: string, initialPayment?: VisitInitialPaymentPayload) {
   return api.post<VisitDetail>(`/visits/${visitId}/complete`, initialPayment ? { initialPayment } : {});
+}
+
+export function getVisitReceipt(visitId: string) {
+  return api.get<VisitReceiptSummary>(`/visits/${visitId}/receipt`);
+}
+
+export function generateVisitReceipt(visitId: string) {
+  return api.post<VisitReceiptSummary>(`/visits/${visitId}/receipt`);
+}
+
+export function downloadVisitReceipt(receipt: VisitReceiptSummary) {
+  return downloadApiFile(receipt.downloadUrl, receipt.fileName);
 }
 
 export function listCentralBalances(productIds: string[]) {

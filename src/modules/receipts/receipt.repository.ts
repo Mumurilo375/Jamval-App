@@ -22,7 +22,13 @@ const visitReceiptInclude = {
   items: {
     orderBy: [{ createdAt: "asc" }]
   },
-  receivable: true,
+  receivable: {
+    include: {
+      payments: {
+        orderBy: [{ paidAt: "asc" }, { createdAt: "asc" }]
+      }
+    }
+  },
   receiptDocument: true
 } satisfies Prisma.VisitInclude;
 
