@@ -274,9 +274,18 @@ export class VisitService {
       ? await this.repository.findClientProductById(item.clientProductId, db)
       : await this.repository.findClientProductByClientAndProduct(visitClientId, item.productId, db);
 
+    if (item.clientProductId && !clientProduct) {
+      throw new AppError(
+        400,
+        "INVALID_CLIENT_PRODUCT",
+        "Client product configuration was not found for this visit item",
+        { clientId: visitClientId, productId: item.productId, clientProductId: item.clientProductId }
+      );
+    }
+
     ensureClientProductMatchesVisit(visitClientId, item.productId, clientProduct);
 
-    const unitPrice = item.unitPrice ?? Number(clientProduct.currentUnitPrice);
+    const unitPrice = item.unitPrice ?? Number(clientProduct?.currentUnitPrice ?? product.basePrice);
 
     return computeDraftVisitItem({
       product,

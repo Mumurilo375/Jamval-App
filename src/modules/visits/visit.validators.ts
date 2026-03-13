@@ -163,14 +163,9 @@ export function ensureClientProductMatchesVisit(
   visitClientId: string,
   productId: string,
   clientProduct: ClientProduct | null
-): asserts clientProduct is ClientProduct {
+): void {
   if (!clientProduct) {
-    throw new AppError(
-      400,
-      "INVALID_CLIENT_PRODUCT",
-      "Client product configuration is required for this visit item",
-      { clientId: visitClientId, productId }
-    );
+    return;
   }
 
   if (clientProduct.clientId !== visitClientId || clientProduct.productId !== productId) {
