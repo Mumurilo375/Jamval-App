@@ -37,10 +37,17 @@ body {
   min-height: 100vh;
   background: var(--jam-bg);
   color: var(--jam-ink);
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  body {
+    overflow-y: auto !important;
+  }
 }
 
 button,

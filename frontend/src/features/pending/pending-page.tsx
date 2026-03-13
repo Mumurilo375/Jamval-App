@@ -3,7 +3,11 @@ import { Button, Card, PageHeader, ToneBadge } from "../../components/ui";
 export function PendingPage() {
   return (
     <div className="space-y-4">
-      <PageHeader eyebrow="Pendencias" title="Financeiro e cobrancas" subtitle="Esta area vai concentrar titulos em aberto, pagamentos posteriores e a rotina de cobranca." />
+      <PageHeader
+        eyebrow="Operacao"
+        title="Financeiro"
+        subtitle="Esta area concentra titulos em aberto, pagamentos posteriores e o acompanhamento da cobranca."
+      />
 
       <Card className="space-y-3">
         <div className="flex items-center justify-between gap-3">

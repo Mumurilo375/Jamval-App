@@ -1,20 +1,24 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
+import { AdminDashboardPage } from "../features/admin/admin-dashboard-page";
+import { AdminIndicatorsPage } from "../features/admin/admin-indicators-page";
+import { AdminPlaceholderPage } from "../features/admin/admin-placeholder-page";
+import { AdminProfitPage } from "../features/admin/admin-profit-page";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
 import { PublicOnlyRoute, ProtectedApp } from "../features/auth/route-guards";
 import { LoginPage } from "../features/auth/login-page";
-import { CadastrosPage } from "../features/cadastros/cadastros-page";
 import { CatalogCreatePage } from "../features/client-catalog/catalog-create-page";
 import { CatalogEditPage } from "../features/client-catalog/catalog-edit-page";
+import { CatalogHubPage } from "../features/client-catalog/catalog-hub-page";
 import { CatalogListPage } from "../features/client-catalog/catalog-list-page";
 import { ClientCreatePage } from "../features/clients/client-create-page";
 import { ClientEditPage } from "../features/clients/client-edit-page";
 import { ClientsListPage } from "../features/clients/clients-list-page";
-import { MorePage } from "../features/more/more-page";
 import { PendingPage } from "../features/pending/pending-page";
 import { ProductCreatePage } from "../features/products/product-create-page";
 import { ProductEditPage } from "../features/products/product-edit-page";
 import { ProductsListPage } from "../features/products/products-list-page";
+import { ReceiptsPage } from "../features/receipts/receipts-page";
 import { StockInitialLoadPage } from "../features/stock/stock-initial-load-page";
 import { StockManualAdjustmentPage } from "../features/stock/stock-manual-adjustment-page";
 import { StockManualEntryPage } from "../features/stock/stock-manual-entry-page";
@@ -45,16 +49,28 @@ export const router = createBrowserRouter([
         element: <DashboardPage />
       },
       {
-        path: "/pendencias",
+        path: "/financeiro",
         element: <PendingPage />
       },
       {
+        path: "/catalog",
+        element: <CatalogHubPage />
+      },
+      {
+        path: "/receipts",
+        element: <ReceiptsPage />
+      },
+      {
+        path: "/pendencias",
+        element: <Navigate to="/financeiro" replace />
+      },
+      {
         path: "/cadastros",
-        element: <CadastrosPage />
+        element: <Navigate to="/catalog" replace />
       },
       {
         path: "/mais",
-        element: <MorePage />
+        element: <Navigate to="/receipts" replace />
       },
       {
         path: "/stock",
@@ -131,6 +147,33 @@ export const router = createBrowserRouter([
       {
         path: "/visits/:visitId/items/:itemId/edit",
         element: <VisitItemEditPage />
+      },
+      {
+        path: "/admin/dashboard",
+        element: <AdminDashboardPage />
+      },
+      {
+        path: "/admin/indicadores",
+        element: <AdminIndicatorsPage />
+      },
+      {
+        path: "/admin/lucro",
+        element: <AdminProfitPage />
+      },
+      {
+        path: "/admin/configuracoes",
+        element: (
+          <AdminPlaceholderPage
+            title="Configuracoes"
+            subtitle="Dados da empresa e parametros do sistema."
+            description="Esta area vai reunir configuracoes institucionais e operacionais para o crescimento do produto."
+            previewItems={[
+              "Dados da empresa usados em comprovantes e documentos.",
+              "Parametros operacionais e preferencias do sistema.",
+              "Base para ajustes administrativos futuros."
+            ]}
+          />
+        )
       }
     ]
   },

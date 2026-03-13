@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { PageLoader } from "../../components/ui";
-import { MobileShell } from "../../components/shell";
+import { AppShell } from "../../components/shell";
 import { useAuthSession } from "./auth";
 
 export function ProtectedApp() {
@@ -20,7 +20,7 @@ export function ProtectedApp() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  return <MobileShell />;
+  return <AppShell />;
 }
 
 export function PublicOnlyRoute() {

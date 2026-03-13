@@ -14,13 +14,13 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3">
-      <div>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
         {eyebrow ? <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">{eyebrow}</p> : null}
-        <h1 className="font-display text-[1.7rem] font-semibold leading-tight text-[var(--jam-ink)]">{title}</h1>
-        {subtitle ? <p className="mt-1 text-sm text-[var(--jam-subtle)]">{subtitle}</p> : null}
+        <h1 className="font-display text-[1.35rem] font-semibold leading-tight text-[var(--jam-ink)] sm:text-[1.7rem]">{title}</h1>
+        {subtitle ? <p className="mt-1 text-[13px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{subtitle}</p> : null}
       </div>
-      {action}
+      {action ? <div className="w-full sm:w-auto sm:shrink-0">{action}</div> : null}
     </div>
   );
 }
@@ -29,7 +29,7 @@ export function Card({ children, className }: PropsWithChildren<{ className?: st
   return (
     <section
       className={cx(
-        "rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
+        "rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:rounded-2xl sm:p-4",
         className
       )}
     >
@@ -57,7 +57,7 @@ export function Button({
   return (
     <button
       className={cx(
-        "inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex min-h-10 items-center justify-center rounded-xl px-3.5 text-[13px] font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm",
         variantClassName,
         className
       )}
@@ -197,12 +197,12 @@ export function SectionHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div>
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
         <h2 className="text-base font-semibold text-[var(--jam-ink)]">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm text-[var(--jam-subtle)]">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1 text-[13px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{subtitle}</p> : null}
       </div>
-      {action}
+      {action ? <div className="w-full sm:w-auto sm:shrink-0">{action}</div> : null}
     </div>
   );
 }
