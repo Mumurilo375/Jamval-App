@@ -16,6 +16,7 @@ export type ProductPayload = {
   voltage?: string;
   connectorType?: string;
   basePrice: number;
+  costPrice?: number | null;
   isActive: boolean;
 };
 

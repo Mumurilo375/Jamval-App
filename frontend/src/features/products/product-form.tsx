@@ -24,6 +24,10 @@ const productFormSchema = z.object({
     .trim()
     .min(1, "Informe o preco base")
     .refine((value) => !Number.isNaN(Number(value)) && Number(value) >= 0, "Informe um valor valido"),
+  costPrice: z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || (!Number.isNaN(Number(value)) && Number(value) >= 0), "Informe um valor valido"),
   isActive: z.boolean()
 });
 
@@ -55,6 +59,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
       voltage: product?.voltage ?? "",
       connectorType: product?.connectorType ?? "",
       basePrice: product ? String(product.basePrice) : "",
+      costPrice: product?.costPrice !== null && product?.costPrice !== undefined ? String(product.costPrice) : "",
       isActive: product?.isActive ?? true
     }
   });
@@ -71,6 +76,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         voltage: toOptionalString(values.voltage),
         connectorType: toOptionalString(values.connectorType),
         basePrice: Number(values.basePrice),
+        costPrice: values.costPrice.trim().length > 0 ? Number(values.costPrice) : null,
         isActive: values.isActive
       };
 
@@ -101,6 +107,14 @@ export function ProductForm({ mode, product }: ProductFormProps) {
             <Input inputMode="decimal" placeholder="29.90" {...register("basePrice")} />
           </Field>
         </div>
+
+        <Field
+          label="Custo de compra"
+          hint="Usado na Administracao para lucro bruto estimado. Deixe em branco se ainda nao souber."
+          error={errors.costPrice?.message}
+        >
+          <Input inputMode="decimal" placeholder="18.50" {...register("costPrice")} />
+        </Field>
 
         <Field label="Nome" error={errors.name?.message}>
           <Input placeholder="Cabo Type-C 1m" {...register("name")} />

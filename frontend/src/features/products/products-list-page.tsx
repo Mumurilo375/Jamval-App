@@ -82,7 +82,12 @@ export function ProductsListPage() {
             <div className="grid grid-cols-[1fr_auto] items-center gap-3 text-sm">
               <div className="min-w-0">
                 <p className="truncate text-sm text-[var(--jam-subtle)]">{product.brand ?? "Sem marca"} · {product.category ?? "Sem categoria"}</p>
-                <p className="mt-1 font-semibold text-[var(--jam-ink)]">{formatCurrency(product.basePrice)}</p>
+                <div className="mt-2 grid gap-1">
+                  <p className="text-sm font-semibold text-[var(--jam-ink)]">Preco base: {formatCurrency(Number(product.basePrice))}</p>
+                  <p className="text-sm text-[var(--jam-subtle)]">
+                    Custo de compra: {product.costPrice === null ? "Sem custo cadastrado" : formatCurrency(Number(product.costPrice))}
+                  </p>
+                </div>
               </div>
               <Link to={`/products/${product.id}/edit`}>
                 <Button variant="secondary" className="min-h-10 px-3">
