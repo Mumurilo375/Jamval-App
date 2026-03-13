@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
 import { AUTH_PUBLIC_ROUTE_CONFIG } from "../modules/auth/auth.plugin";
+import { adminRoutes } from "../modules/admin/admin.routes";
 import { authRoutes } from "../modules/auth/auth.routes";
 import { clientCatalogRoutes } from "../modules/client-catalog/client-catalog.routes";
 import { clientRoutes } from "../modules/clients/client.routes";
@@ -15,6 +16,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get("/health", AUTH_PUBLIC_ROUTE_CONFIG, async () => ({ data: { status: "ok" } }));
 
   await app.register(authRoutes, { prefix: "/auth" });
+  await app.register(adminRoutes, { prefix: "/admin" });
   await app.register(productRoutes, { prefix: "/products" });
   await app.register(clientRoutes, { prefix: "/clients" });
   await app.register(clientCatalogRoutes);
