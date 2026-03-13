@@ -12,6 +12,7 @@ const sensitiveQueryKeys = [
   ["client"],
   ["products"],
   ["product"],
+  ["stock"],
   ["visits"],
   ["visit"],
   ["client-catalog"]

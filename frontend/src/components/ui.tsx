@@ -147,6 +147,14 @@ export function ErrorBanner({ message }: { message: string }) {
   return <p className="rounded-xl border border-[rgba(180,35,24,0.14)] bg-[rgba(180,35,24,0.06)] px-3.5 py-3 text-sm font-medium text-[var(--jam-danger)]">{message}</p>;
 }
 
+export function WarningBanner({ message }: { message: string }) {
+  return (
+    <p className="rounded-xl border border-[rgba(180,83,9,0.18)] bg-[rgba(180,83,9,0.08)] px-3.5 py-3 text-sm font-medium text-[var(--jam-warning)]">
+      {message}
+    </p>
+  );
+}
+
 export function StatusBadge({ active }: { active: boolean }) {
   return (
     <span

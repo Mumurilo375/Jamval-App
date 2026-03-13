@@ -158,6 +158,22 @@ export function DashboardPage() {
         </Link>
       </Card>
 
+      <Card className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-[var(--jam-ink)]">Estoque central</p>
+            <p className="text-sm text-[var(--jam-subtle)]">Saldo atual, entradas, ajustes e saidas para clientes.</p>
+          </div>
+          <ToneBadge label="Operacional" tone="success" />
+        </div>
+        <Link to="/stock">
+          <Button variant="secondary" className="w-full justify-between">
+            <span>Abrir estoque</span>
+            <span>→</span>
+          </Button>
+        </Link>
+      </Card>
+
       <div className="space-y-3">
         <SectionHeader title="Atalhos de cadastro" subtitle="Acesso rapido para manter base e catalogo organizados." />
         <div className="grid grid-cols-2 gap-3">

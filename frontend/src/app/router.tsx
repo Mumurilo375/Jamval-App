@@ -15,6 +15,10 @@ import { PendingPage } from "../features/pending/pending-page";
 import { ProductCreatePage } from "../features/products/product-create-page";
 import { ProductEditPage } from "../features/products/product-edit-page";
 import { ProductsListPage } from "../features/products/products-list-page";
+import { StockInitialLoadPage } from "../features/stock/stock-initial-load-page";
+import { StockManualAdjustmentPage } from "../features/stock/stock-manual-adjustment-page";
+import { StockManualEntryPage } from "../features/stock/stock-manual-entry-page";
+import { StockPage } from "../features/stock/stock-page";
 import { VisitCreatePage } from "../features/visits/visit-create-page";
 import { VisitDetailPage } from "../features/visits/visit-detail-page";
 import { VisitEditPage } from "../features/visits/visit-edit-page";
@@ -51,6 +55,22 @@ export const router = createBrowserRouter([
       {
         path: "/mais",
         element: <MorePage />
+      },
+      {
+        path: "/stock",
+        element: <StockPage />
+      },
+      {
+        path: "/stock/initial-load",
+        element: <StockInitialLoadPage />
+      },
+      {
+        path: "/stock/manual-entry",
+        element: <StockManualEntryPage />
+      },
+      {
+        path: "/stock/manual-adjustment",
+        element: <StockManualAdjustmentPage />
       },
       {
         path: "/products",
