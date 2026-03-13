@@ -13,11 +13,6 @@ import { createVisit, updateVisit } from "./visits-api";
 const visitFormSchema = z.object({
   clientId: z.string().trim().min(1, "Selecione o cliente"),
   visitedAt: z.string(),
-  dueDate: z.string(),
-  receivedAmountOnVisit: z
-    .string()
-    .trim()
-    .refine((value) => value === "" || (!Number.isNaN(Number(value)) && Number(value) >= 0), "Informe um valor valido"),
   notes: z.string()
 });
 
@@ -47,8 +42,6 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
     defaultValues: {
       clientId: visit?.clientId ?? "",
       visitedAt: toDateTimeLocalValue(visit?.visitedAt),
-      dueDate: visit?.dueDate ? visit.dueDate.slice(0, 10) : "",
-      receivedAmountOnVisit: visit ? String(visit.receivedAmountOnVisit) : "0",
       notes: visit?.notes ?? ""
     }
   });
@@ -59,16 +52,12 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
         return createVisit({
           clientId: values.clientId,
           visitedAt: values.visitedAt ? new Date(values.visitedAt).toISOString() : undefined,
-          dueDate: values.dueDate || undefined,
-          receivedAmountOnVisit: values.receivedAmountOnVisit === "" ? 0 : Number(values.receivedAmountOnVisit),
           notes: values.notes.trim() || undefined
         });
       }
 
       return updateVisit(visit!.id, {
         visitedAt: values.visitedAt ? new Date(values.visitedAt).toISOString() : undefined,
-        dueDate: values.dueDate || null,
-        receivedAmountOnVisit: values.receivedAmountOnVisit === "" ? 0 : Number(values.receivedAmountOnVisit),
         notes: values.notes.trim() || undefined
       });
     },
@@ -119,17 +108,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
           <Input type="datetime-local" {...register("visitedAt")} />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Recebido na visita" hint="Pode ficar zero no draft" error={errors.receivedAmountOnVisit?.message}>
-            <Input inputMode="decimal" placeholder="0.00" {...register("receivedAmountOnVisit")} />
-          </Field>
-
-          <Field label="Vencimento">
-            <Input type="date" {...register("dueDate")} />
-          </Field>
-        </div>
-
-        <Field label="Observacoes">
+        <Field label="Observacoes" hint="O valor recebido fica para a etapa final, depois da conferencia dos itens.">
           <Textarea placeholder="Resumo da visita, combinados ou pendencias" {...register("notes")} />
         </Field>
 
@@ -138,7 +117,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
             Voltar
           </Button>
           <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar visita" : "Salvar draft"}
+            {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar visita" : "Salvar rascunho"}
           </Button>
         </div>
       </form>

@@ -11,7 +11,6 @@ export type VisitPayload = {
   visitedAt?: string;
   notes?: string;
   receivedAmountOnVisit?: number;
-  dueDate?: string | null;
 };
 
 export type VisitItemDraftPayload = {
@@ -32,6 +31,11 @@ export type VisitInitialPaymentPayload = {
   paymentMethod: "CASH" | "PIX" | "CARD" | "BANK_TRANSFER" | "OTHER";
   reference?: string;
   notes?: string;
+};
+
+export type CentralStockBalanceSummary = {
+  productId: string;
+  currentQuantity: number;
 };
 
 function buildQuery(filters: VisitListFilters): string {
@@ -55,6 +59,17 @@ export function listVisits(filters: VisitListFilters) {
 
 export function getVisit(visitId: string) {
   return api.get<VisitDetail>(`/visits/${visitId}`);
+}
+
+export async function listCompletedVisitHistoryDetails(clientId: string, limit = 6) {
+  const visits = await listVisits({ clientId, status: "COMPLETED" });
+  const recentVisitIds = visits.slice(0, limit).map((visit) => visit.id);
+
+  if (recentVisitIds.length === 0) {
+    return [];
+  }
+
+  return Promise.all(recentVisitIds.map((visitId) => getVisit(visitId)));
 }
 
 export function createVisit(payload: VisitPayload) {
@@ -83,4 +98,11 @@ export function cancelVisit(visitId: string) {
 
 export function completeVisit(visitId: string, initialPayment?: VisitInitialPaymentPayload) {
   return api.post<VisitDetail>(`/visits/${visitId}/complete`, initialPayment ? { initialPayment } : {});
+}
+
+export function listCentralBalances(productIds: string[]) {
+  const params = new URLSearchParams();
+  params.set("productIds", productIds.join(","));
+
+  return api.get<CentralStockBalanceSummary[]>(`/stock/central-balances?${params.toString()}`);
 }
