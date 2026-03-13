@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import { useLogout } from "../auth/auth";
 import { Button, Card, PageHeader, ToneBadge } from "../../components/ui";
 
@@ -7,6 +9,20 @@ export function MorePage() {
   return (
     <div className="space-y-4">
       <PageHeader eyebrow="Mais" title="Outras areas do app" subtitle="Recibos, comprovantes e configuracoes vao morar aqui sem competir com a operacao principal." />
+
+      <Card className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-[var(--jam-ink)]">Estoque central</p>
+          <ToneBadge label="Novo" tone="success" />
+        </div>
+        <p className="text-sm text-[var(--jam-subtle)]">Consulta de saldo, historico do estoque e saidas das visitas para clientes.</p>
+        <Link to="/stock">
+          <Button variant="secondary" className="w-full justify-between">
+            <span>Abrir estoque</span>
+            <span>→</span>
+          </Button>
+        </Link>
+      </Card>
 
       <Card className="space-y-3">
         <div className="flex items-center justify-between gap-3">
