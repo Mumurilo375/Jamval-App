@@ -8,6 +8,7 @@ import { paymentRoutes } from "../modules/payments/payment.routes";
 import { productRoutes } from "../modules/products/product.routes";
 import { receivableRoutes } from "../modules/receivables/receivable.routes";
 import { receiptRoutes } from "../modules/receipts/receipt.routes";
+import { stockRoutes } from "../modules/stock/stock.routes";
 import { visitRoutes } from "../modules/visits/visit.routes";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
@@ -17,6 +18,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(productRoutes, { prefix: "/products" });
   await app.register(clientRoutes, { prefix: "/clients" });
   await app.register(clientCatalogRoutes);
+  await app.register(stockRoutes, { prefix: "/stock" });
   await app.register(visitRoutes, { prefix: "/visits" });
   await app.register(receivableRoutes);
   await app.register(paymentRoutes);
