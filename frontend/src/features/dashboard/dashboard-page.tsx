@@ -47,31 +47,31 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         eyebrow="Operacao"
         title="Inicio da operacao"
         subtitle="Nova visita, rascunhos, historico recente e atalhos para manter o dia rodando."
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.9fr)]">
-        <Card className="space-y-4 border-[rgba(29,78,216,0.18)] bg-[rgba(29,78,216,0.04)]">
+      <div className="grid gap-3.5 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.9fr)]">
+        <Card className="space-y-3.5 border-[rgba(29,78,216,0.18)] bg-[rgba(29,78,216,0.04)]">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-accent)]">Proxima acao principal</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-[var(--jam-ink)]">Abrir uma nova visita</p>
-            <p className="mt-2 text-sm text-[var(--jam-subtle)]">
+            <p className="mt-1 font-display text-[1.4rem] font-semibold text-[var(--jam-ink)] sm:text-2xl">Abrir uma nova visita</p>
+            <p className="mt-2 text-[13px] text-[var(--jam-subtle)] sm:text-sm">
               Comece por aqui quando for iniciar uma nova conferencia no cliente.
             </p>
           </div>
           <Link to="/visits/new">
-            <Button className="min-h-12 w-full justify-between text-base">
+            <Button className="w-full justify-between text-sm">
               <span>Nova visita</span>
               <span>→</span>
             </Button>
           </Link>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
           <Link to="/stock">
             <Card className="space-y-3">
               <div className="flex items-center justify-between gap-3">
@@ -98,7 +98,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.9fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.9fr)]">
         <div className="space-y-3">
           <SectionHeader
             title="Rascunhos"
@@ -120,14 +120,14 @@ export function DashboardPage() {
             <div className="space-y-2">
               {draftVisits.map((visit) => (
                 <Link key={visit.id} to={`/visits/${visit.id}`}>
-                  <Card className="space-y-3 p-3.5">
+                  <Card className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{clientMap.get(visit.clientId) ?? "Cliente"}</p>
                         <p className="mt-0.5 text-sm text-[var(--jam-subtle)]">{formatDate(visit.visitedAt)}</p>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-2">
-                        <ToneBadge label="DRAFT" tone="warning" />
+                        <ToneBadge label={visitStatusLabel(visit.status)} tone={visitStatusTone(visit.status)} />
                         <p className="text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(visit.totalAmount)}</p>
                       </div>
                     </div>

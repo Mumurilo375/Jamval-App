@@ -120,12 +120,12 @@ export function StockPage() {
         subtitle="Saldo atual, movimentos e o que saiu para os clientes nas visitas."
       />
 
-      <Card className="space-y-4">
+      <Card className="space-y-3">
         <SectionHeader
           title="Resumo operacional"
           subtitle="Leitura rapida do estoque central neste momento."
         />
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid gap-2.5 sm:grid-cols-3">
           <SummaryMetric label="Produtos com saldo" value={String(summary.productsWithStock)} />
           <SummaryMetric label="Unidades no central" value={String(summary.totalUnits)} />
           <SummaryMetric
@@ -183,8 +183,8 @@ export function StockPage() {
             onClick={() => updateStockSearchParams(searchParams, setSearchParams, { tab: tab.value })}
             className={
               activeTab === tab.value
-                ? "rounded-xl bg-[var(--jam-accent)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white"
-                : "rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]"
+                ? "rounded-xl bg-[var(--jam-accent)] px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white sm:px-3 sm:text-[11px]"
+                : "rounded-xl border border-[var(--jam-border)] bg-white px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-subtle)] sm:px-3 sm:text-[11px]"
             }
           >
             {tab.label}
@@ -234,12 +234,12 @@ export function StockPage() {
                     {!item.isActive ? <ToneBadge label="Inativo" tone="neutral" /> : null}
                   </div>
 
-                  <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Saldo atual</p>
-                      <p className="mt-1 font-display text-4xl font-semibold text-[var(--jam-ink)]">{item.currentQuantity}</p>
+                      <p className="mt-1 font-display text-3xl font-semibold text-[var(--jam-ink)] sm:text-4xl">{item.currentQuantity}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Ultima movimentacao</p>
                       <p className="mt-1 text-sm font-medium text-[var(--jam-ink)]">
                         {item.lastMovementAt ? formatDateTime(item.lastMovementAt) : "Sem historico"}
@@ -287,7 +287,7 @@ export function StockPage() {
               </Select>
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <Field label="De">
                 <Input
                   type="date"
@@ -355,7 +355,7 @@ export function StockPage() {
       {activeTab === "saidas" ? (
         <div className="space-y-3">
           <Card className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Visitas desde">
                 <Input
                   type="date"
@@ -440,7 +440,7 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-white p-3">
       <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{value}</p>
+      <p className="mt-1 text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{value}</p>
     </div>
   );
 }

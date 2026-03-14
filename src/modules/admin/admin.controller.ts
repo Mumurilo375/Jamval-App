@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { parseWithZod } from "../../shared/validation/parse-with-zod";
-import { adminProfitQuerySchema } from "./admin.schema";
+import { adminCompanyProfileBodySchema, adminProfitQuerySchema } from "./admin.schema";
 import { AdminService } from "./admin.service";
 
 export class AdminController {
@@ -11,6 +11,19 @@ export class AdminController {
     const dashboard = await this.service.getDashboard();
 
     reply.send({ data: dashboard });
+  };
+
+  getCompanyProfile = async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const companyProfile = await this.service.getCompanyProfile();
+
+    reply.send({ data: companyProfile });
+  };
+
+  updateCompanyProfile = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const body = parseWithZod(adminCompanyProfileBodySchema, request.body);
+    const companyProfile = await this.service.updateCompanyProfile(body);
+
+    reply.send({ data: companyProfile });
   };
 
   getProfit = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {

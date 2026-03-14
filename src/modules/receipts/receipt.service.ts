@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { VisitStatus } from "@prisma/client";
 
+import { AdminRepository } from "../admin/admin.repository";
 import { AppError } from "../../shared/errors/app-error";
 import { NotFoundError } from "../../shared/errors/not-found-error";
 import {
@@ -11,12 +12,15 @@ import {
   removeStorageFile,
   writeStorageFile
 } from "../../shared/utils/local-storage";
-import { getReceiptCompanyProfile } from "./receipt-company-profile";
+import { resolveReceiptCompanyProfile } from "./receipt-company-profile";
 import { renderReceiptPdf } from "./receipt-pdf";
 import { ReceiptRepository } from "./receipt.repository";
 
 export class ReceiptService {
-  constructor(private readonly repository = new ReceiptRepository()) {}
+  constructor(
+    private readonly repository = new ReceiptRepository(),
+    private readonly adminRepository = new AdminRepository()
+  ) {}
 
   async generateForVisit(visitId: string) {
     const visit = await this.repository.findVisitByIdForReceipt(visitId);
@@ -27,10 +31,11 @@ export class ReceiptService {
 
     ensureVisitCanGenerateReceipt(visit.id, visit.status);
     const generatedAt = new Date();
+    const companyProfile = await this.getCompanyProfile();
 
     const pdfBuffer = await renderReceiptPdf({
       visit,
-      companyProfile: getReceiptCompanyProfile(),
+      companyProfile,
       issuedAt: generatedAt,
       initialPayment: getInitialPaymentSummary(visit)
     });
@@ -102,6 +107,23 @@ export class ReceiptService {
       receiptDocument,
       content: await readStorageFile(receiptDocument.storageKey)
     };
+  }
+
+  private async getCompanyProfile() {
+    const settings = await this.adminRepository.findCompanyProfileSettings();
+
+    return resolveReceiptCompanyProfile(
+      settings
+        ? {
+            companyName: settings.companyName,
+            document: settings.document,
+            phone: settings.phone,
+            address: settings.address,
+            email: settings.email,
+            contactName: settings.contactName
+          }
+        : null
+    );
   }
 }
 

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 
+import { resolveReceiptCompanyProfile } from "../receipts/receipt-company-profile";
 import type { AdminProfitQuery } from "./admin.types";
 import { AdminRepository } from "./admin.repository";
 
@@ -17,6 +18,23 @@ type AggregatedProductProfit = {
 
 export class AdminService {
   constructor(private readonly repository = new AdminRepository()) {}
+
+  async getCompanyProfile() {
+    const settings = await this.repository.findCompanyProfileSettings();
+    return mapCompanyProfileResponse(settings);
+  }
+
+  async updateCompanyProfile(input: {
+    companyName: string;
+    document?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    email?: string | null;
+    contactName?: string | null;
+  }) {
+    const settings = await this.repository.upsertCompanyProfileSettings(input);
+    return mapCompanyProfileResponse(settings);
+  }
 
   async getDashboard() {
     const [
@@ -211,6 +229,32 @@ export class AdminService {
       topClientsByOutstanding
     };
   }
+}
+
+function mapCompanyProfileResponse(
+  settings: Awaited<ReturnType<AdminRepository["findCompanyProfileSettings"]>>
+) {
+  const profile = resolveReceiptCompanyProfile(
+    settings
+      ? {
+          companyName: settings.companyName,
+          document: settings.document,
+          phone: settings.phone,
+          address: settings.address,
+          email: settings.email,
+          contactName: settings.contactName
+        }
+      : null
+  );
+
+  return {
+    companyName: profile.name,
+    document: profile.document,
+    phone: profile.phone,
+    address: profile.address,
+    email: profile.email,
+    contactName: profile.contactName
+  };
 }
 
 function buildTopSellingProducts(

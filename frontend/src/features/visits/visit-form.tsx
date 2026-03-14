@@ -112,11 +112,11 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
           <Textarea placeholder="Resumo da visita, combinados ou pendencias" {...register("notes")} />
         </Field>
 
-        <div className="flex gap-3">
-          <Button type="button" variant="ghost" className="flex-1" onClick={() => navigate(-1)}>
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
+          <Button type="button" variant="ghost" className="w-full sm:flex-1" onClick={() => navigate(-1)}>
             Voltar
           </Button>
-          <Button type="submit" className="flex-1" disabled={mutation.isPending}>
+          <Button type="submit" className="w-full sm:flex-1" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar visita" : "Salvar rascunho"}
           </Button>
         </div>

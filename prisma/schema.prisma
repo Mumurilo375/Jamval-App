@@ -69,6 +69,19 @@ model User {
   updatedAt        DateTime  @updatedAt
 }
 
+model CompanyProfileSettings {
+  id           String   @id @default(uuid()) @db.Uuid
+  singletonKey String   @unique @default("default") @db.VarChar(32)
+  companyName  String   @db.VarChar(200)
+  document     String?  @db.VarChar(32)
+  phone        String?  @db.VarChar(32)
+  address      String?  @db.VarChar(200)
+  email        String?  @db.VarChar(160)
+  contactName  String?  @db.VarChar(160)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Product {
   id                   String                  @id @default(uuid()) @db.Uuid
   sku                  String                  @unique @db.VarChar(120)

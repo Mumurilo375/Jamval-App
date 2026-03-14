@@ -177,11 +177,11 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-[var(--jam-bg)] text-[var(--jam-ink)]">
       <header className="fixed inset-x-0 top-0 z-40 border-b border-[var(--jam-border)] bg-[rgba(243,246,249,0.94)] backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center justify-between gap-3 px-3 sm:h-16 sm:px-4 md:px-6">
+        <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center justify-between gap-2.5 px-2.5 sm:h-14 sm:px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-white text-[var(--jam-ink)] md:hidden"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-white text-[var(--jam-ink)] sm:h-9 sm:w-9 md:hidden"
               onClick={() => setIsDrawerOpen(true)}
               aria-label="Abrir menu"
             >
@@ -190,14 +190,14 @@ export function AppShell() {
 
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
-              <p className="truncate text-[13px] font-medium text-[var(--jam-ink)] sm:text-sm">
+              <p className="truncate text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">
                 {activeNavigationItem?.label ?? "Operacao do consignado"}
               </p>
             </div>
           </div>
 
-          <div className="rounded-full border border-[var(--jam-border)] bg-white px-2.5 py-1.5 text-right sm:px-3 sm:py-2">
-            <p className="text-[13px] font-medium text-[var(--jam-ink)] sm:text-sm">{firstName}</p>
+          <div className="rounded-full border border-[var(--jam-border)] bg-white px-2.5 py-1 text-right sm:px-3 sm:py-1.5">
+            <p className="text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">{firstName}</p>
             <p className="hidden text-[11px] text-[var(--jam-subtle)] sm:block">Sessao ativa</p>
           </div>
         </div>
@@ -213,7 +213,7 @@ export function AppShell() {
         />
         <aside
           className={cx(
-            "fixed inset-y-0 left-0 z-50 flex w-[88vw] max-w-[320px] flex-col border-r border-[var(--jam-border)] bg-[var(--jam-panel)] shadow-[0_24px_48px_rgba(15,23,42,0.18)] transition-transform duration-200",
+            "fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[300px] flex-col border-r border-[var(--jam-border)] bg-[var(--jam-panel)] shadow-[0_24px_48px_rgba(15,23,42,0.18)] transition-transform duration-200",
             isDrawerOpen ? "translate-x-0" : "-translate-x-full"
           )}
           aria-hidden={!isDrawerOpen}
@@ -230,7 +230,7 @@ export function AppShell() {
       </div>
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-[var(--jam-border)] bg-[var(--jam-panel)] md:flex md:flex-col">
-        <div className="h-16 shrink-0 border-b border-[var(--jam-border)]" />
+        <div className="h-14 shrink-0 border-b border-[var(--jam-border)]" />
         <NavigationPanel
           firstName={firstName}
           pathname={location.pathname}
@@ -241,8 +241,8 @@ export function AppShell() {
         />
       </aside>
 
-      <div className="pt-14 sm:pt-16 md:pl-72">
-        <main className="page-fade mx-auto w-full max-w-6xl px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6">
+      <div className="pt-[52px] sm:pt-14 md:pl-72">
+        <main className="page-fade mx-auto w-full max-w-6xl px-2.5 py-3.5 sm:px-4 sm:py-5 md:px-6 md:py-6">
           <Outlet />
         </main>
       </div>
@@ -263,25 +263,25 @@ function NavigationPanel({
 }) {
   return (
     <>
-      <div className="border-b border-[var(--jam-border)] px-4 py-4">
+      <div className="border-b border-[var(--jam-border)] px-3.5 py-3.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
-        <p className="mt-2 font-display text-2xl font-semibold text-[var(--jam-ink)]">Operacao organizada</p>
-        <p className="mt-1 text-sm text-[var(--jam-subtle)]">
+        <p className="mt-2 font-display text-xl font-semibold text-[var(--jam-ink)]">Operacao organizada</p>
+        <p className="mt-1 text-[13px] text-[var(--jam-subtle)]">
           Navegacao preparada para crescer sem depender da barra inferior.
         </p>
-        <div className="mt-4 rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3.5 py-3">
-          <p className="text-sm font-medium text-[var(--jam-ink)]">{firstName}</p>
-          <p className="text-sm text-[var(--jam-subtle)]">Administrador</p>
+        <div className="mt-3 rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3 py-2.5">
+          <p className="text-[13px] font-medium text-[var(--jam-ink)]">{firstName}</p>
+          <p className="text-[13px] text-[var(--jam-subtle)]">Administrador</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-4">
+      <div className="flex-1 overflow-y-auto px-3 py-3.5">
         {navigationSections.map((section) => (
-          <div key={section.title} className="mb-5">
+          <div key={section.title} className="mb-4">
             <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">
               {section.title}
             </p>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               {section.items.map((item) => {
                 const active = item.isActive(pathname);
 
@@ -290,7 +290,7 @@ function NavigationPanel({
                     key={item.to}
                     to={item.to}
                     className={cx(
-                      "group flex items-center gap-3 rounded-2xl border px-3.5 py-3 transition",
+                      "group flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition",
                       active
                         ? "border-[rgba(29,78,216,0.16)] bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
                         : "border-transparent text-[var(--jam-subtle)] hover:border-[var(--jam-border)] hover:bg-white hover:text-[var(--jam-ink)]"
@@ -298,15 +298,15 @@ function NavigationPanel({
                   >
                     <span
                       className={cx(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
                         active ? "bg-white text-[var(--jam-accent)]" : "bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)]"
                       )}
                     >
                       {item.icon}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-semibold">{item.label}</span>
-                      <span className="block truncate text-sm opacity-80">{item.description}</span>
+                      <span className="block text-[13px] font-semibold sm:text-sm">{item.label}</span>
+                      <span className="block truncate text-[12px] opacity-80 sm:text-sm">{item.description}</span>
                     </span>
                   </Link>
                 );
@@ -316,7 +316,7 @@ function NavigationPanel({
         ))}
       </div>
 
-      <div className="border-t border-[var(--jam-border)] px-4 py-4">
+      <div className="border-t border-[var(--jam-border)] px-3.5 py-3.5">
         <Button
           variant="ghost"
           className="w-full border border-[var(--jam-border)] bg-white"

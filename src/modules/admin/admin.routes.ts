@@ -8,4 +8,6 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
   app.get("/dashboard", controller.getDashboard);
   app.get("/profit", controller.getProfit);
   app.get("/indicators", controller.getIndicators);
+  app.get("/settings/company-profile", controller.getCompanyProfile);
+  app.patch("/settings/company-profile", controller.updateCompanyProfile);
 }

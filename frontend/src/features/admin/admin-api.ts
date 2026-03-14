@@ -94,6 +94,15 @@ export type AdminIndicatorsResponse = {
   }>;
 };
 
+export type AdminCompanyProfile = {
+  companyName: string;
+  document: string | null;
+  phone: string | null;
+  address: string | null;
+  email: string | null;
+  contactName: string | null;
+};
+
 type ProfitFilters = {
   dateFrom?: string;
   dateTo?: string;
@@ -120,4 +129,12 @@ export function getAdminProfit(filters: ProfitFilters) {
 
 export function getAdminIndicators() {
   return api.get<AdminIndicatorsResponse>("/admin/indicators");
+}
+
+export function getAdminCompanyProfile() {
+  return api.get<AdminCompanyProfile>("/admin/settings/company-profile");
+}
+
+export function updateAdminCompanyProfile(payload: AdminCompanyProfile) {
+  return api.patch<AdminCompanyProfile>("/admin/settings/company-profile", payload);
 }

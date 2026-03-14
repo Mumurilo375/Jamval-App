@@ -4,6 +4,49 @@ import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
 
 export class AdminRepository {
+  async findCompanyProfileSettings(db: DbClient = prisma) {
+    return db.companyProfileSettings.findUnique({
+      where: {
+        singletonKey: "default"
+      }
+    });
+  }
+
+  async upsertCompanyProfileSettings(
+    input: {
+      companyName: string;
+      document?: string | null;
+      phone?: string | null;
+      address?: string | null;
+      email?: string | null;
+      contactName?: string | null;
+    },
+    db: DbClient = prisma
+  ) {
+    return db.companyProfileSettings.upsert({
+      where: {
+        singletonKey: "default"
+      },
+      create: {
+        singletonKey: "default",
+        companyName: input.companyName,
+        document: input.document ?? null,
+        phone: input.phone ?? null,
+        address: input.address ?? null,
+        email: input.email ?? null,
+        contactName: input.contactName ?? null
+      },
+      update: {
+        companyName: input.companyName,
+        document: input.document ?? null,
+        phone: input.phone ?? null,
+        address: input.address ?? null,
+        email: input.email ?? null,
+        contactName: input.contactName ?? null
+      }
+    });
+  }
+
   async countProducts(db: DbClient = prisma): Promise<number> {
     return db.product.count();
   }

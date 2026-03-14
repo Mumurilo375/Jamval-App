@@ -2,8 +2,8 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { AdminDashboardPage } from "../features/admin/admin-dashboard-page";
 import { AdminIndicatorsPage } from "../features/admin/admin-indicators-page";
-import { AdminPlaceholderPage } from "../features/admin/admin-placeholder-page";
 import { AdminProfitPage } from "../features/admin/admin-profit-page";
+import { AdminSettingsPage } from "../features/admin/admin-settings-page";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
 import { PublicOnlyRoute, ProtectedApp } from "../features/auth/route-guards";
 import { LoginPage } from "../features/auth/login-page";
@@ -162,18 +162,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/admin/configuracoes",
-        element: (
-          <AdminPlaceholderPage
-            title="Configuracoes"
-            subtitle="Dados da empresa e parametros do sistema."
-            description="Esta area vai reunir configuracoes institucionais e operacionais para o crescimento do produto."
-            previewItems={[
-              "Dados da empresa usados em comprovantes e documentos.",
-              "Parametros operacionais e preferencias do sistema.",
-              "Base para ajustes administrativos futuros."
-            ]}
-          />
-        )
+        element: <AdminSettingsPage />
       }
     ]
   },

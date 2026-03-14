@@ -16,13 +16,13 @@ export function AdminMetricCard({
   tone?: "neutral" | "warning" | "success";
 }) {
   return (
-    <Card className="space-y-2.5">
+    <Card className="space-y-2">
       <div className="flex items-start justify-between gap-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
         {tone !== "neutral" ? <ToneBadge label={tone === "warning" ? "Atencao" : "Ok"} tone={tone === "warning" ? "warning" : "success"} /> : null}
       </div>
-      <p className="font-display text-[1.4rem] font-semibold leading-none text-[var(--jam-ink)] sm:text-[1.7rem]">{value}</p>
-      {hint ? <p className="text-[13px] leading-5 text-[var(--jam-subtle)]">{hint}</p> : null}
+      <p className="font-display text-[1.15rem] font-semibold leading-none text-[var(--jam-ink)] sm:text-[1.5rem]">{value}</p>
+      {hint ? <p className="text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{hint}</p> : null}
     </Card>
   );
 }
@@ -41,12 +41,12 @@ export function AdminSectionCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="space-y-4">
+    <Card className="space-y-3.5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           {eyebrow ? <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{eyebrow}</p> : null}
-          <h2 className="text-base font-semibold text-[var(--jam-ink)]">{title}</h2>
-          {description ? <p className="mt-1 text-[13px] leading-5 text-[var(--jam-subtle)]">{description}</p> : null}
+          <h2 className="text-[15px] font-semibold text-[var(--jam-ink)] sm:text-base">{title}</h2>
+          {description ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{description}</p> : null}
         </div>
         {action ? <div className="w-full sm:w-auto sm:shrink-0">{action}</div> : null}
       </div>
@@ -67,14 +67,14 @@ export function AdminInfoPanel({
   return (
     <div
       className={cx(
-        "rounded-xl border px-3.5 py-3",
+        "rounded-xl border px-3 py-3 sm:px-3.5",
         tone === "warning"
           ? "border-[rgba(180,83,9,0.18)] bg-[rgba(180,83,9,0.07)]"
           : "border-[var(--jam-border)] bg-[var(--jam-panel-strong)]"
       )}
     >
-      <p className="text-sm font-semibold text-[var(--jam-ink)]">{title}</p>
-      <div className="mt-2 space-y-2 text-[13px] leading-5 text-[var(--jam-subtle)]">{children}</div>
+      <p className="text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{title}</p>
+      <div className="mt-2 space-y-2 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{children}</div>
     </div>
   );
 }
@@ -91,16 +91,16 @@ export function AdminListRow({
   badge?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--jam-border)] bg-white px-3.5 py-3">
+    <div className="rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2.5 sm:px-3.5 sm:py-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{title}</p>
+            <p className="truncate text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{title}</p>
             {badge}
           </div>
-          {subtitle ? <p className="mt-1 text-[13px] leading-5 text-[var(--jam-subtle)]">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{subtitle}</p> : null}
         </div>
-        <p className="text-left text-sm font-semibold text-[var(--jam-ink)] sm:text-right">{value}</p>
+        <p className="text-left text-[13px] font-semibold text-[var(--jam-ink)] sm:text-right sm:text-sm">{value}</p>
       </div>
     </div>
   );
@@ -114,9 +114,9 @@ export function AdminEmptyBlock({
   message: string;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3.5 py-4">
-      <p className="text-sm font-semibold text-[var(--jam-ink)]">{title}</p>
-      <p className="mt-1 text-[13px] leading-5 text-[var(--jam-subtle)]">{message}</p>
+    <div className="rounded-xl border border-dashed border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3 py-3.5 sm:px-3.5 sm:py-4">
+      <p className="text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{title}</p>
+      <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{message}</p>
     </div>
   );
 }
