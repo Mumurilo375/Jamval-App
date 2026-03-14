@@ -39,6 +39,88 @@ export function Card({ children, className }: PropsWithChildren<{ className?: st
   );
 }
 
+export function DrawerPanel({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  size = "md"
+}: PropsWithChildren<{
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  footer?: ReactNode;
+  size?: "md" | "lg";
+}>) {
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
+
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90]">
+      <button
+        type="button"
+        className="absolute inset-0 bg-[rgba(15,23,42,0.46)] backdrop-blur-[2px]"
+        onClick={onClose}
+        aria-label="Fechar painel"
+      />
+
+      <div className="absolute inset-0 flex items-end justify-end sm:items-stretch">
+        <section
+          className={cx(
+            "relative flex h-[min(88vh,760px)] w-full flex-col rounded-t-[28px] border border-[var(--jam-border)] bg-[var(--jam-panel)] shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:h-full sm:rounded-none sm:border-b-0 sm:border-r-0 sm:border-t-0",
+            size === "lg" ? "sm:max-w-[640px]" : "sm:max-w-[560px]"
+          )}
+        >
+          <div className="flex items-start justify-between gap-3 border-b border-[var(--jam-border)] px-4 py-3.5 sm:px-5 sm:py-4">
+            <div className="min-w-0">
+              <p className="text-[15px] font-semibold text-[var(--jam-ink)] sm:text-base">{title}</p>
+              {description ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{description}</p> : null}
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-white text-[var(--jam-subtle)] transition hover:text-[var(--jam-ink)]"
+              aria-label="Fechar"
+            >
+              <CloseIcon />
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
+
+          {footer ? <div className="border-t border-[var(--jam-border)] px-4 py-3.5 sm:px-5">{footer}</div> : null}
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export function Button({
   className,
   variant = "primary",
@@ -598,6 +680,15 @@ export function PageLoader({ label = "Carregando..." }: { label?: string }) {
         {label}
       </div>
     </div>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </svg>
   );
 }
 

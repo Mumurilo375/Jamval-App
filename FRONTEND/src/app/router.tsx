@@ -5,6 +5,7 @@ import { AdminIndicatorsPage } from "../features/admin/admin-indicators-page";
 import { AdminProfitPage } from "../features/admin/admin-profit-page";
 import { AdminSettingsPage } from "../features/admin/admin-settings-page";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
+import { FinancePage } from "../features/finance/finance-page";
 import { PublicOnlyRoute, ProtectedApp } from "../features/auth/route-guards";
 import { LoginPage } from "../features/auth/login-page";
 import { CatalogCreatePage } from "../features/client-catalog/catalog-create-page";
@@ -14,7 +15,6 @@ import { CatalogListPage } from "../features/client-catalog/catalog-list-page";
 import { ClientCreatePage } from "../features/clients/client-create-page";
 import { ClientEditPage } from "../features/clients/client-edit-page";
 import { ClientsListPage } from "../features/clients/clients-list-page";
-import { PendingPage } from "../features/pending/pending-page";
 import { ProductCreatePage } from "../features/products/product-create-page";
 import { ProductEditPage } from "../features/products/product-edit-page";
 import { ProductsListPage } from "../features/products/products-list-page";
@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/financeiro",
-        element: <PendingPage />
+        element: <FinancePage />
       },
       {
         path: "/catalog",

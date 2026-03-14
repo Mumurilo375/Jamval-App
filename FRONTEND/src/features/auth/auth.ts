@@ -8,6 +8,7 @@ import { getMe, login, logout } from "./auth-api";
 export const authQueryKey = ["auth", "session"] as const;
 const sensitiveQueryKeys = [
   ["operation-home"],
+  ["finance"],
   ["clients"],
   ["client"],
   ["products"],
@@ -15,7 +16,8 @@ const sensitiveQueryKeys = [
   ["stock"],
   ["visits"],
   ["visit"],
-  ["client-catalog"]
+  ["client-catalog"],
+  ["admin"]
 ] as const;
 
 export function useAuthSession() {

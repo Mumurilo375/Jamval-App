@@ -105,3 +105,52 @@ export type VisitItem = {
 export type VisitDetail = Visit & {
   items: VisitItem[];
 };
+
+export type ReceivableStatus = "PENDING" | "PARTIAL" | "PAID";
+export type ReceivableDisplayStatus = ReceivableStatus | "OVERDUE";
+export type PaymentMethod = "CASH" | "PIX" | "CARD" | "BANK_TRANSFER" | "OTHER";
+
+export type ReceivableVisitSummary = {
+  id: string;
+  visitCode: string;
+  visitedAt: string;
+  status: VisitStatus;
+  totalAmount: number;
+  receivedAmountOnVisit: number;
+  dueDate: string | null;
+  completedAt: string | null;
+};
+
+export type ReceivableListItem = {
+  id: string;
+  visitId: string;
+  clientId: string;
+  originalAmount: number;
+  amountReceived: number;
+  amountOutstanding: number;
+  status: ReceivableStatus;
+  displayStatus: ReceivableDisplayStatus;
+  issuedAt: string;
+  dueDate: string | null;
+  settledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  isOverdue: boolean;
+  client: Pick<Client, "id" | "tradeName">;
+  visit: ReceivableVisitSummary;
+};
+
+export type PaymentRecord = {
+  id: string;
+  receivableId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  reference: string | null;
+  notes: string | null;
+  paidAt: string;
+  createdAt: string;
+};
+
+export type ReceivableDetail = ReceivableListItem & {
+  payments: PaymentRecord[];
+};
