@@ -16,12 +16,12 @@ export function AdminMetricCard({
   tone?: "neutral" | "warning" | "success";
 }) {
   return (
-    <Card className="space-y-2">
+    <Card className="space-y-1.5 p-3">
       <div className="flex items-start justify-between gap-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
         {tone !== "neutral" ? <ToneBadge label={tone === "warning" ? "Atencao" : "Ok"} tone={tone === "warning" ? "warning" : "success"} /> : null}
       </div>
-      <p className="font-display text-[1.15rem] font-semibold leading-none text-[var(--jam-ink)] sm:text-[1.5rem]">{value}</p>
+      <p className="font-display text-[1.05rem] font-semibold leading-none text-[var(--jam-ink)] sm:text-[1.35rem]">{value}</p>
       {hint ? <p className="text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{hint}</p> : null}
     </Card>
   );
@@ -41,7 +41,7 @@ export function AdminSectionCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="space-y-3.5">
+    <Card className="space-y-3 p-3.5 sm:p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           {eyebrow ? <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{eyebrow}</p> : null}
@@ -101,6 +101,36 @@ export function AdminListRow({
           {subtitle ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{subtitle}</p> : null}
         </div>
         <p className="text-left text-[13px] font-semibold text-[var(--jam-ink)] sm:text-right sm:text-sm">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+export function AdminBarRow({
+  title,
+  subtitle,
+  value,
+  progress
+}: {
+  title: string;
+  subtitle?: string;
+  value: string;
+  progress: number;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--jam-border)] bg-white px-3 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{title}</p>
+          {subtitle ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{subtitle}</p> : null}
+        </div>
+        <p className="shrink-0 text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{value}</p>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--jam-panel-strong)]">
+        <div
+          className="h-full rounded-full bg-[var(--jam-accent)] transition-[width]"
+          style={{ width: `${Math.max(6, Math.min(progress, 100))}%` }}
+        />
       </div>
     </div>
   );

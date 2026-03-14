@@ -4,7 +4,14 @@ import { Link } from "react-router-dom";
 import { Button, PageHeader, PageLoader, StatusBadge } from "../../components/ui";
 import { formatCurrency } from "../../lib/format";
 import { getAdminIndicators } from "./admin-api";
-import { AdminEmptyBlock, AdminListRow, AdminMetricCard, AdminQueryErrorState, AdminSectionCard } from "./admin-ui";
+import {
+  AdminBarRow,
+  AdminEmptyBlock,
+  AdminListRow,
+  AdminMetricCard,
+  AdminQueryErrorState,
+  AdminSectionCard
+} from "./admin-ui";
 
 export function AdminIndicatorsPage() {
   const indicatorsQuery = useQuery({
@@ -28,41 +35,70 @@ export function AdminIndicatorsPage() {
 
   const { counts, productsWithoutCost, productsWithoutCentralStock, topSellingProducts, topClientsByOutstanding } =
     indicatorsQuery.data;
+  const maxSoldUnits = Math.max(...topSellingProducts.map((product) => product.soldUnits), 1);
 
   return (
     <div className="space-y-4">
       <PageHeader
         eyebrow="Administracao"
         title="Indicadores"
-        subtitle="Leituras de acao para custo, estoque, venda e carteira, com foco em priorizar o que precisa de correcao."
+        subtitle="Leituras diretas para reposicao, cobertura de custo, carteira e giro."
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
         <AdminMetricCard
-          label="Produtos sem custo"
-          value={String(counts.productsWithoutCost)}
-          hint="Impactam diretamente a cobertura do lucro bruto estimado."
-          tone={counts.productsWithoutCost > 0 ? "warning" : "success"}
-        />
-        <AdminMetricCard
-          label="Produtos sem estoque"
+          label="Produtos sem saldo"
           value={String(counts.productsWithoutCentralStock)}
-          hint="Itens ativos sem saldo no estoque central."
           tone={counts.productsWithoutCentralStock > 0 ? "warning" : "success"}
         />
         <AdminMetricCard
-          label="Clientes com pendencia"
+          label="Produtos sem custo cadastrado"
+          value={String(counts.productsWithoutCost)}
+          tone={counts.productsWithoutCost > 0 ? "warning" : "success"}
+        />
+        <AdminMetricCard
+          label="Clientes com maior pendencia"
           value={String(counts.clientsWithOutstanding)}
-          hint="Clientes que ainda possuem valor em aberto na carteira."
           tone={counts.clientsWithOutstanding > 0 ? "warning" : "success"}
         />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <AdminSectionCard
-          eyebrow="Prioridade 1"
-          title="Produtos sem custo cadastrado"
-          description="Comece por aqui para ampliar a confiabilidade do lucro bruto estimado."
+          eyebrow="Reposicao"
+          title="Reposicao imediata"
+          description="Itens ativos sem saldo no estoque principal."
+          action={
+            <Link to="/stock">
+              <Button variant="secondary" className="w-full sm:w-auto">
+                Abrir estoque
+              </Button>
+            </Link>
+          }
+        >
+          {productsWithoutCentralStock.length === 0 ? (
+            <AdminEmptyBlock
+              title="Sem alerta de reposicao"
+              message="Todos os produtos ativos listados tem saldo no estoque principal."
+            />
+          ) : (
+            <div className="space-y-2">
+              {productsWithoutCentralStock.map((product) => (
+                <AdminListRow
+                  key={product.productId}
+                  title={product.name}
+                  subtitle={`${product.sku} · item ativo sem saldo disponivel`}
+                  value={`${product.currentQuantity} un.`}
+                />
+              ))}
+            </div>
+          )}
+        </AdminSectionCard>
+
+        <AdminSectionCard
+          eyebrow="Cobertura"
+          title="Cobertura de custo"
+          description="Produtos que ainda precisam de custo para dar mais confianca ao lucro bruto estimado."
           action={
             <Link to="/products">
               <Button variant="secondary" className="w-full sm:w-auto">
@@ -74,7 +110,7 @@ export function AdminIndicatorsPage() {
           {productsWithoutCost.length === 0 ? (
             <AdminEmptyBlock
               title="Boa cobertura de custo"
-              message="Os produtos listados nesta amostra ja possuem custo de compra cadastrado."
+              message="Os produtos listados nesta amostra ja possuem custo cadastrado."
             />
           ) : (
             <div className="space-y-2">
@@ -92,40 +128,9 @@ export function AdminIndicatorsPage() {
         </AdminSectionCard>
 
         <AdminSectionCard
-          eyebrow="Prioridade 2"
-          title="Produtos sem estoque central"
-          description="Itens ativos sem saldo agora, o que pode travar reposicao e giro."
-          action={
-            <Link to="/stock">
-              <Button variant="secondary" className="w-full sm:w-auto">
-                Abrir estoque
-              </Button>
-            </Link>
-          }
-        >
-          {productsWithoutCentralStock.length === 0 ? (
-            <AdminEmptyBlock
-              title="Sem alerta de saldo nesta leitura"
-              message="Todos os produtos ativos listados tem saldo positivo no estoque central."
-            />
-          ) : (
-            <div className="space-y-2">
-              {productsWithoutCentralStock.map((product) => (
-                <AdminListRow
-                  key={product.productId}
-                  title={product.name}
-                  subtitle={`${product.sku} · item ativo sem saldo disponivel`}
-                  value={`${product.currentQuantity} un.`}
-                />
-              ))}
-            </div>
-          )}
-        </AdminSectionCard>
-
-        <AdminSectionCard
-          eyebrow="Prioridade 3"
+          eyebrow="Carteira"
           title="Clientes com maior pendencia"
-          description="Carteira agrupada por cliente para leitura rapida do valor ainda em aberto."
+          description="Leitura curta de quem concentra o maior valor em aberto."
           action={
             <Link to="/financeiro">
               <Button variant="secondary" className="w-full sm:w-auto">
@@ -136,7 +141,7 @@ export function AdminIndicatorsPage() {
         >
           {topClientsByOutstanding.length === 0 ? (
             <AdminEmptyBlock
-              title="Carteira sem pendencias agora"
+              title="Carteira sem pendencias"
               message="Nao ha clientes com valor em aberto nesta leitura da base."
             />
           ) : (
@@ -145,7 +150,7 @@ export function AdminIndicatorsPage() {
                 <AdminListRow
                   key={client.clientId}
                   title={client.tradeName}
-                  subtitle={`${client.receivableCount} titulo(s) em aberto na carteira`}
+                  subtitle={`${client.receivableCount} titulo(s) em aberto`}
                   value={formatCurrency(client.outstandingAmount)}
                 />
               ))}
@@ -154,23 +159,24 @@ export function AdminIndicatorsPage() {
         </AdminSectionCard>
 
         <AdminSectionCard
-          eyebrow="Prioridade 4"
-          title="Produtos mais vendidos"
-          description="Leitura de giro para identificar os itens com maior volume nas visitas concluidas."
+          eyebrow="Giro"
+          title="Produtos com maior giro"
+          description="Volume vendido nas visitas concluidas, com leitura visual simples."
         >
           {topSellingProducts.length === 0 ? (
             <AdminEmptyBlock
-              title="Ainda sem volume de vendas suficiente"
+              title="Ainda sem volume suficiente"
               message="Nao ha itens vendidos em visitas concluidas para montar este ranking."
             />
           ) : (
             <div className="space-y-2">
               {topSellingProducts.map((product) => (
-                <AdminListRow
+                <AdminBarRow
                   key={product.productId}
                   title={product.name}
                   subtitle={`${product.sku} · Receita ${formatCurrency(product.revenueAmount)}`}
                   value={`${product.soldUnits} un.`}
+                  progress={(product.soldUnits / maxSoldUnits) * 100}
                 />
               ))}
             </div>

@@ -33,53 +33,34 @@ export function AdminDashboardPage() {
       <AdminSectionCard
         eyebrow="Operacao"
         title="Base operacional"
-        description="Panorama rapido do tamanho da base e do volume de visitas ja concluido."
+        description="Panorama rapido do tamanho da base e do volume consolidado."
       >
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <AdminMetricCard
-            label="Produtos cadastrados"
-            value={String(summary.totalProducts)}
-            hint="Todos os SKUs existentes hoje no sistema."
-          />
-          <AdminMetricCard
-            label="Produtos ativos"
-            value={String(summary.activeProducts)}
-            hint="Itens disponiveis para operar no dia a dia."
-          />
-          <AdminMetricCard
-            label="Clientes ativos"
-            value={String(summary.activeClients)}
-            hint="Clientes atualmente ativos para visita e carteira."
-          />
-          <AdminMetricCard
-            label="Visitas concluidas"
-            value={String(summary.completedVisits)}
-            hint="Visitas ja fechadas e consolidadas na base."
-          />
+        <div className="grid gap-2.5 grid-cols-2 xl:grid-cols-4">
+          <AdminMetricCard label="Produtos cadastrados" value={String(summary.totalProducts)} />
+          <AdminMetricCard label="Produtos ativos" value={String(summary.activeProducts)} />
+          <AdminMetricCard label="Clientes ativos" value={String(summary.activeClients)} />
+          <AdminMetricCard label="Visitas concluidas" value={String(summary.completedVisits)} />
         </div>
       </AdminSectionCard>
 
       <AdminSectionCard
         eyebrow="Financeiro"
         title="Leitura financeira"
-        description="Totais consolidados a partir das visitas concluidas e dos titulos gerados."
+        description="Totais consolidados da carteira gerada nas visitas concluidas."
       >
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2.5 grid-cols-2 xl:grid-cols-3">
           <AdminMetricCard
-            label="Total vendido nas visitas concluidas"
+            label="Total vendido"
             value={formatCurrency(summary.totalSoldAmount)}
-            hint="Soma do valor apurado nas visitas fechadas."
           />
           <AdminMetricCard
             label="Total recebido"
             value={formatCurrency(summary.totalReceivedAmount)}
-            hint="Valor ja recebido e registrado no financeiro."
             tone="success"
           />
           <AdminMetricCard
             label="Total pendente"
             value={formatCurrency(summary.totalPendingAmount)}
-            hint="Valor que ainda permanece em aberto na carteira."
             tone={summary.totalPendingAmount > 0 ? "warning" : "neutral"}
           />
         </div>
@@ -87,8 +68,8 @@ export function AdminDashboardPage() {
 
       <AdminSectionCard
         eyebrow="Estoque"
-        title="Cobertura administrativa do estoque"
-        description="Leitura rapida do saldo central e dos produtos que ainda precisam de custo cadastrado."
+        title="Saldo do estoque principal"
+        description="Saldo consolidado do estoque principal e itens que ainda precisam de custo."
         action={
           <Link to="/stock">
             <Button variant="secondary" className="w-full sm:w-auto">
@@ -97,23 +78,21 @@ export function AdminDashboardPage() {
           </Link>
         }
       >
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-2.5 sm:grid-cols-2">
           <AdminMetricCard
-            label="Unidades no estoque central"
+            label="Saldo do estoque principal"
             value={`${summary.centralStockUnits} un.`}
-            hint="Soma do saldo disponivel hoje no estoque central."
           />
           <AdminMetricCard
-            label="Produtos sem custo cadastrado"
+            label="Produtos sem custo"
             value={String(summary.productsWithoutCost)}
-            hint="Itens que ainda nao entram corretamente no lucro bruto estimado."
             tone={summary.productsWithoutCost > 0 ? "warning" : "success"}
           />
         </div>
 
         {lowStockProducts.length === 0 ? (
           <AdminEmptyBlock
-            title="Nenhum alerta de estoque nesta amostra"
+            title="Sem alerta imediato"
             message="Nao houve produtos ativos suficientes para montar a lista de menor saldo."
           />
         ) : (
@@ -122,7 +101,7 @@ export function AdminDashboardPage() {
               <AdminListRow
                 key={product.productId}
                 title={product.name}
-                subtitle={`${product.sku} · saldo atual mais baixo entre os produtos ativos`}
+                subtitle={`${product.sku} · menor saldo entre os produtos ativos`}
                 value={`${product.currentQuantity} un.`}
                 badge={product.costPriceMissing ? <ToneBadge label="Sem custo" tone="warning" /> : undefined}
               />
