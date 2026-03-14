@@ -1,9 +1,9 @@
-import { createReadStream, promises as fs } from "node:fs";
+import { createReadStream, existsSync, promises as fs } from "node:fs";
 import path from "node:path";
 
 import { AppError } from "../errors/app-error";
 
-const STORAGE_ROOT = path.resolve(process.cwd(), "storage");
+const STORAGE_ROOT = resolveStorageRoot();
 
 export function getStorageRoot(): string {
   return STORAGE_ROOT;
@@ -82,4 +82,26 @@ export function resolveStoragePath(storageKey: string): string {
 
 function isMissingFileError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
+function resolveStorageRoot(): string {
+  const configuredStorageRoot = process.env.STORAGE_ROOT?.trim();
+
+  if (configuredStorageRoot) {
+    return path.resolve(configuredStorageRoot);
+  }
+
+  // Preserve access to files created before the repo was split into BACKEND/FRONTEND.
+  const workspaceStorageRoot = path.resolve(__dirname, "../../../../storage");
+  const backendStorageRoot = path.resolve(__dirname, "../../../storage");
+
+  if (existsSync(workspaceStorageRoot)) {
+    return workspaceStorageRoot;
+  }
+
+  if (existsSync(backendStorageRoot)) {
+    return backendStorageRoot;
+  }
+
+  return workspaceStorageRoot;
 }

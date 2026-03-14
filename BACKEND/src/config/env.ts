@@ -6,7 +6,6 @@ const resolvedDatabaseUrl = resolveDatabaseUrl(process.env);
 
 if (!process.env.DATABASE_URL && resolvedDatabaseUrl) {
   process.env.DATABASE_URL = resolvedDatabaseUrl;
-  console.warn("[env] Using legacy DB_* variables to build DATABASE_URL. Migrate BACKEND/.env to DATABASE_URL.");
 }
 
 const envSchema = z.object({
