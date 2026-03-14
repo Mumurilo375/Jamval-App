@@ -30,7 +30,7 @@ export function CatalogListPage() {
       <PageHeader
         eyebrow="Cadastros"
         title="Catalogo do cliente"
-        subtitle={`${clientQuery.data.tradeName} · produtos ativos e preco atual`}
+        subtitle={`${clientQuery.data.tradeName} · mix configurado para as proximas visitas`}
         action={
           <Link to={`/clients/${clientId}/catalog/new`}>
             <Button>Novo</Button>
@@ -38,10 +38,20 @@ export function CatalogListPage() {
         }
       />
 
+      <Card className="space-y-3">
+        <p className="text-sm font-semibold text-[var(--jam-ink)]">Leitura correta desta area</p>
+        <p className="text-sm text-[var(--jam-subtle)]">
+          Este catalogo define quais produtos ficam habilitados para esse cliente, com preco configurado, quantidade ideal e ordem de uso.
+        </p>
+        <p className="text-sm text-[var(--jam-subtle)]">
+          Ele nao representa o estoque fisico atual da loja. O saldo real do cliente depende do historico das visitas e da ultima conferencia registrada.
+        </p>
+      </Card>
+
       {catalogQuery.data.length === 0 ? (
         <EmptyState
           title="Catalogo vazio"
-          message="Adicione os primeiros produtos ativos para esse ponto de venda."
+          message="Adicione os primeiros produtos ao mix configurado deste ponto de venda."
           action={
             <Link to={`/clients/${clientId}/catalog/new`}>
               <Button>Adicionar produto</Button>
@@ -63,12 +73,23 @@ export function CatalogListPage() {
 
             <div className="grid grid-cols-2 gap-3 text-sm text-[var(--jam-subtle)]">
               <div>
-                <p className="text-xs uppercase tracking-[0.18em]">Preco atual</p>
+                <p className="text-xs uppercase tracking-[0.18em]">Preco configurado</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(item.currentUnitPrice)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.18em]">Ideal</p>
+                <p className="text-xs uppercase tracking-[0.18em]">Quantidade ideal</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{item.idealQuantity ?? "-"}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm text-[var(--jam-subtle)]">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em]">Ordem no catalogo</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{item.displayOrder ?? "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em]">Ativo nas proximas visitas</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{item.isActive ? "Sim" : "Nao"}</p>
               </div>
             </div>
 

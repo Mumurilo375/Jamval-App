@@ -111,7 +111,7 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Preco no cliente" error={errors.currentUnitPrice?.message}>
+          <Field label="Preco configurado" error={errors.currentUnitPrice?.message}>
             <Input inputMode="decimal" placeholder="39.90" {...register("currentUnitPrice")} />
           </Field>
 
@@ -119,15 +119,15 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
             <Input inputMode="numeric" placeholder="12" {...register("idealQuantity")} />
           </Field>
 
-          <Field label="Ordem de exibicao" error={errors.displayOrder?.message}>
+          <Field label="Ordem no catalogo" error={errors.displayOrder?.message}>
             <Input inputMode="numeric" placeholder="1" {...register("displayOrder")} />
           </Field>
         </div>
 
         <Checkbox
           {...register("isActive")}
-          label="Produto ativo neste cliente"
-          hint={`Catalogo de ${client.tradeName}`}
+          label="Ativo nas proximas visitas"
+          hint={`Mix configurado de ${client.tradeName}`}
           checked={watch("isActive")}
           onChange={(event) => setValue("isActive", event.target.checked, { shouldDirty: true })}
         />

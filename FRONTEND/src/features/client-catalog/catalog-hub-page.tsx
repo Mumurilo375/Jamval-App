@@ -30,13 +30,25 @@ export function CatalogHubPage() {
       <PageHeader
         eyebrow="Cadastros"
         title="Catalogo por cliente"
-        subtitle="Acesse o mix, a ordem e o preco dos produtos configurados em cada loja."
+        subtitle="Acesse o mix configurado de cada cliente sem confundir isso com o estoque fisico atual da loja."
       />
 
-      <Card className="space-y-3">
-        <p className="text-sm text-[var(--jam-subtle)]">
-          O catalogo continua sendo configurado cliente a cliente. Esta area centraliza esse acesso para ficar mais facil de operar.
-        </p>
+      <Card className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl bg-white px-3 py-3">
+            <p className="text-sm font-semibold text-[var(--jam-ink)]">O que esta area mostra</p>
+            <p className="mt-1 text-sm text-[var(--jam-subtle)]">
+              Produtos habilitados para o cliente, com preco configurado, quantidade ideal, ordem e se entram nas proximas visitas.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-white px-3 py-3">
+            <p className="text-sm font-semibold text-[var(--jam-ink)]">O que esta area nao mostra</p>
+            <p className="mt-1 text-sm text-[var(--jam-subtle)]">
+              O estoque fisico atual da loja. Esse saldo real depende do historico das visitas e da ultima conferencia feita no cliente.
+            </p>
+          </div>
+        </div>
 
         <Field label="Buscar cliente">
           <Input
