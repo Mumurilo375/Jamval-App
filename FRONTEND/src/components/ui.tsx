@@ -166,17 +166,6 @@ function DateValuePicker({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const base = selectedDate ?? new Date();
-    setViewDate((current) => {
-      if (current.getFullYear() === base.getFullYear() && current.getMonth() === base.getMonth()) {
-        return current;
-      }
-
-      return new Date(base.getFullYear(), base.getMonth(), 1);
-    });
-  }, [selectedDate]);
-
-  useEffect(() => {
     if (!isOpen) {
       return;
     }
@@ -239,6 +228,7 @@ function DateValuePicker({
     }
 
     onValueChange(mode === "date" ? formatDateValue(next) : formatDateTimeLocalValue(next));
+    setViewDate(new Date(next.getFullYear(), next.getMonth(), 1));
 
     if (mode === "date") {
       setIsOpen(false);
@@ -259,12 +249,22 @@ function DateValuePicker({
 
   const selectedHour = selectedDate ? String(selectedDate.getHours()).padStart(2, "0") : "00";
   const selectedMinute = selectedDate ? String(selectedDate.getMinutes()).padStart(2, "0") : "00";
+  const syncViewDateWithSelection = () => {
+    const base = selectedDate ?? new Date();
+    setViewDate(new Date(base.getFullYear(), base.getMonth(), 1));
+  };
 
   return (
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={() => {
+          if (!isOpen) {
+            syncViewDateWithSelection();
+          }
+
+          setIsOpen((current) => !current);
+        }}
         disabled={disabled}
         className={cx(
           "inline-flex min-h-10 w-full min-w-0 items-center justify-between rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-left text-base text-[var(--jam-ink)] outline-none transition focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-11 sm:px-3.5 sm:text-sm",
@@ -384,6 +384,7 @@ function DateValuePicker({
                 type="button"
                 onClick={() => {
                   const now = new Date();
+                  setViewDate(new Date(now.getFullYear(), now.getMonth(), 1));
                   onValueChange(mode === "date" ? formatDateValue(now) : formatDateTimeLocalValue(now));
                   if (mode === "date") {
                     setIsOpen(false);

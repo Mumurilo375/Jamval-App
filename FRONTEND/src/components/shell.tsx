@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 import { useLogout, useSessionUser } from "../features/auth/auth";
@@ -143,10 +143,6 @@ export function AppShell() {
   );
 
   useEffect(() => {
-    setIsDrawerOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
     if (!isDrawerOpen) {
       document.body.style.removeProperty("overflow");
       return;
@@ -221,7 +217,9 @@ export function AppShell() {
           <NavigationPanel
             firstName={firstName}
             pathname={location.pathname}
+            onNavigate={() => setIsDrawerOpen(false)}
             onLogout={() => {
+              setIsDrawerOpen(false);
               void logoutMutation.mutateAsync();
             }}
             isLoggingOut={logoutMutation.isPending}
@@ -253,14 +251,24 @@ export function AppShell() {
 function NavigationPanel({
   pathname,
   firstName,
+  onNavigate,
   onLogout,
   isLoggingOut
 }: {
   pathname: string;
   firstName: string;
+  onNavigate?: () => void;
   onLogout: () => void;
   isLoggingOut: boolean;
 }) {
+  const handleNavigate = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    onNavigate?.();
+  };
+
   return (
     <>
       <div className="border-b border-[var(--jam-border)] px-3.5 py-3.5">
@@ -289,6 +297,7 @@ function NavigationPanel({
                   <Link
                     key={item.to}
                     to={item.to}
+                    onClick={handleNavigate}
                     className={cx(
                       "group flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition",
                       active
