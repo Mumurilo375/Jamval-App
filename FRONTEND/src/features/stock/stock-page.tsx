@@ -112,25 +112,27 @@ export function StockPage() {
   }
 
   const { summary, items } = overviewQuery.data;
+  const productsWithoutStock = Math.max(items.length - summary.productsWithStock, 0);
 
   return (
     <div className="space-y-4">
       <PageHeader
-        eyebrow="Estoque central"
-        title="Controle operacional do estoque"
-        subtitle="Saldo atual, movimentos e o que saiu para os clientes nas visitas."
+        eyebrow="Estoque principal"
+        title="Controle do estoque principal"
+        subtitle="Existe apenas um estoque principal. Aqui voce acompanha saldo atual, historico e saidas para clientes."
       />
 
       <Card className="space-y-3">
         <SectionHeader
           title="Resumo operacional"
-          subtitle="Leitura rapida do estoque central neste momento."
+          subtitle="Leitura curta do estoque principal neste momento."
         />
-        <div className="grid gap-2.5 sm:grid-cols-3">
-          <SummaryMetric label="Produtos com saldo" value={String(summary.productsWithStock)} />
-          <SummaryMetric label="Unidades no central" value={String(summary.totalUnits)} />
+        <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetric label="SKUs com saldo" value={String(summary.productsWithStock)} />
+          <SummaryMetric label="SKUs sem saldo" value={String(productsWithoutStock)} />
+          <SummaryMetric label="Saldo total do estoque principal" value={`${summary.totalUnits} un.`} />
           <SummaryMetric
-            label="Ultima movimentacao"
+            label="Ultimo lancamento"
             value={summary.lastMovementAt ? formatDateTime(summary.lastMovementAt) : "-"}
           />
         </div>
@@ -139,14 +141,14 @@ export function StockPage() {
       <Card className="space-y-4">
         <SectionHeader
           title="Acoes do estoque"
-          subtitle="Use entrada manual para novas mercadorias e ajuste manual apenas para correcao."
+          subtitle="Entrada manual para novas mercadorias. Ajuste manual apenas para correcao."
         />
 
         {summary.canUseInitialLoad ? (
           <WarningBanner message="Carga inicial e um fluxo de comeco de operacao. Depois da primeira montagem do estoque, o fluxo correto para novas mercadorias passa a ser Entrada manual." />
         ) : (
           <p className="text-sm text-[var(--jam-subtle)]">
-            Carga inicial ficou restrita ao comeco da operacao. Para novas mercadorias, siga com Entrada manual.
+            Carga inicial ficou restrita ao comeco da operacao. Para novas mercadorias, use Entrada manual.
           </p>
         )}
 
@@ -241,7 +243,7 @@ export function StockPage() {
                       <p className="mt-1 font-display text-3xl font-semibold text-[var(--jam-ink)] sm:text-4xl">{item.currentQuantity}</p>
                     </div>
                     <div className="text-left sm:text-right">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Ultima movimentacao</p>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Ultimo lancamento</p>
                       <p className="mt-1 text-sm font-medium text-[var(--jam-ink)]">
                         {item.lastMovementAt ? formatDateTime(item.lastMovementAt) : "Sem historico"}
                       </p>
