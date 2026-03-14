@@ -13,6 +13,13 @@ import { stockRoutes } from "../modules/stock/stock.routes";
 import { visitRoutes } from "../modules/visits/visit.routes";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
+  app.get("/", AUTH_PUBLIC_ROUTE_CONFIG, async () => ({
+    data: {
+      service: "jamval-backend",
+      status: "ok"
+    }
+  }));
+
   app.get("/health", AUTH_PUBLIC_ROUTE_CONFIG, async () => ({ data: { status: "ok" } }));
 
   await app.register(authRoutes, { prefix: "/auth" });
