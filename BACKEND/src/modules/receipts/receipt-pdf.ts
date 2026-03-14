@@ -3,6 +3,8 @@ import PDFDocument from "pdfkit";
 import type { ReceiptCompanyProfile } from "./receipt-company-profile";
 import type { VisitReceiptSource } from "./receipt.types";
 
+type PdfDocument = InstanceType<typeof PDFDocument>;
+
 type RenderReceiptPdfInput = {
   visit: VisitReceiptSource;
   companyProfile: ReceiptCompanyProfile;
@@ -101,20 +103,20 @@ export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Bu
   return finished;
 }
 
-function writeSectionTitle(doc: PDFKit.PDFDocument, title: string, y: number): number {
+function writeSectionTitle(doc: PdfDocument, title: string, y: number): number {
   const nextY = ensurePageSpace(doc, y, 34);
   doc.font("Helvetica-Bold").fontSize(14).fillColor("#0f172a").text(title, 40, nextY);
   return nextY + 20;
 }
 
-function writeLabelValue(doc: PDFKit.PDFDocument, label: string, value: string, y: number): number {
+function writeLabelValue(doc: PdfDocument, label: string, value: string, y: number): number {
   const nextY = ensurePageSpace(doc, y, 22);
   doc.font("Helvetica-Bold").fontSize(10).fillColor("#0f172a").text(`${label}:`, 40, nextY, { continued: true });
   doc.font("Helvetica").fillColor("#0f172a").text(` ${value}`, { width: 500 });
   return doc.y + 4;
 }
 
-function writeOptionalLabelValue(doc: PDFKit.PDFDocument, label: string, value: string | null | undefined, y: number): number {
+function writeOptionalLabelValue(doc: PdfDocument, label: string, value: string | null | undefined, y: number): number {
   if (!value) {
     return y;
   }
@@ -122,7 +124,7 @@ function writeOptionalLabelValue(doc: PDFKit.PDFDocument, label: string, value: 
   return writeLabelValue(doc, label, value, y);
 }
 
-function ensurePageSpace(doc: PDFKit.PDFDocument, y: number, neededHeight: number): number {
+function ensurePageSpace(doc: PdfDocument, y: number, neededHeight: number): number {
   if (y + neededHeight <= doc.page.height - doc.page.margins.bottom) {
     return y;
   }
@@ -165,7 +167,7 @@ function formatAddress(
   return parts.length > 0 ? parts.join(" | ") : null;
 }
 
-function drawHeader(doc: PDFKit.PDFDocument, companyProfile: ReceiptCompanyProfile, y: number): number {
+function drawHeader(doc: PdfDocument, companyProfile: ReceiptCompanyProfile, y: number): number {
   const nextY = ensurePageSpace(doc, y, 72);
   doc.roundedRect(40, nextY, 72, 42, 12).fill("#1d4ed8");
   doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(18).text("J", 67, nextY + 9, { align: "center", width: 18 });
@@ -179,7 +181,7 @@ function drawHeader(doc: PDFKit.PDFDocument, companyProfile: ReceiptCompanyProfi
 }
 
 function drawVisitItemBlock(
-  doc: PDFKit.PDFDocument,
+  doc: PdfDocument,
   item: VisitReceiptSource["items"][number],
   y: number
 ): number {
@@ -206,7 +208,7 @@ function drawVisitItemBlock(
 }
 
 function writeInlineMetric(
-  doc: PDFKit.PDFDocument,
+  doc: PdfDocument,
   x: number,
   y: number,
   label: string,
@@ -217,7 +219,7 @@ function writeInlineMetric(
   return y;
 }
 
-function writeParagraph(doc: PDFKit.PDFDocument, value: string, y: number): number {
+function writeParagraph(doc: PdfDocument, value: string, y: number): number {
   const nextY = ensurePageSpace(doc, y, 50);
   doc.font("Helvetica").fontSize(10).fillColor("#0f172a").text(value, 40, nextY, {
     width: 515,
@@ -226,7 +228,7 @@ function writeParagraph(doc: PDFKit.PDFDocument, value: string, y: number): numb
   return doc.y + 6;
 }
 
-function drawSignatureBlocks(doc: PDFKit.PDFDocument, y: number): number {
+function drawSignatureBlocks(doc: PdfDocument, y: number): number {
   const nextY = ensurePageSpace(doc, y, 130);
   const top = nextY + 38;
 
