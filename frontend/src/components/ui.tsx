@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, PropsWithChildren, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 import { cx } from "../lib/cx";
@@ -67,18 +68,343 @@ export function Button({
 }
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
-  const isTemporalInput = props.type === "date" || props.type === "time" || props.type === "datetime-local";
-
   return (
     <input
       {...props}
-      data-temporal-input={isTemporalInput ? "true" : undefined}
       className={cx(
         "min-h-10 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-[13px] text-[var(--jam-ink)] outline-none transition placeholder:text-slate-400 focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] sm:min-h-11 sm:px-3.5 sm:text-sm",
-        isTemporalInput ? "pr-3 [color-scheme:light]" : null,
         props.className
       )}
     />
+  );
+}
+
+type DateInputProps = {
+  value: string;
+  onValueChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+  min?: string;
+  max?: string;
+};
+
+export function DateInput({
+  value,
+  onValueChange,
+  placeholder = "Selecionar data",
+  className,
+  disabled,
+  min,
+  max
+}: DateInputProps) {
+  return (
+    <DateValuePicker
+      mode="date"
+      value={value}
+      onValueChange={onValueChange}
+      placeholder={placeholder}
+      className={className}
+      disabled={disabled}
+      min={min}
+      max={max}
+    />
+  );
+}
+
+export function DateTimeInput({
+  value,
+  onValueChange,
+  placeholder = "Selecionar data e hora",
+  className,
+  disabled,
+  min,
+  max
+}: DateInputProps) {
+  return (
+    <DateValuePicker
+      mode="datetime-local"
+      value={value}
+      onValueChange={onValueChange}
+      placeholder={placeholder}
+      className={className}
+      disabled={disabled}
+      min={min}
+      max={max}
+    />
+  );
+}
+
+function DateValuePicker({
+  mode,
+  value,
+  onValueChange,
+  placeholder,
+  className,
+  disabled,
+  min,
+  max
+}: DateInputProps & { mode: "date" | "datetime-local" }) {
+  const selectedDate = useMemo(
+    () => (mode === "date" ? parseDateValue(value) : parseDateTimeLocalValue(value)),
+    [mode, value]
+  );
+  const minDate = useMemo(
+    () => (mode === "date" ? parseDateValue(min) : parseDateTimeLocalValue(min)),
+    [mode, min]
+  );
+  const maxDate = useMemo(
+    () => (mode === "date" ? parseDateValue(max) : parseDateTimeLocalValue(max)),
+    [mode, max]
+  );
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [viewDate, setViewDate] = useState<Date>(() => {
+    const base = selectedDate ?? new Date();
+    return new Date(base.getFullYear(), base.getMonth(), 1);
+  });
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const base = selectedDate ?? new Date();
+    setViewDate((current) => {
+      if (current.getFullYear() === base.getFullYear() && current.getMonth() === base.getMonth()) {
+        return current;
+      }
+
+      return new Date(base.getFullYear(), base.getMonth(), 1);
+    });
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onEscape);
+    };
+  }, [isOpen]);
+
+  const days = useMemo(() => {
+    const month = viewDate.getMonth();
+    const year = viewDate.getFullYear();
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const entries: Array<{ key: string; day: number | null }> = [];
+
+    for (let index = 0; index < firstWeekday; index += 1) {
+      entries.push({ key: `empty-${index}`, day: null });
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      entries.push({ key: `day-${year}-${month}-${day}`, day });
+    }
+
+    return entries;
+  }, [viewDate]);
+
+  const selectedDayKey = selectedDate ? getDayKey(selectedDate) : null;
+
+  const assignDate = (day: number) => {
+    const base = selectedDate ?? new Date();
+    const next = new Date(
+      viewDate.getFullYear(),
+      viewDate.getMonth(),
+      day,
+      mode === "datetime-local" ? base.getHours() : 0,
+      mode === "datetime-local" ? base.getMinutes() : 0,
+      0,
+      0
+    );
+
+    if (!isWithinRange(next, minDate, maxDate, mode)) {
+      return;
+    }
+
+    onValueChange(mode === "date" ? formatDateValue(next) : formatDateTimeLocalValue(next));
+
+    if (mode === "date") {
+      setIsOpen(false);
+    }
+  };
+
+  const updateTime = (nextHour: number, nextMinute: number) => {
+    const base = selectedDate ?? new Date();
+    const next = new Date(base);
+    next.setHours(nextHour, nextMinute, 0, 0);
+
+    if (!isWithinRange(next, minDate, maxDate, mode)) {
+      return;
+    }
+
+    onValueChange(formatDateTimeLocalValue(next));
+  };
+
+  const selectedHour = selectedDate ? String(selectedDate.getHours()).padStart(2, "0") : "00";
+  const selectedMinute = selectedDate ? String(selectedDate.getMinutes()).padStart(2, "0") : "00";
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        disabled={disabled}
+        className={cx(
+          "inline-flex min-h-10 w-full min-w-0 items-center justify-between rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-left text-base text-[var(--jam-ink)] outline-none transition focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-11 sm:px-3.5 sm:text-sm",
+          className
+        )}
+      >
+        <span className={cx("truncate", !value ? "text-slate-400" : null)}>{value ? formatDateDisplay(value, mode) : placeholder}</span>
+        <span className="ml-2 shrink-0 rounded-full bg-[var(--jam-accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-accent)]">
+          Data
+        </span>
+      </button>
+
+      {isOpen ? (
+        <div className="absolute left-0 z-50 mt-2 w-[min(92vw,360px)] max-w-[calc(100vw-1rem)] rounded-2xl border border-[var(--jam-border)] bg-white p-3 shadow-[0_18px_42px_rgba(15,23,42,0.2)]">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <button
+              type="button"
+                className="rounded-lg border border-[var(--jam-border)] bg-white px-2.5 py-1.5 text-[13px] font-semibold text-[var(--jam-subtle)] sm:text-[12px]"
+              onClick={() => setViewDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}
+            >
+              Mes anterior
+            </button>
+            <p className="text-[14px] font-semibold text-[var(--jam-ink)] sm:text-[13px]">{MONTH_LABELS[viewDate.getMonth()]} {viewDate.getFullYear()}</p>
+            <button
+              type="button"
+              className="rounded-lg border border-[var(--jam-border)] bg-white px-2.5 py-1.5 text-[13px] font-semibold text-[var(--jam-subtle)] sm:text-[12px]"
+              onClick={() => setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}
+            >
+              Proximo mes
+            </button>
+          </div>
+
+          <div className="mb-1 grid grid-cols-7 gap-1">
+            {WEEKDAY_LABELS.map((weekday) => (
+              <span key={weekday} className="px-1 py-1 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--jam-subtle)]">
+                {weekday}
+              </span>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {days.map((entry) => {
+              const dayValue = entry.day;
+
+              if (dayValue === null) {
+                return <span key={entry.key} className="h-9" />;
+              }
+
+              const dayDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), dayValue, 12, 0, 0, 0);
+              const isSelected = selectedDayKey === getDayKey(dayDate);
+              const isToday = getDayKey(dayDate) === getDayKey(new Date());
+              const isDisabled = !isWithinRange(dayDate, minDate, maxDate, "date");
+
+              return (
+                <button
+                  key={entry.key}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => assignDate(dayValue)}
+                  className={cx(
+                    "h-9 rounded-lg border text-[12px] font-semibold transition",
+                    isSelected
+                      ? "border-[var(--jam-accent)] bg-[var(--jam-accent)] text-white"
+                      : isToday
+                        ? "border-[rgba(29,78,216,0.3)] bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
+                        : "border-transparent bg-[var(--jam-panel-strong)] text-[var(--jam-ink)] hover:border-[var(--jam-border)] hover:bg-white",
+                    isDisabled ? "cursor-not-allowed opacity-40" : null
+                  )}
+                >
+                  {entry.day}
+                </button>
+              );
+            })}
+          </div>
+
+          {mode === "datetime-local" ? (
+            <div className="mt-3 space-y-2 border-t border-[var(--jam-border)] pt-3">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--jam-subtle)]">Horario</p>
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <select
+                  value={selectedHour}
+                  onChange={(event) => updateTime(Number(event.target.value), selectedMinute ? Number(selectedMinute) : 0)}
+                  className="min-h-10 rounded-xl border border-[var(--jam-border)] bg-white px-3 text-base text-[var(--jam-ink)] outline-none transition focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] sm:text-sm"
+                >
+                  {HOUR_OPTIONS.map((hour) => (
+                    <option key={hour} value={hour}>
+                      {hour}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[13px] font-semibold text-[var(--jam-subtle)]">:</span>
+                <select
+                  value={selectedMinute}
+                  onChange={(event) => updateTime(selectedHour ? Number(selectedHour) : 0, Number(event.target.value))}
+                  className="min-h-10 rounded-xl border border-[var(--jam-border)] bg-white px-3 text-base text-[var(--jam-ink)] outline-none transition focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] sm:text-sm"
+                >
+                  {MINUTE_OPTIONS.map((minute) => (
+                    <option key={minute} value={minute}>
+                      {minute}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--jam-border)] pt-3">
+            <button
+              type="button"
+              onClick={() => onValueChange("")}
+              className="rounded-lg border border-[var(--jam-border)] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[var(--jam-subtle)]"
+            >
+              Limpar
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const now = new Date();
+                  onValueChange(mode === "date" ? formatDateValue(now) : formatDateTimeLocalValue(now));
+                  if (mode === "date") {
+                    setIsOpen(false);
+                  }
+                }}
+                className="rounded-lg border border-[var(--jam-border)] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[var(--jam-subtle)]"
+              >
+                Hoje
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg bg-[var(--jam-accent)] px-2.5 py-1.5 text-[12px] font-semibold text-white"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -272,4 +598,129 @@ export function PageLoader({ label = "Carregando..." }: { label?: string }) {
       </div>
     </div>
   );
+}
+
+const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+const MONTH_LABELS = [
+  "Janeiro",
+  "Fevereiro",
+  "Marco",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro"
+];
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, minute) => String(minute).padStart(2, "0"));
+
+function parseDateValue(value?: string): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 0, 0, 0, 0);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date;
+}
+
+function parseDateTimeLocalValue(value?: string): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const date = new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(match[4]),
+    Number(match[5]),
+    0,
+    0
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date;
+}
+
+function formatDateValue(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function formatDateTimeLocalValue(date: Date): string {
+  return `${formatDateValue(date)}T${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function formatDateDisplay(value: string, mode: "date" | "datetime-local"): string {
+  const date = mode === "date" ? parseDateValue(value) : parseDateTimeLocalValue(value);
+
+  if (!date) {
+    return value;
+  }
+
+  const datePart = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+
+  if (mode === "date") {
+    return datePart;
+  }
+
+  const timePart = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return `${datePart} ${timePart}`;
+}
+
+function getDayKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function isWithinRange(date: Date, minDate: Date | null, maxDate: Date | null, mode: "date" | "datetime-local"): boolean {
+  if (mode === "date") {
+    const dayDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0).getTime();
+    const minDay = minDate ? new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate(), 0, 0, 0, 0).getTime() : null;
+    const maxDay = maxDate ? new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate(), 0, 0, 0, 0).getTime() : null;
+
+    if (minDay !== null && dayDate < minDay) {
+      return false;
+    }
+
+    if (maxDay !== null && dayDate > maxDay) {
+      return false;
+    }
+
+    return true;
+  }
+
+  const stamp = date.getTime();
+
+  if (minDate && stamp < minDate.getTime()) {
+    return false;
+  }
+
+  if (maxDate && stamp > maxDate.getTime()) {
+    return false;
+  }
+
+  return true;
 }

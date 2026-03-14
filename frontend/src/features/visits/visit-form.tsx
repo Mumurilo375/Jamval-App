@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, ErrorBanner, Field, Input, PageLoader, Select, Textarea } from "../../components/ui";
+import { Button, Card, DateTimeInput, ErrorBanner, Field, PageLoader, Select, Textarea } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import type { Client, VisitDetail } from "../../types/domain";
 import { listClients } from "../clients/clients-api";
@@ -34,6 +34,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
   });
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors }
@@ -105,7 +106,13 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
         )}
 
         <Field label="Data e hora da visita" error={errors.visitedAt?.message}>
-          <Input type="datetime-local" {...register("visitedAt")} />
+          <Controller
+            control={control}
+            name="visitedAt"
+            render={({ field }) => (
+              <DateTimeInput value={field.value} onValueChange={field.onChange} placeholder="Selecionar data e hora da visita" />
+            )}
+          />
         </Field>
 
         <Field label="Observacoes" hint="O valor recebido fica para a etapa final, depois da conferencia dos itens.">

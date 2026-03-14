@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, ErrorBanner, Field, Input, PageHeader, PageLoader, ToneBadge } from "../../components/ui";
+import { Button, DateInput, ErrorBanner, Field, PageHeader, PageLoader, ToneBadge } from "../../components/ui";
 import { formatCurrency } from "../../lib/format";
 import { getAdminProfit } from "./admin-api";
 import { AdminEmptyBlock, AdminInfoPanel, AdminListRow, AdminMetricCard, AdminQueryErrorState, AdminSectionCard } from "./admin-ui";
@@ -64,18 +64,10 @@ export function AdminProfitPage() {
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Data inicial">
-            <Input
-              type="date"
-              value={draftFilters.dateFrom}
-              onChange={(event) => setDraftFilters((current) => ({ ...current, dateFrom: event.target.value }))}
-            />
+            <DateInput value={draftFilters.dateFrom} onValueChange={(value) => setDraftFilters((current) => ({ ...current, dateFrom: value }))} />
           </Field>
           <Field label="Data final">
-            <Input
-              type="date"
-              value={draftFilters.dateTo}
-              onChange={(event) => setDraftFilters((current) => ({ ...current, dateTo: event.target.value }))}
-            />
+            <DateInput value={draftFilters.dateTo} onValueChange={(value) => setDraftFilters((current) => ({ ...current, dateTo: value }))} />
           </Field>
         </div>
         {invalidPeriod ? <ErrorBanner message="A data inicial nao pode ser maior que a data final." /> : null}

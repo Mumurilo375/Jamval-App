@@ -5,6 +5,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   Button,
   Card,
+  DateInput,
   EmptyState,
   Field,
   Input,
@@ -289,23 +290,21 @@ export function StockPage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="De">
-                <Input
-                  type="date"
+                <DateInput
                   value={historyDateFrom}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     updateStockSearchParams(searchParams, setSearchParams, {
-                      historyDateFrom: event.target.value
+                      historyDateFrom: value
                     })
                   }
                 />
               </Field>
               <Field label="Ate">
-                <Input
-                  type="date"
+                <DateInput
                   value={historyDateTo}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     updateStockSearchParams(searchParams, setSearchParams, {
-                      historyDateTo: event.target.value
+                      historyDateTo: value
                     })
                   }
                 />
@@ -357,23 +356,21 @@ export function StockPage() {
           <Card className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Visitas desde">
-                <Input
-                  type="date"
+                <DateInput
                   value={outflowDateFrom}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     updateStockSearchParams(searchParams, setSearchParams, {
-                      outflowDateFrom: event.target.value
+                      outflowDateFrom: value
                     })
                   }
                 />
               </Field>
               <Field label="Visitas ate">
-                <Input
-                  type="date"
+                <DateInput
                   value={outflowDateTo}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     updateStockSearchParams(searchParams, setSearchParams, {
-                      outflowDateTo: event.target.value
+                      outflowDateTo: value
                     })
                   }
                 />
