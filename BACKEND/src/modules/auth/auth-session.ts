@@ -28,11 +28,19 @@ export function buildSessionExpiresAt(baseDate = new Date()): Date {
   return new Date(baseDate.getTime() + getSessionTtlMs());
 }
 
+function isProductionEnvironment(): boolean {
+  return env.NODE_ENV === "production";
+}
+
+function getCookieSameSitePolicy(): "lax" | "none" {
+  return isProductionEnvironment() ? "none" : "lax";
+}
+
 export function setSessionCookie(reply: FastifyReply, sessionToken: string): void {
   reply.setCookie(getAuthCookieName(), sessionToken, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: env.NODE_ENV === "production",
+    sameSite: getCookieSameSitePolicy(),
+    secure: isProductionEnvironment(),
     path: "/",
     maxAge: getSessionTtlSeconds()
   });
@@ -41,8 +49,8 @@ export function setSessionCookie(reply: FastifyReply, sessionToken: string): voi
 export function clearSessionCookie(reply: FastifyReply): void {
   reply.clearCookie(getAuthCookieName(), {
     httpOnly: true,
-    sameSite: "lax",
-    secure: env.NODE_ENV === "production",
+    sameSite: getCookieSameSitePolicy(),
+    secure: isProductionEnvironment(),
     path: "/"
   });
 }

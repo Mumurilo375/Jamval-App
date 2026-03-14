@@ -16,6 +16,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().trim().min(1, "DATABASE_URL is required"),
   AUTH_SESSION_TTL_HOURS: z.coerce.number().int().positive().default(168),
   AUTH_COOKIE_NAME: z.string().trim().min(1).default("jamval_session"),
+  CORS_ORIGIN: z.string().trim().optional(),
   COMPANY_NAME: z.string().trim().optional(),
   COMPANY_DOCUMENT: z.string().trim().optional(),
   COMPANY_PHONE: z.string().trim().optional(),
