@@ -17,6 +17,8 @@
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.1.0",
     "@prisma/client": "^6.6.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/pdfkit": "^0.17.5",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1",
@@ -24,9 +26,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
     "@types/node": "^22.13.10",
-    "@types/pdfkit": "^0.17.5",
     "prisma": "^6.6.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"

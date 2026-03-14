@@ -23,7 +23,7 @@ export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Bu
 
   const chunks: Buffer[] = [];
 
-  doc.on("data", (chunk) => {
+  doc.on("data", (chunk: Buffer | Uint8Array) => {
     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   });
 
