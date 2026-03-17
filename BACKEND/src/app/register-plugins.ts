@@ -30,7 +30,8 @@ export async function registerPlugins(app: FastifyInstance): Promise<void> {
           callback(null, isAllowed);
         }
       : true,
-    credentials: true
+    credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   });
   await registerAuthPlugin(app);
 
