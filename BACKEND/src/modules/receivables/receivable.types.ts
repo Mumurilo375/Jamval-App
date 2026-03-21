@@ -23,6 +23,7 @@ export type ReceivableListItem = Prisma.ReceivableGetPayload<{
       select: {
         id: true;
         visitCode: true;
+        visitType: true;
         visitedAt: true;
         status: true;
         totalAmount: true;
@@ -46,6 +47,7 @@ export type ReceivableDetailItem = Prisma.ReceivableGetPayload<{
       select: {
         id: true;
         visitCode: true;
+        visitType: true;
         visitedAt: true;
         status: true;
         totalAmount: true;

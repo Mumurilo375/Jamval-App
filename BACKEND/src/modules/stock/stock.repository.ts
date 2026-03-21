@@ -40,10 +40,11 @@ export class StockRepository {
 
   async findLatestCentralMovement(
     db: DbClient = prisma
-  ): Promise<Pick<CentralStockMovement, "createdAt"> | null> {
+  ): Promise<Pick<CentralStockMovement, "movementType" | "createdAt"> | null> {
     return db.centralStockMovement.findFirst({
       orderBy: [{ createdAt: "desc" }],
       select: {
+        movementType: true,
         createdAt: true
       }
     });
@@ -71,7 +72,7 @@ export class StockRepository {
       category: string | null;
       isActive: boolean;
       centralStockBalance: Pick<CentralStockBalance, "currentQuantity"> | null;
-      centralStockMovement: Array<Pick<CentralStockMovement, "createdAt">>;
+      centralStockMovement: Array<Pick<CentralStockMovement, "movementType" | "createdAt">>;
     }>
   > {
     return db.product.findMany({
@@ -88,6 +89,7 @@ export class StockRepository {
         },
         centralStockMovement: {
           select: {
+            movementType: true,
             createdAt: true
           },
           orderBy: [{ createdAt: "desc" }],

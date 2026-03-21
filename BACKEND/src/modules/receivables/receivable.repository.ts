@@ -15,6 +15,7 @@ const receivableListInclude = {
     select: {
       id: true,
       visitCode: true,
+      visitType: true,
       visitedAt: true,
       status: true,
       totalAmount: true,

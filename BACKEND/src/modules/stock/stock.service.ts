@@ -18,6 +18,11 @@ type CentralBalanceSummary = {
 };
 
 type BalanceEffect = "IN" | "OUT" | "NEUTRAL";
+type MovementSnapshot = {
+  label: string;
+  balanceEffect: BalanceEffect;
+  createdAt: Date;
+};
 
 const MOVEMENT_TYPES_BY_KIND: Record<
   NonNullable<CentralMovementsQuery["movementKind"]>,
@@ -54,7 +59,7 @@ export class StockService {
     summary: {
       productsWithStock: number;
       totalUnits: number;
-      lastMovementAt: Date | null;
+      lastMovement: MovementSnapshot | null;
       canUseInitialLoad: boolean;
     };
     items: Array<{
@@ -64,7 +69,7 @@ export class StockService {
       category: string | null;
       isActive: boolean;
       currentQuantity: number;
-      lastMovementAt: Date | null;
+      lastMovement: MovementSnapshot | null;
     }>;
   }> {
     const [products, latestMovement, movementCount] = await Promise.all([
@@ -80,14 +85,14 @@ export class StockService {
       category: product.category,
       isActive: product.isActive,
       currentQuantity: product.centralStockBalance?.currentQuantity ?? 0,
-      lastMovementAt: product.centralStockMovement[0]?.createdAt ?? null
+      lastMovement: toMovementSnapshot(product.centralStockMovement[0] ?? null)
     }));
 
     return {
       summary: {
         productsWithStock: items.filter((item) => item.currentQuantity > 0).length,
         totalUnits: items.reduce((sum, item) => sum + item.currentQuantity, 0),
-        lastMovementAt: latestMovement?.createdAt ?? null,
+        lastMovement: toMovementSnapshot(latestMovement),
         canUseInitialLoad: movementCount === 0
       },
       items
@@ -495,4 +500,23 @@ function startOfDay(date: Date): Date {
 
 function endOfDay(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
+}
+
+function toMovementSnapshot(
+  movement:
+    | {
+        movementType: CentralStockMovementType;
+        createdAt: Date;
+      }
+    | null
+): MovementSnapshot | null {
+  if (!movement) {
+    return null;
+  }
+
+  return {
+    label: formatMovementLabel(movement.movementType),
+    balanceEffect: getBalanceEffect(movement.movementType),
+    createdAt: movement.createdAt
+  };
 }
