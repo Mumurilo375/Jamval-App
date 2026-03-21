@@ -42,6 +42,7 @@ export class VisitRepository {
     const where: Prisma.VisitWhereInput = {
       ...(filters.clientId ? { clientId: filters.clientId } : {}),
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.visitType ? { visitType: filters.visitType } : {}),
       ...(filters.dateFrom || filters.dateTo
         ? {
             visitedAt: {

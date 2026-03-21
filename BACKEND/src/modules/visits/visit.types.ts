@@ -29,7 +29,7 @@ export type VisitWithItems = Prisma.VisitGetPayload<{
   };
 }>;
 
-export type VisitDraftMetadata = Pick<Visit, "visitedAt" | "notes" | "receivedAmountOnVisit" | "dueDate">;
+export type VisitDraftMetadata = Pick<Visit, "visitType" | "visitedAt" | "notes" | "receivedAmountOnVisit" | "dueDate">;
 
 export type DraftVisitComputedItem = {
   clientProductId: string | null;

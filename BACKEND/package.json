@@ -4,10 +4,13 @@
   "private": true,
   "description": "Jamval backend with Fastify, Prisma and Zod",
   "scripts": {
+    "predev": "npm run prisma:sync-client",
     "dev": "tsx watch src/server.ts",
+    "prebuild": "npm run prisma:sync-client",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "admin:create": "tsx src/scripts/create-admin.ts",
+    "prisma:sync-client": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",

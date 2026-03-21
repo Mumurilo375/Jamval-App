@@ -62,6 +62,7 @@ export class VisitService {
         {
           visitCode: generateVisitCode(),
           clientId: input.clientId,
+          visitType: input.visitType,
           status: "DRAFT",
           visitedAt: input.visitedAt,
           notes: input.notes,

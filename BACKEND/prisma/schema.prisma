@@ -13,6 +13,11 @@ enum VisitStatus {
   CANCELLED
 }
 
+enum VisitType {
+  CONSIGNMENT
+  SALE
+}
+
 enum SignatureStatus {
   PENDING
   SIGNED
@@ -220,6 +225,7 @@ model Visit {
   id                   String          @id @default(uuid()) @db.Uuid
   visitCode            String          @unique @db.VarChar(64)
   clientId             String          @db.Uuid
+  visitType            VisitType       @default(CONSIGNMENT)
   status               VisitStatus     @default(DRAFT)
   visitedAt            DateTime        @default(now())
   notes                String?

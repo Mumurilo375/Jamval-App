@@ -1,4 +1,4 @@
-import { PaymentMethod, VisitStatus } from "@prisma/client";
+import { PaymentMethod, VisitStatus, VisitType } from "@prisma/client";
 import { z } from "zod";
 
 const nonNegativeIntSchema = z.coerce.number().int().min(0);
@@ -51,6 +51,7 @@ export const visitItemParamsSchema = z.object({
 
 export const createVisitBodySchema = z.object({
   clientId: z.string().uuid(),
+  visitType: z.nativeEnum(VisitType).optional().default(VisitType.CONSIGNMENT),
   visitedAt: dateTimeSchema.optional(),
   notes: z.string().trim().optional(),
   receivedAmountOnVisit: nonNegativeNumberSchema.optional().default(0),
@@ -59,6 +60,7 @@ export const createVisitBodySchema = z.object({
 
 export const updateVisitBodySchema = z
   .object({
+    visitType: z.nativeEnum(VisitType).optional(),
     visitedAt: dateTimeSchema.optional(),
     notes: z.string().trim().optional(),
     receivedAmountOnVisit: nonNegativeNumberSchema.optional(),
@@ -71,6 +73,7 @@ export const updateVisitBodySchema = z
 export const visitListQuerySchema = z.object({
   clientId: z.string().uuid().optional(),
   status: z.nativeEnum(VisitStatus).optional(),
+  visitType: z.nativeEnum(VisitType).optional(),
   dateFrom: simpleDateSchema.optional(),
   dateTo: simpleDateSchema.optional()
 });
