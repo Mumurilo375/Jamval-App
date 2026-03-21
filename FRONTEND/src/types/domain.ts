@@ -58,12 +58,14 @@ export type ClientProduct = {
 };
 
 export type VisitStatus = "DRAFT" | "COMPLETED" | "CANCELLED";
+export type VisitType = "CONSIGNMENT" | "SALE";
 export type SignatureStatus = "PENDING" | "SIGNED";
 
 export type Visit = {
   id: string;
   visitCode: string;
   clientId: string;
+  visitType: VisitType;
   status: VisitStatus;
   visitedAt: string;
   notes: string | null;

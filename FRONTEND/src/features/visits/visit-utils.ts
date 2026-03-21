@@ -1,4 +1,4 @@
-import type { ClientProduct, VisitDetail, VisitStatus } from "../../types/domain";
+import type { ClientProduct, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
 import type { VisitItemDraftPayload } from "./visits-api";
 
 export function visitStatusLabel(status: VisitStatus): string {
@@ -25,14 +25,26 @@ export function visitStatusTone(status: VisitStatus): "warning" | "success" | "d
   return "danger";
 }
 
+export function visitTypeLabel(type: VisitType): string {
+  if (type === "SALE") {
+    return "Venda";
+  }
+
+  return "Consignacao";
+}
+
 export function computeVisitItemPreview(input: {
   quantityPrevious: number;
+  quantitySold?: number;
   quantityGoodRemaining: number;
   quantityDefectiveReturn: number;
+  quantityLoss?: number;
   unitPrice: number;
   restockedQuantity: number;
 }) {
-  const quantitySold = input.quantityPrevious - input.quantityGoodRemaining - input.quantityDefectiveReturn;
+  const quantitySold =
+    input.quantitySold ??
+    (input.quantityPrevious - input.quantityGoodRemaining - input.quantityDefectiveReturn - (input.quantityLoss ?? 0));
 
   return {
     quantitySold,

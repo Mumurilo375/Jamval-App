@@ -155,6 +155,7 @@ export function VisitItemForm({
     quantityPrevious: Number(quantityPreviousValue || 0),
     quantityGoodRemaining: Number(quantityGoodRemainingValue || 0),
     quantityDefectiveReturn: Number(quantityDefectiveReturnValue || 0),
+    quantityLoss: 0,
     unitPrice: unitPriceNumber,
     restockedQuantity: Number(restockedQuantityValue || 0)
   });

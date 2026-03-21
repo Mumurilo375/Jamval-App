@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 
 import { EmptyState, PageHeader, PageLoader } from "../../components/ui";
 import { listClientCatalog } from "../client-catalog/catalog-api";
@@ -62,6 +62,10 @@ export function VisitItemCreatePage() {
 
   if (visitQuery.isError || !visitQuery.data || catalogQuery.isError || productsQuery.isError) {
     return <EmptyState title="Visita indisponivel" message="Volte para o rascunho e tente novamente." />;
+  }
+
+  if (visitQuery.data.visitType === "CONSIGNMENT") {
+    return <Navigate to={`/visits/${visitId}`} replace />;
   }
 
   if (visitQuery.data.status !== "DRAFT") {

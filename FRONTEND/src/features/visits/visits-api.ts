@@ -1,13 +1,15 @@
 import { api, downloadApiFile } from "../../lib/api";
-import type { Visit, VisitDetail } from "../../types/domain";
+import type { Visit, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
 
 export type VisitListFilters = {
   clientId?: string;
-  status?: "DRAFT" | "COMPLETED" | "CANCELLED";
+  status?: VisitStatus;
+  visitType?: VisitType;
 };
 
 export type VisitPayload = {
   clientId: string;
+  visitType?: VisitType;
   visitedAt?: string;
   notes?: string;
   receivedAmountOnVisit?: number;
@@ -85,6 +87,10 @@ function buildQuery(filters: VisitListFilters): string {
     params.set("status", filters.status);
   }
 
+  if (filters.visitType) {
+    params.set("visitType", filters.visitType);
+  }
+
   const query = params.toString();
   return query ? `?${query}` : "";
 }
@@ -97,8 +103,8 @@ export function getVisit(visitId: string) {
   return api.get<VisitDetail>(`/visits/${visitId}`);
 }
 
-export async function listCompletedVisitHistoryDetails(clientId: string, limit = 6) {
-  const visits = await listVisits({ clientId, status: "COMPLETED" });
+export async function listCompletedVisitHistoryDetails(clientId: string, limit = 6, visitType?: VisitType) {
+  const visits = await listVisits({ clientId, status: "COMPLETED", visitType });
   const recentVisitIds = visits.slice(0, limit).map((visit) => visit.id);
 
   if (recentVisitIds.length === 0) {

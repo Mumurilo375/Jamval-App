@@ -12,6 +12,7 @@ import { createVisit, updateVisit } from "./visits-api";
 
 const visitFormSchema = z.object({
   clientId: z.string().trim().min(1, "Selecione o cliente"),
+  visitType: z.enum(["CONSIGNMENT", "SALE"]),
   visitedAt: z.string(),
   notes: z.string()
 });
@@ -42,6 +43,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
     resolver: zodResolver(visitFormSchema),
     defaultValues: {
       clientId: visit?.clientId ?? "",
+      visitType: visit?.visitType ?? "CONSIGNMENT",
       visitedAt: toDateTimeLocalValue(visit?.visitedAt),
       notes: visit?.notes ?? ""
     }
@@ -52,12 +54,14 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
       if (mode === "create") {
         return createVisit({
           clientId: values.clientId,
+          visitType: values.visitType,
           visitedAt: values.visitedAt ? new Date(values.visitedAt).toISOString() : undefined,
           notes: values.notes.trim() || undefined
         });
       }
 
       return updateVisit(visit!.id, {
+        visitType: values.visitType,
         visitedAt: values.visitedAt ? new Date(values.visitedAt).toISOString() : undefined,
         notes: values.notes.trim() || undefined
       });
@@ -104,6 +108,13 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
             </div>
           </Field>
         )}
+
+        <Field label="Tipo da visita">
+          <Select {...register("visitType")}>
+            <option value="CONSIGNMENT">Consignacao</option>
+            <option value="SALE">Venda</option>
+          </Select>
+        </Field>
 
         <Field label="Data e hora da visita" error={errors.visitedAt?.message}>
           <Controller

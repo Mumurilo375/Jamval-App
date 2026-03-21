@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 
 import { EmptyState, PageHeader, PageLoader } from "../../components/ui";
 import { getVisit } from "./visits-api";
@@ -21,6 +21,10 @@ export function VisitItemEditPage() {
 
   if (visitQuery.isError || !visitQuery.data || !item) {
     return <EmptyState title="Item nao encontrado" message="Volte para os detalhes da visita e tente novamente." />;
+  }
+
+  if (visitQuery.data.visitType === "CONSIGNMENT") {
+    return <Navigate to={`/visits/${visitId}`} replace />;
   }
 
   if (visitQuery.data.status !== "DRAFT") {

@@ -4,8 +4,10 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { Button, Card, EmptyState, ErrorBanner, PageHeader, PageLoader, SectionHeader, ToneBadge, WarningBanner } from "../../components/ui";
 import { formatCurrency, formatDate } from "../../lib/format";
+import type { VisitDetail } from "../../types/domain";
 import { listClientCatalog } from "../client-catalog/catalog-api";
 import { getClient } from "../clients/clients-api";
+import { ConsignmentVisitFlow } from "./consignment-visit-flow";
 import { VisitCompletionPanel } from "./visit-completion-panel";
 import { VisitFinancialPanel } from "./visit-financial-panel";
 import { VisitReceiptCard } from "./visit-receipt-card";
@@ -27,10 +29,6 @@ import {
 
 export function VisitDetailPage() {
   const { visitId = "" } = useParams();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const autoPopulateAttemptedRef = useRef<string | null>(null);
-  const [autoPopulateCount, setAutoPopulateCount] = useState(0);
   const visitQuery = useQuery({
     queryKey: ["visit", visitId],
     queryFn: () => getVisit(visitId)
@@ -41,89 +39,111 @@ export function VisitDetailPage() {
     enabled: Boolean(visitQuery.data?.clientId)
   });
 
-  const cancelMutation = useMutation({
-    mutationFn: () => cancelVisit(visitId),
-    onSuccess: async (visit) => {
-      await queryClient.invalidateQueries({ queryKey: ["visits"] });
-      queryClient.setQueryData(["visit", visit.id], visit);
-    }
-  });
+  if (visitQuery.isPending || clientQuery.isPending) {
+    return <PageLoader label="Carregando visita..." />;
+  }
 
-  const deleteItemMutation = useMutation({
-    mutationFn: ({ itemId }: { itemId: string }) => deleteVisitItem(visitId, itemId),
-    onSuccess: async (visit) => {
-      await queryClient.invalidateQueries({ queryKey: ["visits"] });
-      queryClient.setQueryData(["visit", visit.id], visit);
-    }
-  });
-  const autoPopulateMutation = useMutation({
-    mutationFn: (items: Parameters<typeof bulkUpsertVisitItems>[1]) => bulkUpsertVisitItems(visitId, items),
-    onSuccess: async (visit) => {
-      await queryClient.invalidateQueries({ queryKey: ["visits"] });
-      queryClient.setQueryData(["visit", visit.id], visit);
-      setAutoPopulateCount(visit.items.length);
-    }
-  });
+  if (visitQuery.isError || !visitQuery.data || clientQuery.isError) {
+    return <EmptyState title="Visita nao encontrada" message="Volte para a lista de visitas e tente novamente." />;
+  }
 
-  const clientName = useMemo(() => clientQuery.data?.tradeName ?? "Cliente", [clientQuery.data]);
   const visit = visitQuery.data;
-  const isDraft = visit?.status === "DRAFT";
-  const shouldAutopopulate = Boolean(visit?.clientId && isDraft && (visit?.items.length ?? 0) === 0);
+  const clientName = clientQuery.data?.tradeName ?? "Cliente";
+
+  if (visit.visitType === "CONSIGNMENT") {
+    return <ConsignmentVisitFlow visit={visit} clientName={clientName} />;
+  }
+
+  return <SaleVisitDetailContent visit={visit} clientName={clientName} />;
+}
+
+type SaleVisitDetailContentProps = {
+  visit: VisitDetail;
+  clientName: string;
+};
+
+function SaleVisitDetailContent({ visit, clientName }: SaleVisitDetailContentProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const autoPopulateAttemptedRef = useRef<string | null>(null);
+  const [autoPopulateCount, setAutoPopulateCount] = useState(0);
+  const isDraft = visit.status === "DRAFT";
+  const shouldAutopopulate = Boolean(visit.clientId && isDraft && visit.items.length === 0);
   const clientCatalogQuery = useQuery({
-    queryKey: ["client-catalog", visit?.clientId, "visit-autopopulate"],
-    queryFn: () => listClientCatalog(visit!.clientId, true),
+    queryKey: ["client-catalog", visit.clientId, "visit-autopopulate"],
+    queryFn: () => listClientCatalog(visit.clientId, true),
     enabled: shouldAutopopulate
   });
   const completedHistoryQuery = useQuery({
-    queryKey: ["visits", visit?.clientId, "completed-history-details", "visit-autopopulate"],
-    queryFn: () => listCompletedVisitHistoryDetails(visit!.clientId),
+    queryKey: ["visits", visit.clientId, "completed-history-details", "visit-autopopulate"],
+    queryFn: () => listCompletedVisitHistoryDetails(visit.clientId),
     enabled: shouldAutopopulate
   });
   const productIds = useMemo(
-    () => Array.from(new Set((visit?.items ?? []).map((item) => item.productId))),
-    [visit?.items]
+    () => Array.from(new Set(visit.items.map((item) => item.productId))),
+    [visit.items]
   );
   const centralBalancesQuery = useQuery({
     queryKey: ["stock", "central-balances", productIds],
     queryFn: () => listCentralBalances(productIds),
     enabled: Boolean(isDraft && productIds.length > 0)
   });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => cancelVisit(visit.id),
+    onSuccess: async (nextVisit) => {
+      await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
+    }
+  });
+  const deleteItemMutation = useMutation({
+    mutationFn: ({ itemId }: { itemId: string }) => deleteVisitItem(visit.id, itemId),
+    onSuccess: async (nextVisit) => {
+      await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
+    }
+  });
+  const autoPopulateMutation = useMutation({
+    mutationFn: (items: Parameters<typeof bulkUpsertVisitItems>[1]) => bulkUpsertVisitItems(visit.id, items),
+    onSuccess: async (nextVisit) => {
+      await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
+      setAutoPopulateCount(nextVisit.items.length);
+    }
+  });
+
   const availableCentralByProductId = useMemo(
-    () =>
-      Object.fromEntries((centralBalancesQuery.data ?? []).map((entry) => [entry.productId, entry.currentQuantity])),
+    () => Object.fromEntries((centralBalancesQuery.data ?? []).map((entry) => [entry.productId, entry.currentQuantity])),
     [centralBalancesQuery.data]
   );
-  const stockWarnings = useMemo(
-    () => {
-      if (!isDraft || !centralBalancesQuery.data) {
-        return [];
-      }
+  const stockWarnings = useMemo(() => {
+    if (!isDraft || !centralBalancesQuery.data) {
+      return [];
+    }
 
-      return (visit?.items ?? [])
-        .map((item) => {
-          const availableQuantity = availableCentralByProductId[item.productId] ?? 0;
-          if (item.restockedQuantity <= availableQuantity) {
-            return null;
-          }
+    return visit.items
+      .map((item) => {
+        const availableQuantity = availableCentralByProductId[item.productId] ?? 0;
+        if (item.restockedQuantity <= availableQuantity) {
+          return null;
+        }
 
-          return {
-            productId: item.productId,
-            productName: item.productSnapshotName,
-            requiredQuantity: item.restockedQuantity,
-            availableQuantity
-          };
-        })
-        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-    },
-    [availableCentralByProductId, centralBalancesQuery.data, isDraft, visit?.items]
-  );
+        return {
+          productId: item.productId,
+          productName: item.productSnapshotName,
+          requiredQuantity: item.restockedQuantity,
+          availableQuantity
+        };
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+  }, [availableCentralByProductId, centralBalancesQuery.data, isDraft, visit.items]);
   const stockWarningByProductId = useMemo(
     () => Object.fromEntries(stockWarnings.map((entry) => [entry.productId, entry])),
     [stockWarnings]
   );
 
   useEffect(() => {
-    if (!visit || !shouldAutopopulate) {
+    if (!shouldAutopopulate) {
       return;
     }
 
@@ -147,7 +167,7 @@ export function VisitDetailPage() {
       return;
     }
 
-    void autoPopulateMutation.mutateAsync(itemsToPopulate);
+    void autoPopulateMutation.mutateAsync(itemsToPopulate).catch(() => undefined);
   }, [
     autoPopulateMutation,
     clientCatalogQuery.data,
@@ -155,38 +175,28 @@ export function VisitDetailPage() {
     completedHistoryQuery.data,
     completedHistoryQuery.isSuccess,
     shouldAutopopulate,
-    visit
+    visit.id
   ]);
-
-  if (visitQuery.isPending || clientQuery.isPending) {
-    return <PageLoader label="Carregando visita..." />;
-  }
-
-  if (visitQuery.isError || !visitQuery.data || clientQuery.isError) {
-    return <EmptyState title="Visita nao encontrada" message="Volte para a lista de visitas e tente novamente." />;
-  }
-
-  const resolvedVisit = visitQuery.data;
 
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Visita"
         title={clientName}
-        subtitle={resolvedVisit.visitCode}
-        action={<ToneBadge label={visitStatusLabel(resolvedVisit.status)} tone={visitStatusTone(resolvedVisit.status)} />}
+        subtitle={visit.visitCode}
+        action={<ToneBadge label={visitStatusLabel(visit.status)} tone={visitStatusTone(visit.status)} />}
       />
 
       <Card className="space-y-4">
-        <VisitHeaderMetric label="Data da visita" value={formatDate(resolvedVisit.visitedAt)} />
+        <VisitHeaderMetric label="Data da visita" value={formatDate(visit.visitedAt)} />
 
         <div className="rounded-2xl bg-white/80 p-3">
           <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Observacoes</p>
-          <p className="mt-1 text-sm text-[var(--jam-subtle)]">{resolvedVisit.notes || "Sem observacoes registradas."}</p>
+          <p className="mt-1 text-sm text-[var(--jam-subtle)]">{visit.notes || "Sem observacoes registradas."}</p>
         </div>
 
         {isDraft ? (
-          <Link to={`/visits/${resolvedVisit.id}/edit`}>
+          <Link to={`/visits/${visit.id}/edit`}>
             <Button variant="secondary" className="w-full">
               Editar dados da visita
             </Button>
@@ -200,7 +210,7 @@ export function VisitDetailPage() {
           subtitle="Comece pelo que havia no cliente, conte o que sobrou e deixe o sistema calcular a cobranca."
           action={
             isDraft ? (
-              <Link to={`/visits/${resolvedVisit.id}/items/new`}>
+              <Link to={`/visits/${visit.id}/items/new`}>
                 <Button>Novo item</Button>
               </Link>
             ) : undefined
@@ -213,7 +223,7 @@ export function VisitDetailPage() {
           </div>
         ) : null}
 
-        {resolvedVisit.items.length === 0 ? (
+        {visit.items.length === 0 ? (
           shouldAutopopulate && (clientCatalogQuery.isPending || completedHistoryQuery.isPending || autoPopulateMutation.isPending) ? (
             <Card className="space-y-2">
               <p className="text-sm font-medium text-[var(--jam-ink)]">Carregando produtos que ja estavam na loja...</p>
@@ -227,7 +237,7 @@ export function VisitDetailPage() {
               message="Adicione os produtos conferidos no cliente para calcular o total da cobranca."
               action={
                 isDraft ? (
-                  <Link to={`/visits/${resolvedVisit.id}/items/new`}>
+                  <Link to={`/visits/${visit.id}/items/new`}>
                     <Button>Adicionar primeiro item</Button>
                   </Link>
                 ) : undefined
@@ -245,7 +255,7 @@ export function VisitDetailPage() {
         ) : null}
 
         <div className="space-y-3">
-          {resolvedVisit.items.map((item) => (
+          {visit.items.map((item) => (
             <Card key={item.id} className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -296,7 +306,7 @@ export function VisitDetailPage() {
 
               {isDraft ? (
                 <div className="grid grid-cols-2 gap-3">
-                  <Link to={`/visits/${resolvedVisit.id}/items/${item.id}/edit`}>
+                  <Link to={`/visits/${visit.id}/items/${item.id}/edit`}>
                     <Button variant="secondary" className="w-full">
                       Editar conferencia
                     </Button>
@@ -307,7 +317,7 @@ export function VisitDetailPage() {
                     disabled={deleteItemMutation.isPending}
                     onClick={() => {
                       if (window.confirm("Remover este item da visita em rascunho?")) {
-                        void deleteItemMutation.mutateAsync({ itemId: item.id });
+                        void deleteItemMutation.mutateAsync({ itemId: item.id }).catch(() => undefined);
                       }
                     }}
                   >
@@ -329,31 +339,25 @@ export function VisitDetailPage() {
       ) : null}
 
       <div className="space-y-3">
-        <SectionHeader
-          title="Totais da visita"
-          subtitle="O total a cobrar e calculado automaticamente pela soma dos subtotais dos produtos."
-        />
+        <SectionHeader title="Totais da visita" subtitle="O total a cobrar e calculado automaticamente pela soma dos subtotais dos produtos." />
 
         <Card className="space-y-4">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Total a cobrar</p>
-              <p className="mt-1 font-display text-4xl font-semibold text-[var(--jam-ink)]">
-                {formatCurrency(visitNumber(resolvedVisit.totalAmount))}
-              </p>
+              <p className="mt-1 font-display text-4xl font-semibold text-[var(--jam-ink)]">{formatCurrency(visitNumber(visit.totalAmount))}</p>
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Itens conferidos</p>
-              <p className="mt-1 text-xl font-semibold text-[var(--jam-ink)]">{resolvedVisit.items.length}</p>
+              <p className="mt-1 text-xl font-semibold text-[var(--jam-ink)]">{visit.items.length}</p>
             </div>
           </div>
         </Card>
       </div>
 
-      <VisitFinancialPanel visit={resolvedVisit} />
-      <VisitReceiptCard visit={resolvedVisit} />
-
-      <VisitCompletionPanel visit={resolvedVisit} />
+      <VisitFinancialPanel visit={visit} />
+      <VisitReceiptCard visit={visit} />
+      <VisitCompletionPanel visit={visit} />
 
       {isDraft ? (
         <Card className="space-y-3">
@@ -363,9 +367,14 @@ export function VisitDetailPage() {
             className="w-full"
             disabled={cancelMutation.isPending}
             onClick={() => {
-              if (window.confirm("Cancelar esta visita em rascunho?")) {
-                void cancelMutation.mutateAsync().then(() => navigate("/visits", { replace: true }));
+              if (!window.confirm("Cancelar esta visita em rascunho?")) {
+                return;
               }
+
+              void cancelMutation
+                .mutateAsync()
+                .then(() => navigate("/visits", { replace: true }))
+                .catch(() => undefined);
             }}
           >
             Cancelar visita
