@@ -33,6 +33,7 @@ export function VisitReceiptCard({ visit }: VisitReceiptCardProps) {
     mutationFn: () => generateVisitReceipt(visit.id),
     onSuccess: (receipt) => {
       queryClient.setQueryData(["visit-receipt", visit.id], receipt);
+      void queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
     }
   });
   const downloadMutation = useMutation({

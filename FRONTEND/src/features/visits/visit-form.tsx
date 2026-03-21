@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
@@ -8,7 +9,7 @@ import { Button, Card, DateTimeInput, ErrorBanner, Field, PageLoader, Select, Te
 import { ApiError } from "../../lib/api";
 import type { Client, VisitDetail } from "../../types/domain";
 import { listClients } from "../clients/clients-api";
-import { createVisit, updateVisit } from "./visits-api";
+import { createVisit, listVisits, updateVisit } from "./visits-api";
 
 const visitFormSchema = z.object({
   clientId: z.string().trim().min(1, "Selecione o cliente"),
@@ -33,6 +34,15 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
     queryFn: () => listClients({ isActive: true }),
     enabled: mode === "create"
   });
+  const draftVisitsQuery = useQuery({
+    queryKey: ["visits", "visit-form", "open-by-client"],
+    queryFn: () => listVisits({ status: "DRAFT" }),
+    enabled: mode === "create"
+  });
+  const clientIdsWithOpenVisit = useMemo(
+    () => new Set((draftVisitsQuery.data ?? []).map((entry) => entry.clientId)),
+    [draftVisitsQuery.data]
+  );
 
   const {
     control,
@@ -68,6 +78,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
     },
     onSuccess: async (savedVisit) => {
       await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
       await queryClient.invalidateQueries({ queryKey: ["visit", savedVisit.id] });
       await navigate(mode === "create" ? `/visits/${savedVisit.id}` : `/visits/${visit!.id}`, { replace: true });
     }
@@ -91,12 +102,17 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
         {mutation.error instanceof ApiError ? <ErrorBanner message={mutation.error.message} /> : null}
 
         {mode === "create" ? (
-          <Field label="Cliente" error={errors.clientId?.message}>
+          <Field
+            label="Cliente"
+            error={errors.clientId?.message}
+            hint="Clientes com visita nao finalizada ficam indisponiveis para uma nova abertura."
+          >
             <Select {...register("clientId")}>
               <option value="">Selecione um cliente</option>
               {clientsQuery.data?.map((entry) => (
-                <option key={entry.id} value={entry.id}>
+                <option key={entry.id} value={entry.id} disabled={clientIdsWithOpenVisit.has(entry.id)}>
                   {entry.tradeName}
+                  {clientIdsWithOpenVisit.has(entry.id) ? " - ja tem visita nao finalizada" : ""}
                 </option>
               ))}
             </Select>
@@ -135,7 +151,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
             Voltar
           </Button>
           <Button type="submit" className="w-full sm:flex-1" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar visita" : "Salvar rascunho"}
+            {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar visita" : "Salvar visita"}
           </Button>
         </div>
       </form>

@@ -1,5 +1,5 @@
 import { api, downloadApiFile } from "../../lib/api";
-import type { Visit, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
+import type { OperationalVisitQueue, Visit, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
 
 export type VisitListFilters = {
   clientId?: string;
@@ -97,6 +97,10 @@ function buildQuery(filters: VisitListFilters): string {
 
 export function listVisits(filters: VisitListFilters) {
   return api.get<Visit[]>(`/visits${buildQuery(filters)}`);
+}
+
+export function listOperationalVisitQueue() {
+  return api.get<OperationalVisitQueue>("/visits/operational-queue");
 }
 
 export function getVisit(visitId: string) {

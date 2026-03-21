@@ -108,6 +108,59 @@ export type VisitDetail = Visit & {
   items: VisitItem[];
 };
 
+export type OperationalQueueMainAction = {
+  mode: "continue" | "new";
+  visitId: string | null;
+  clientId: string | null;
+  clientName: string | null;
+  visitCode: string | null;
+  visitType: VisitType | null;
+  visitedAt: string | null;
+  nextStepLabel: string | null;
+};
+
+export type OperationalReturnQueueItem = {
+  clientId: string;
+  clientName: string;
+  sourceVisitId: string;
+  sourceVisitCode: string;
+  lastVisitAt: string;
+  itemCount: number;
+  baseQuantity: number;
+};
+
+export type OperationalInProgressVisit = {
+  visitId: string;
+  visitCode: string;
+  clientId: string;
+  clientName: string;
+  visitType: VisitType;
+  visitedAt: string;
+  itemCount: number;
+  nextStepLabel: string;
+};
+
+export type OperationalHistoryVisit = {
+  visitId: string;
+  visitCode: string;
+  clientId: string;
+  clientName: string;
+  visitType: VisitType;
+  visitedAt: string;
+  completedAt: string | null;
+  totalAmount: number;
+  receivedAmount: number;
+  receivableStatus: ReceivableStatus | null;
+  hasReceipt: boolean;
+};
+
+export type OperationalVisitQueue = {
+  mainAction: OperationalQueueMainAction;
+  returnQueue: OperationalReturnQueueItem[];
+  inProgress: OperationalInProgressVisit[];
+  recentHistory: OperationalHistoryVisit[];
+};
+
 export type ReceivableStatus = "PENDING" | "PARTIAL" | "PAID";
 export type ReceivableDisplayStatus = ReceivableStatus | "OVERDUE";
 export type PaymentMethod = "CASH" | "PIX" | "CARD" | "BANK_TRANSFER" | "OTHER";

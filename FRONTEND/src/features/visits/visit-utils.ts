@@ -3,7 +3,7 @@ import type { VisitItemDraftPayload } from "./visits-api";
 
 export function visitStatusLabel(status: VisitStatus): string {
   if (status === "DRAFT") {
-    return "Rascunho";
+    return "Nao finalizada";
   }
 
   if (status === "COMPLETED") {

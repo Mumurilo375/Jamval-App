@@ -38,7 +38,7 @@ export function LoginPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
           <h1 className="font-display mt-2 text-4xl font-semibold text-[var(--jam-ink)]">Acesse a operacao</h1>
           <p className="mt-2 text-sm text-[var(--jam-subtle)]">
-            Entre com o usuario administrador para abrir visitas, revisar rascunhos e manter os cadastros.
+          Entre com o usuario administrador para abrir visitas, revisar visitas nao finalizadas e manter os cadastros.
           </p>
         </div>
 

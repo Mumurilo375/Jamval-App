@@ -394,7 +394,7 @@ export function DirectSaleVisitFlow({ visit, clientName }: DirectSaleVisitFlowPr
 
         {isDraft ? (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button variant="secondary" onClick={() => void saveDraft()} disabled={saveItemsMutation.isPending || saveMetadataMutation.isPending || deleteItemMutation.isPending}>Salvar rascunho</Button>
+            <Button variant="secondary" onClick={() => void saveDraft()} disabled={saveItemsMutation.isPending || saveMetadataMutation.isPending || deleteItemMutation.isPending}>Salvar visita</Button>
             <Button onClick={() => void onConclude()} disabled={completeMutation.isPending || rows.length === 0}>Concluir venda</Button>
           </div>
         ) : (
@@ -417,8 +417,8 @@ export function DirectSaleVisitFlow({ visit, clientName }: DirectSaleVisitFlowPr
 
       {isDraft ? (
         <Card className="space-y-3">
-          <StepHeader step="Rascunho" title="Acoes do rascunho" />
-          <Button variant="danger" className="w-full" disabled={cancelMutation.isPending} onClick={() => { if (window.confirm("Cancelar esta venda em rascunho?")) { void cancelMutation.mutateAsync().then(() => navigate("/visits", { replace: true })); } }}>
+          <StepHeader step="Nao finalizada" title="Acoes da venda" />
+          <Button variant="danger" className="w-full" disabled={cancelMutation.isPending} onClick={() => { if (window.confirm("Cancelar esta venda nao finalizada?")) { void cancelMutation.mutateAsync().then(() => navigate("/visits", { replace: true })); } }}>
             {cancelMutation.isPending ? "Cancelando..." : "Cancelar venda"}
           </Button>
         </Card>
@@ -573,6 +573,7 @@ function selectPaymentStatus(status: SalePaymentStatus, totalAmount: number, rec
 function handleVisitMutationSuccess(queryClient: QueryClient) {
   return async (nextVisit: VisitDetail) => {
     await queryClient.invalidateQueries({ queryKey: ["visits"] });
+    await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
     queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
   };
 }

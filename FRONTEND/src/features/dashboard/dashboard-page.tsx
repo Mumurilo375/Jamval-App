@@ -1,53 +1,28 @@
-import { useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, CompactLinkRow, EmptyState, PageHeader, PageLoader, SectionHeader, ToneBadge } from "../../components/ui";
-import { formatCurrency, formatDate } from "../../lib/format";
-import { listClients } from "../clients/clients-api";
-import { listReceivables } from "../finance/finance-api";
+import { Button, Card, CompactLinkRow, EmptyState, PageHeader, PageLoader, SectionHeader } from "../../components/ui";
 import {
-  buildReceivableRoute,
-  matchesFinanceView,
-  receivableStatusLabel,
-  receivableStatusTone,
-  sortReceivablesForQueue
-} from "../finance/finance-utils";
-import { listVisits } from "../visits/visits-api";
-import { visitNumber, visitStatusLabel, visitStatusTone } from "../visits/visit-utils";
+  HistoryList,
+  InProgressList,
+  ReturnQueueList,
+  StartVisitErrorBanner,
+  useStartConsignmentVisit
+} from "../visits/operational-queue";
+import { listOperationalVisitQueue } from "../visits/visits-api";
 
 export function DashboardPage() {
-  const draftVisitsQuery = useQuery({
-    queryKey: ["operation-home", "drafts"],
-    queryFn: () => listVisits({ status: "DRAFT" })
+  const queueQuery = useQuery({
+    queryKey: ["visits", "operational-queue"],
+    queryFn: () => listOperationalVisitQueue()
   });
-  const clientsQuery = useQuery({
-    queryKey: ["operation-home", "clients"],
-    queryFn: () => listClients({})
-  });
-  const receivablesQuery = useQuery({
-    queryKey: ["operation-home", "receivables"],
-    queryFn: () => listReceivables({})
-  });
+  const startVisit = useStartConsignmentVisit();
 
-  const draftVisits = draftVisitsQuery.data ?? [];
-  const latestDraftVisit = draftVisits[0] ?? null;
-  const visitsInProgress = draftVisits.slice(0, 4);
-  const clientMap = useMemo(
-    () => new Map((clientsQuery.data ?? []).map((client) => [client.id, client.tradeName])),
-    [clientsQuery.data]
-  );
-  const receivablesToCollect = useMemo(
-    () =>
-      sortReceivablesForQueue((receivablesQuery.data ?? []).filter((receivable) => matchesFinanceView(receivable, "OPEN"))).slice(0, 4),
-    [receivablesQuery.data]
-  );
-
-  if (draftVisitsQuery.isPending || clientsQuery.isPending) {
+  if (queueQuery.isPending) {
     return <PageLoader label="Montando a fila do dia..." />;
   }
 
-  if (draftVisitsQuery.isError || clientsQuery.isError) {
+  if (queueQuery.isError || !queueQuery.data) {
     return (
       <EmptyState
         title="Nao foi possivel montar a fila do dia"
@@ -56,19 +31,22 @@ export function DashboardPage() {
     );
   }
 
-  const mainActionTitle = latestDraftVisit ? "Visita aberta pronta para continuar" : "Nenhuma visita aberta agora";
-  const mainActionSubtitle = latestDraftVisit
-    ? `${clientMap.get(latestDraftVisit.clientId) ?? "Cliente"} • ${formatDate(latestDraftVisit.visitedAt)} • ${latestDraftVisit.visitCode}`
-    : "Abra uma nova visita para comecar a conferencia do dia.";
-  const mainActionLabel = latestDraftVisit ? "Continuar visita aberta" : "Nova visita";
-  const mainActionHref = latestDraftVisit ? `/visits/${latestDraftVisit.id}` : "/visits/new";
+  const queue = queueQuery.data;
+  const mainAction = queue.mainAction;
+  const hasOpenVisit = mainAction.mode === "continue" && mainAction.visitId;
+  const mainActionTitle = hasOpenVisit ? "Continuar atendimento em aberto" : "Nova visita";
+  const mainActionSubtitle = hasOpenVisit
+    ? `${mainAction.clientName ?? "Cliente"} • ${mainAction.visitCode ?? ""}`
+    : "Abra uma nova visita quando nao houver atendimento em aberto.";
+  const mainActionHref = hasOpenVisit ? `/visits/${mainAction.visitId}` : "/visits/new";
+  const mainActionLabel = hasOpenVisit ? "Continuar" : "Nova visita";
 
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Operacao"
         title="Fila do dia"
-        subtitle="Retome o que ja esta aberto, veja o que precisa receber e siga para a proxima acao."
+        subtitle="Veja quem volta primeiro, o que ja esta em andamento e o que ja rodou."
       />
 
       <Card className="space-y-3 border-[rgba(29,78,216,0.18)] bg-[rgba(29,78,216,0.05)]">
@@ -85,143 +63,83 @@ export function DashboardPage() {
         </div>
       </Card>
 
+      <StartVisitErrorBanner error={startVisit.error} />
+
       <div className="space-y-3">
         <SectionHeader
-          title="Visitas em andamento"
-          subtitle="Rascunhos abertos para continuar hoje."
+          title="Fila de retorno"
+          subtitle="Clientes de consignacao aguardando a proxima conferencia."
           action={
             <Link to="/visits">
               <Button variant="ghost" className="px-0">
-                Abrir visitas
+                Abrir organizador
               </Button>
             </Link>
           }
         />
 
-        {visitsInProgress.length === 0 ? (
-          <Card className="space-y-3">
-            <p className="text-sm text-[var(--jam-subtle)]">Nenhuma visita em andamento agora.</p>
-            <Link to="/visits/new">
-              <Button variant="secondary" className="w-full sm:w-auto">
-                Nova visita
-              </Button>
-            </Link>
-          </Card>
-        ) : (
-          <Card className="divide-y divide-[var(--jam-border)] overflow-hidden p-0">
-            {visitsInProgress.map((visit) => (
-              <QueueRow
-                key={visit.id}
-                to={`/visits/${visit.id}`}
-                title={clientMap.get(visit.clientId) ?? "Cliente"}
-                subtitle={`${formatDate(visit.visitedAt)} • ${visit.visitCode}`}
-                amount={formatCurrency(visitNumber(visit.totalAmount))}
-                badge={<ToneBadge label={visitStatusLabel(visit.status)} tone={visitStatusTone(visit.status)} />}
-              />
-            ))}
-          </Card>
-        )}
+        <ReturnQueueList
+          items={queue.returnQueue.slice(0, 5)}
+          emptyTitle="Nenhum cliente na fila de retorno"
+          emptyMessage="Quando uma base de consignacao estiver aguardando nova conferencia, ela aparece aqui."
+          onStartVisit={startVisit.startVisit}
+          pendingClientId={startVisit.pendingClientId}
+        />
       </div>
 
       <div className="space-y-3">
         <SectionHeader
-          title="Para receber"
-          subtitle="Titulos em aberto e parciais para tratar hoje."
+          title="Em andamento"
+          subtitle="Atendimentos abertos para continuar sem duplicar trabalho."
           action={
-            <Link to="/financeiro">
+            <Link to="/visits">
               <Button variant="ghost" className="px-0">
-                Abrir receber
+                Ver tudo
               </Button>
             </Link>
           }
         />
 
-        {receivablesQuery.isPending ? (
-          <Card>
-            <p className="text-sm text-[var(--jam-subtle)]">Carregando cobrancas do dia...</p>
-          </Card>
-        ) : null}
+        <InProgressList
+          items={queue.inProgress.slice(0, 5)}
+          emptyTitle="Nada em andamento agora"
+          emptyMessage="Quando voce abrir uma visita e ainda nao concluir, ela aparece aqui."
+        />
+      </div>
 
-        {receivablesQuery.isError ? (
-          <Card className="space-y-3">
-            <p className="text-sm text-[var(--jam-subtle)]">Nao foi possivel carregar os titulos para receber agora.</p>
-            <Link to="/financeiro">
-              <Button variant="secondary" className="w-full sm:w-auto">
-                Abrir receber
+      <div className="space-y-3">
+        <SectionHeader
+          title="Historico recente"
+          subtitle="O que ja foi concluido e saiu da fila viva."
+          action={
+            <Link to="/visits">
+              <Button variant="ghost" className="px-0">
+                Ver historico
               </Button>
             </Link>
-          </Card>
-        ) : null}
+          }
+        />
 
-        {!receivablesQuery.isPending && !receivablesQuery.isError && receivablesToCollect.length === 0 ? (
-          <Card>
-            <p className="text-sm text-[var(--jam-subtle)]">Nenhum titulo aguardando recebimento agora.</p>
-          </Card>
-        ) : null}
-
-        {!receivablesQuery.isPending && !receivablesQuery.isError && receivablesToCollect.length > 0 ? (
-          <Card className="divide-y divide-[var(--jam-border)] overflow-hidden p-0">
-            {receivablesToCollect.map((receivable) => (
-              <QueueRow
-                key={receivable.id}
-                to={buildReceivableRoute(receivable.id, receivable.status)}
-                title={receivable.client.tradeName}
-                subtitle={`${receivable.visit.visitCode} • visita em ${formatDate(receivable.visit.visitedAt)}`}
-                amount={formatCurrency(visitNumber(receivable.amountOutstanding))}
-                badge={
-                  <ToneBadge
-                    label={receivableStatusLabel(receivable.status)}
-                    tone={receivableStatusTone(receivable.status)}
-                  />
-                }
-              />
-            ))}
-          </Card>
-        ) : null}
+        <HistoryList
+          items={queue.recentHistory.slice(0, 5)}
+          emptyTitle="Nenhuma visita concluida ainda"
+          emptyMessage="As visitas concluidas vao aparecer aqui para consulta rapida."
+        />
       </div>
 
       <div className="space-y-3">
         <SectionHeader
           title="Atalhos uteis"
-          subtitle="Base e configuracao sem competir com a operacao principal."
+          subtitle="Acessos secundarios sem competir com a fila principal."
         />
 
         <div className="space-y-2">
+          <ShortcutLink to="/financeiro" title="Financeiro" />
           <ShortcutLink to="/clients" title="Clientes" />
           <ShortcutLink to="/products" title="Produtos" />
         </div>
       </div>
     </div>
-  );
-}
-
-function QueueRow({
-  to,
-  title,
-  subtitle,
-  amount,
-  badge
-}: {
-  to: string;
-  title: string;
-  subtitle: string;
-  amount: string;
-  badge: ReactNode;
-}) {
-  return (
-    <Link to={to} className="block px-4 py-3 transition hover:bg-[rgba(29,78,216,0.04)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{title}</p>
-          <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{subtitle}</p>
-        </div>
-
-        <div className="shrink-0 text-right">
-          <div className="mb-1 flex justify-end">{badge}</div>
-          <p className="text-sm font-semibold text-[var(--jam-ink)]">{amount}</p>
-        </div>
-      </div>
-    </Link>
   );
 }
 

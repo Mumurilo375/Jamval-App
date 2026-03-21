@@ -59,6 +59,7 @@ export function VisitFinancialPanel({ visit }: VisitFinancialPanelProps) {
       }),
     onSuccess: async (nextVisit) => {
       await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
       queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
       reset({
         receivedAmountOnVisit: String(visitNumber(nextVisit.receivedAmountOnVisit))

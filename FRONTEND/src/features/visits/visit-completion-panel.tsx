@@ -61,6 +61,7 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
       ),
     onSuccess: async (completedVisit) => {
       await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
       await queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.setQueryData(["visit", completedVisit.id], completedVisit);
       setIsFormOpen(false);

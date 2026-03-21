@@ -23,7 +23,7 @@ export function VisitEditPage() {
   }
 
   if (visitQuery.isError || !visitQuery.data || clientQuery.isError) {
-    return <EmptyState title="Visita nao encontrada" message="Volte para a lista e tente abrir o rascunho novamente." />;
+    return <EmptyState title="Visita nao encontrada" message="Volte para a lista e tente abrir a visita nao finalizada novamente." />;
   }
 
   return (

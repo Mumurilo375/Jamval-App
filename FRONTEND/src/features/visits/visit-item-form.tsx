@@ -185,6 +185,7 @@ export function VisitItemForm({
     },
     onSuccess: async (nextVisit) => {
       await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
       queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
       await navigate(`/visits/${nextVisit.id}`, { replace: true });
     }
@@ -205,6 +206,7 @@ export function VisitItemForm({
       }),
     onSuccess: async (nextVisit) => {
       await queryClient.invalidateQueries({ queryKey: ["visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
       queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
       await navigate(`/visits/${nextVisit.id}`, { replace: true });
     }

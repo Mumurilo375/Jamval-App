@@ -16,7 +16,7 @@ export function VisitItemCreatePage() {
   }
 
   if (visitQuery.isError || !visitQuery.data) {
-    return <EmptyState title="Visita indisponivel" message="Volte para o rascunho e tente novamente." />;
+    return <EmptyState title="Visita indisponivel" message="Volte para a visita e tente novamente." />;
   }
 
   return <Navigate to={`/visits/${visitId}`} replace />;

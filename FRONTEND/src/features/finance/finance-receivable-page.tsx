@@ -207,6 +207,7 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
       queryClient.setQueryData(["finance", "receivable", receivable.id], result.receivable);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["finance", "receivables"] }),
+        queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] }),
         queryClient.invalidateQueries({ queryKey: ["operation-home"] }),
         queryClient.invalidateQueries({ queryKey: ["admin"] })
       ]);

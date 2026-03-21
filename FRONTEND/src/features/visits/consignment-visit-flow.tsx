@@ -338,7 +338,7 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
     setDraftValidationError(null);
 
     if (rowValidationErrors.length > 0) {
-      setDraftValidationError("Revise a conferencia antes de salvar o rascunho. Existem produtos com saldo negativo ou campos invalidos.");
+      setDraftValidationError("Revise a conferencia antes de salvar a visita. Existem produtos com saldo negativo ou campos invalidos.");
       return false;
     }
 
@@ -710,9 +710,9 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
                             variant="danger"
                             disabled={deleteItemMutation.isPending}
                             onClick={() => {
-                              if (!window.confirm("Remover este produto da visita em rascunho?")) {
-                                return;
-                              }
+                        if (!window.confirm("Remover este produto da visita nao finalizada?")) {
+                          return;
+                        }
 
                               void deleteItemMutation.mutateAsync({ itemId: row.item.id }).catch(() => undefined);
                             }}
@@ -847,7 +847,7 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
         {isDraft ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <Button variant="secondary" disabled={isBusy} onClick={() => void saveDraft()}>
-              {saveBusy ? "Salvando..." : "Salvar rascunho"}
+              {saveBusy ? "Salvando..." : "Salvar visita"}
             </Button>
             <Button disabled={isBusy || !canConclude} onClick={() => void onConclude()}>
               {completeMutation.isPending ? "Concluindo..." : "Concluir visita"}
@@ -882,13 +882,13 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
 
       {isDraft ? (
         <Card className="space-y-3">
-          <StepHeader step="Rascunho" title="Acoes do rascunho" />
+          <StepHeader step="Nao finalizada" title="Acoes da visita" />
           <Button
             variant="danger"
             className="w-full"
             disabled={cancelMutation.isPending}
             onClick={() => {
-              if (!window.confirm("Cancelar esta visita em rascunho?")) {
+              if (!window.confirm("Cancelar esta visita nao finalizada?")) {
                 return;
               }
 
@@ -1177,6 +1177,7 @@ function formatUnknownError(error: unknown): string | null {
 function handleVisitMutationSuccess(queryClient: QueryClient) {
   return async (nextVisit: VisitDetail) => {
     await queryClient.invalidateQueries({ queryKey: ["visits"] });
+    await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
     queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
   };
 }
