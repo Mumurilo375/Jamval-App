@@ -9,6 +9,11 @@ import { normalizeSignatureImage } from "../../shared/utils/signature-image";
 import type {
   BulkUpsertVisitItemsInput,
   CreateVisitInput,
+  OperationalCompletedConsignmentRecord,
+  OperationalDraftVisitRecord,
+  OperationalInProgressVisit,
+  OperationalQueueMainAction,
+  OperationalVisitQueue,
   PatchVisitItemInput,
   PutVisitSignatureInput,
   UpdateVisitInput,
@@ -35,6 +40,76 @@ export class VisitService {
     return this.repository.list(filters);
   }
 
+  async getOperationalQueue(): Promise<OperationalVisitQueue> {
+    const [drafts, completedConsignments, recentHistory] = await Promise.all([
+      this.repository.listDraftsForOperationalQueue(),
+      this.repository.listCompletedConsignmentsForOperationalQueue(),
+      this.repository.listRecentCompletedForOperationalQueue(20)
+    ]);
+
+    const inProgress = drafts.map(mapDraftToOperationalInProgress);
+    const draftClientIds = new Set(drafts.map((visit) => visit.clientId));
+    const latestCompletedConsignmentByClientId = new Map<string, OperationalCompletedConsignmentRecord>();
+
+    for (const visit of completedConsignments) {
+      if (draftClientIds.has(visit.clientId) || latestCompletedConsignmentByClientId.has(visit.clientId)) {
+        continue;
+      }
+
+      latestCompletedConsignmentByClientId.set(visit.clientId, visit);
+    }
+
+    const consignedBalances = await this.repository.listConsignedBalancesByClientIds([
+      ...latestCompletedConsignmentByClientId.keys()
+    ]);
+    const consignedBalanceSummaryByClientId = buildConsignedBalanceSummaryByClientId(consignedBalances);
+
+    const returnQueue = [...latestCompletedConsignmentByClientId.values()]
+      .sort(
+        (left, right) =>
+          left.visitedAt.getTime() - right.visitedAt.getTime() ||
+          left.createdAt.getTime() - right.createdAt.getTime()
+      )
+      .map((visit) => {
+        const summary = consignedBalanceSummaryByClientId.get(visit.clientId) ?? {
+          itemCount: 0,
+          baseQuantity: 0
+        };
+
+        return {
+          clientId: visit.clientId,
+          clientName: visit.client.tradeName,
+          sourceVisitId: visit.id,
+          sourceVisitCode: visit.visitCode,
+          lastVisitAt: visit.visitedAt,
+          itemCount: summary.itemCount,
+          baseQuantity: summary.baseQuantity
+        };
+      });
+
+    return {
+      mainAction: buildOperationalMainAction(inProgress[0]),
+      returnQueue,
+      inProgress,
+      recentHistory: recentHistory.map((visit) => ({
+        visitId: visit.id,
+        visitCode: visit.visitCode,
+        clientId: visit.clientId,
+        clientName: visit.client.tradeName,
+        visitType: visit.visitType,
+        visitedAt: visit.visitedAt,
+        completedAt: visit.completedAt,
+        totalAmount: moneyToNumber(visit.totalAmount) ?? 0,
+        receivedAmount:
+          moneyToNumber(visit.receivable?.amountReceived) ??
+          moneyToNumber(visit.receivedAmountOnVisit) ??
+          0,
+        receivableStatus: visit.receivable?.status ?? null,
+        hasReceipt: Boolean(visit.receiptDocument)
+      }))
+    };
+  }
+
   async getById(id: string): Promise<VisitWithItems> {
     const visit = await this.repository.findByIdWithItems(id);
 
@@ -56,6 +131,20 @@ export class VisitService {
 
       if (!client) {
         throw new NotFoundError("Client not found", { clientId: input.clientId });
+      }
+
+      const existingDraft = await this.repository.findDraftByClientId(input.clientId, tx);
+
+      if (existingDraft) {
+        throw new AppError(
+          409,
+          "VISIT_ALREADY_OPEN",
+          "Este cliente ja tem uma visita nao finalizada em aberto.",
+          {
+            clientId: input.clientId,
+            visitId: existingDraft.id
+          }
+        );
       }
 
       const created = await this.repository.create(
@@ -376,4 +465,83 @@ export class VisitService {
     ensureReceivedAmountWithinTotal(receivedAmountOnVisit, totalAmount);
     await this.repository.updateTotalAmount(visitId, totalAmount, db);
   }
+}
+
+function mapDraftToOperationalInProgress(visit: OperationalDraftVisitRecord): OperationalInProgressVisit {
+  return {
+    visitId: visit.id,
+    visitCode: visit.visitCode,
+    clientId: visit.clientId,
+    clientName: visit.client.tradeName,
+    visitType: visit.visitType,
+    visitedAt: visit.visitedAt,
+    itemCount: visit._count.items,
+    nextStepLabel: resolveOperationalNextStepLabel(visit.visitType, visit._count.items)
+  };
+}
+
+function resolveOperationalNextStepLabel(visitType: "CONSIGNMENT" | "SALE", itemCount: number): string {
+  if (itemCount === 0) {
+    return "Adicionar itens";
+  }
+
+  return visitType === "SALE" ? "Continuar venda" : "Continuar acerto";
+}
+
+function buildOperationalMainAction(
+  visit: OperationalInProgressVisit | undefined
+): OperationalQueueMainAction {
+  if (!visit) {
+    return {
+      mode: "new",
+      visitId: null,
+      clientId: null,
+      clientName: null,
+      visitCode: null,
+      visitType: null,
+      visitedAt: null,
+      nextStepLabel: null
+    };
+  }
+
+  return {
+    mode: "continue",
+    visitId: visit.visitId,
+    clientId: visit.clientId,
+    clientName: visit.clientName,
+    visitCode: visit.visitCode,
+    visitType: visit.visitType,
+    visitedAt: visit.visitedAt,
+    nextStepLabel: visit.nextStepLabel
+  };
+}
+
+function buildConsignedBalanceSummaryByClientId(
+  balances: Array<{ clientId: string; currentQuantity: number }>
+): Map<string, { itemCount: number; baseQuantity: number }> {
+  const summaryByClientId = new Map<string, { itemCount: number; baseQuantity: number }>();
+
+  for (const balance of balances) {
+    const current = summaryByClientId.get(balance.clientId) ?? {
+      itemCount: 0,
+      baseQuantity: 0
+    };
+
+    if (balance.currentQuantity > 0) {
+      current.itemCount += 1;
+      current.baseQuantity += balance.currentQuantity;
+    }
+
+    summaryByClientId.set(balance.clientId, current);
+  }
+
+  return summaryByClientId;
+}
+
+function moneyToNumber(value: Prisma.Decimal | number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  return Number(value);
 }

@@ -11,6 +11,9 @@ import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
 import type {
   DraftVisitComputedItem,
+  OperationalCompletedConsignmentRecord,
+  OperationalDraftVisitRecord,
+  OperationalHistoryVisitRecord,
   UpdateVisitInput,
   VisitListQuery,
   VisitWithItems
@@ -38,6 +41,16 @@ export class VisitRepository {
     });
   }
 
+  async findDraftByClientId(clientId: string, db: DbClient = prisma): Promise<Visit | null> {
+    return db.visit.findFirst({
+      where: {
+        clientId,
+        status: "DRAFT"
+      },
+      orderBy: [{ createdAt: "desc" }]
+    });
+  }
+
   async list(filters: VisitListQuery, db: DbClient = prisma): Promise<Visit[]> {
     const where: Prisma.VisitWhereInput = {
       ...(filters.clientId ? { clientId: filters.clientId } : {}),
@@ -56,6 +69,117 @@ export class VisitRepository {
     return db.visit.findMany({
       where,
       orderBy: [{ visitedAt: "desc" }]
+    });
+  }
+
+  async listDraftsForOperationalQueue(db: DbClient = prisma): Promise<OperationalDraftVisitRecord[]> {
+    return db.visit.findMany({
+      where: {
+        status: "DRAFT"
+      },
+      select: {
+        id: true,
+        visitCode: true,
+        clientId: true,
+        visitType: true,
+        visitedAt: true,
+        createdAt: true,
+        client: {
+          select: {
+            tradeName: true
+          }
+        },
+        _count: {
+          select: {
+            items: true
+          }
+        }
+      },
+      orderBy: [{ visitedAt: "asc" }, { createdAt: "asc" }]
+    });
+  }
+
+  async listCompletedConsignmentsForOperationalQueue(
+    db: DbClient = prisma
+  ): Promise<OperationalCompletedConsignmentRecord[]> {
+    return db.visit.findMany({
+      where: {
+        status: "COMPLETED",
+        visitType: "CONSIGNMENT"
+      },
+      select: {
+        id: true,
+        visitCode: true,
+        clientId: true,
+        visitedAt: true,
+        createdAt: true,
+        client: {
+          select: {
+            tradeName: true
+          }
+        }
+      },
+      orderBy: [{ visitedAt: "desc" }, { createdAt: "desc" }]
+    });
+  }
+
+  async listRecentCompletedForOperationalQueue(
+    limit = 20,
+    db: DbClient = prisma
+  ): Promise<OperationalHistoryVisitRecord[]> {
+    return db.visit.findMany({
+      where: {
+        status: "COMPLETED"
+      },
+      select: {
+        id: true,
+        visitCode: true,
+        clientId: true,
+        visitType: true,
+        visitedAt: true,
+        completedAt: true,
+        totalAmount: true,
+        receivedAmountOnVisit: true,
+        client: {
+          select: {
+            tradeName: true
+          }
+        },
+        receivable: {
+          select: {
+            amountReceived: true,
+            status: true
+          }
+        },
+        receiptDocument: {
+          select: {
+            id: true
+          }
+        }
+      },
+      orderBy: [{ completedAt: "desc" }, { visitedAt: "desc" }],
+      take: limit
+    });
+  }
+
+  async listConsignedBalancesByClientIds(
+    clientIds: string[],
+    db: DbClient = prisma
+  ): Promise<Array<{ clientId: string; currentQuantity: number }>> {
+    if (clientIds.length === 0) {
+      return [];
+    }
+
+    return db.consignedStockBalance.findMany({
+      where: {
+        clientId: {
+          in: clientIds
+        }
+      },
+      select: {
+        clientId: true,
+        currentQuantity: true
+      }
     });
   }
 

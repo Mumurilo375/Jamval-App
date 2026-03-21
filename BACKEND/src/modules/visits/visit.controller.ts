@@ -28,6 +28,12 @@ export class VisitController {
     reply.status(201).send({ data: visit });
   };
 
+  getOperationalQueue = async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const queue = await this.service.getOperationalQueue();
+
+    reply.send({ data: queue });
+  };
+
   list = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const query = parseWithZod(visitListQuerySchema, request.query);
     const visits = await this.service.list(query);

@@ -29,6 +29,124 @@ export type VisitWithItems = Prisma.VisitGetPayload<{
   };
 }>;
 
+export type OperationalDraftVisitRecord = Prisma.VisitGetPayload<{
+  select: {
+    id: true;
+    visitCode: true;
+    clientId: true;
+    visitType: true;
+    visitedAt: true;
+    createdAt: true;
+    client: {
+      select: {
+        tradeName: true;
+      };
+    };
+    _count: {
+      select: {
+        items: true;
+      };
+    };
+  };
+}>;
+
+export type OperationalCompletedConsignmentRecord = Prisma.VisitGetPayload<{
+  select: {
+    id: true;
+    visitCode: true;
+    clientId: true;
+    visitedAt: true;
+    createdAt: true;
+    client: {
+      select: {
+        tradeName: true;
+      };
+    };
+  };
+}>;
+
+export type OperationalHistoryVisitRecord = Prisma.VisitGetPayload<{
+  select: {
+    id: true;
+    visitCode: true;
+    clientId: true;
+    visitType: true;
+    visitedAt: true;
+    completedAt: true;
+    totalAmount: true;
+    receivedAmountOnVisit: true;
+    client: {
+      select: {
+        tradeName: true;
+      };
+    };
+    receivable: {
+      select: {
+        amountReceived: true;
+        status: true;
+      };
+    };
+    receiptDocument: {
+      select: {
+        id: true;
+      };
+    };
+  };
+}>;
+
+export type OperationalReturnQueueItem = {
+  clientId: string;
+  clientName: string;
+  sourceVisitId: string;
+  sourceVisitCode: string;
+  lastVisitAt: Date;
+  itemCount: number;
+  baseQuantity: number;
+};
+
+export type OperationalInProgressVisit = {
+  visitId: string;
+  visitCode: string;
+  clientId: string;
+  clientName: string;
+  visitType: "CONSIGNMENT" | "SALE";
+  visitedAt: Date;
+  itemCount: number;
+  nextStepLabel: string;
+};
+
+export type OperationalHistoryVisit = {
+  visitId: string;
+  visitCode: string;
+  clientId: string;
+  clientName: string;
+  visitType: "CONSIGNMENT" | "SALE";
+  visitedAt: Date;
+  completedAt: Date | null;
+  totalAmount: number;
+  receivedAmount: number;
+  receivableStatus: "PENDING" | "PARTIAL" | "PAID" | null;
+  hasReceipt: boolean;
+};
+
+export type OperationalQueueMainAction = {
+  mode: "continue" | "new";
+  visitId: string | null;
+  clientId: string | null;
+  clientName: string | null;
+  visitCode: string | null;
+  visitType: "CONSIGNMENT" | "SALE" | null;
+  visitedAt: Date | null;
+  nextStepLabel: string | null;
+};
+
+export type OperationalVisitQueue = {
+  mainAction: OperationalQueueMainAction;
+  returnQueue: OperationalReturnQueueItem[];
+  inProgress: OperationalInProgressVisit[];
+  recentHistory: OperationalHistoryVisit[];
+};
+
 export type VisitDraftMetadata = Pick<Visit, "visitType" | "visitedAt" | "notes" | "receivedAmountOnVisit" | "dueDate">;
 
 export type DraftVisitComputedItem = {
