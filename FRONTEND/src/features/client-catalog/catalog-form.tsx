@@ -110,34 +110,42 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
           </Select>
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Preco configurado" error={errors.currentUnitPrice?.message}>
-            <Input inputMode="decimal" placeholder="39.90" {...register("currentUnitPrice")} />
-          </Field>
+        <Field label="Preco" error={errors.currentUnitPrice?.message}>
+          <Input inputMode="decimal" placeholder="39.90" {...register("currentUnitPrice")} />
+        </Field>
 
-          <Field label="Quantidade ideal" error={errors.idealQuantity?.message}>
-            <Input inputMode="numeric" placeholder="12" {...register("idealQuantity")} />
-          </Field>
+        <details className="rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3 py-3">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-[var(--jam-ink)]">
+            Mais ajustes
+          </summary>
 
-          <Field label="Ordem no catalogo" error={errors.displayOrder?.message}>
-            <Input inputMode="numeric" placeholder="1" {...register("displayOrder")} />
-          </Field>
-        </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Field label="Quantidade ideal" error={errors.idealQuantity?.message}>
+              <Input inputMode="numeric" placeholder="12" {...register("idealQuantity")} />
+            </Field>
 
-        <Checkbox
-          {...register("isActive")}
-          label="Ativo nas proximas visitas"
-          hint={`Mix configurado de ${client.tradeName}`}
-          checked={watch("isActive")}
-          onChange={(event) => setValue("isActive", event.target.checked, { shouldDirty: true })}
-        />
+            <Field label="Ordem" error={errors.displayOrder?.message}>
+              <Input inputMode="numeric" placeholder="1" {...register("displayOrder")} />
+            </Field>
+          </div>
+
+          <div className="mt-4">
+            <Checkbox
+              {...register("isActive")}
+              label="Ativo nas proximas visitas"
+              hint={`Mix configurado de ${client.tradeName}`}
+              checked={watch("isActive")}
+              onChange={(event) => setValue("isActive", event.target.checked, { shouldDirty: true })}
+            />
+          </div>
+        </details>
 
         <div className="flex gap-3">
           <Button type="button" variant="ghost" className="flex-1" onClick={() => navigate(-1)}>
             Voltar
           </Button>
           <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : mode === "create" ? "Adicionar ao catalogo" : "Salvar alteracoes"}
+            {mutation.isPending ? "Salvando..." : mode === "create" ? "Adicionar ao mix" : "Salvar mix e preco"}
           </Button>
         </div>
       </form>

@@ -115,6 +115,7 @@ export type PaymentMethod = "CASH" | "PIX" | "CARD" | "BANK_TRANSFER" | "OTHER";
 export type ReceivableVisitSummary = {
   id: string;
   visitCode: string;
+  visitType: VisitType;
   visitedAt: string;
   status: VisitStatus;
   totalAmount: number;

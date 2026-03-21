@@ -6,7 +6,13 @@ import { Button, Card, CompactLinkRow, EmptyState, PageHeader, PageLoader, Secti
 import { formatCurrency, formatDate } from "../../lib/format";
 import { listClients } from "../clients/clients-api";
 import { listReceivables } from "../finance/finance-api";
-import { matchesFinanceView, receivableStatusLabel, receivableStatusTone, sortReceivables } from "../finance/finance-utils";
+import {
+  buildReceivableRoute,
+  matchesFinanceView,
+  receivableStatusLabel,
+  receivableStatusTone,
+  sortReceivablesForQueue
+} from "../finance/finance-utils";
 import { listVisits } from "../visits/visits-api";
 import { visitNumber, visitStatusLabel, visitStatusTone } from "../visits/visit-utils";
 
@@ -33,7 +39,7 @@ export function DashboardPage() {
   );
   const receivablesToCollect = useMemo(
     () =>
-      sortReceivables((receivablesQuery.data ?? []).filter((receivable) => matchesFinanceView(receivable, "OPEN"))).slice(0, 4),
+      sortReceivablesForQueue((receivablesQuery.data ?? []).filter((receivable) => matchesFinanceView(receivable, "OPEN"))).slice(0, 4),
     [receivablesQuery.data]
   );
 
@@ -158,7 +164,7 @@ export function DashboardPage() {
             {receivablesToCollect.map((receivable) => (
               <QueueRow
                 key={receivable.id}
-                to="/financeiro"
+                to={buildReceivableRoute(receivable.id, receivable.status)}
                 title={receivable.client.tradeName}
                 subtitle={`${receivable.visit.visitCode} • visita em ${formatDate(receivable.visit.visitedAt)}`}
                 amount={formatCurrency(visitNumber(receivable.amountOutstanding))}
@@ -183,7 +189,6 @@ export function DashboardPage() {
         <div className="space-y-2">
           <ShortcutLink to="/clients" title="Clientes" />
           <ShortcutLink to="/products" title="Produtos" />
-          <ShortcutLink to="/catalog" title="Mix e preco do cliente" />
         </div>
       </div>
     </div>

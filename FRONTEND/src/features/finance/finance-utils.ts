@@ -1,4 +1,12 @@
-import type { PaymentMethod, ReceivableListItem, ReceivableStatus } from "../../types/domain";
+import type { PaymentMethod, ReceivableListItem, ReceivableStatus, VisitType } from "../../types/domain";
+
+export type FinanceQueueStatus = "PENDING" | "PARTIAL" | "PAID";
+
+export const financeQueueStatusOptions: Array<{ value: FinanceQueueStatus; label: string }> = [
+  { value: "PENDING", label: "Em aberto" },
+  { value: "PARTIAL", label: "Parcial" },
+  { value: "PAID", label: "Quitado" }
+];
 
 export type FinanceView = "OPEN" | "PARTIAL" | "PAID" | "ALL";
 
@@ -64,6 +72,18 @@ export function sortReceivables(receivables: ReceivableListItem[]): ReceivableLi
     }
 
     return new Date(right.visit.visitedAt).getTime() - new Date(left.visit.visitedAt).getTime();
+  });
+}
+
+export function sortReceivablesForQueue(receivables: ReceivableListItem[]): ReceivableListItem[] {
+  return [...receivables].sort((left, right) => {
+    const visitedAtDifference = new Date(right.visit.visitedAt).getTime() - new Date(left.visit.visitedAt).getTime();
+
+    if (visitedAtDifference !== 0) {
+      return visitedAtDifference;
+    }
+
+    return Number(right.amountOutstanding) - Number(left.amountOutstanding);
   });
 }
 
@@ -143,6 +163,22 @@ export function paymentMethodLabel(paymentMethod: PaymentMethod): string {
   }
 
   return "Outro";
+}
+
+export function normalizeFinanceQueueStatus(value: string | null): FinanceQueueStatus {
+  if (value === "PARTIAL" || value === "PAID") {
+    return value;
+  }
+
+  return "PENDING";
+}
+
+export function receivableOriginLabel(visitType: VisitType): string {
+  return visitType === "SALE" ? "Venda" : "Acerto";
+}
+
+export function buildReceivableRoute(receivableId: string, status: ReceivableStatus): string {
+  return `/financeiro/${receivableId}?status=${status}`;
 }
 
 function getReceivableStatusPriority(status: ReceivableStatus): number {

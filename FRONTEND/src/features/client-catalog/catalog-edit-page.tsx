@@ -18,18 +18,18 @@ export function CatalogEditPage() {
   });
 
   if (clientQuery.isPending || catalogQuery.isPending) {
-    return <PageLoader label="Carregando item do catalogo..." />;
+    return <PageLoader label="Carregando item do mix..." />;
   }
 
   const item = catalogQuery.data?.find((entry) => entry.id === clientProductId);
 
   if (clientQuery.isError || catalogQuery.isError || !clientQuery.data || !item) {
-    return <EmptyState title="Item nao encontrado" message="Volte para o catalogo do cliente e tente novamente." />;
+    return <EmptyState title="Item nao encontrado" message="Volte para o mix do cliente e tente novamente." />;
   }
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Editar item do catalogo" subtitle={`${clientQuery.data.tradeName} · ${item.product.name}`} />
+      <PageHeader title="Editar mix e preco" subtitle={`${clientQuery.data.tradeName} · ${item.product.name}`} />
       <CatalogForm client={clientQuery.data} item={item} mode="edit" />
     </div>
   );

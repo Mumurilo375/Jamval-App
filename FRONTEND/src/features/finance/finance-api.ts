@@ -1,8 +1,9 @@
 import { api } from "../../lib/api";
-import type { PaymentMethod, PaymentRecord, ReceivableDetail, ReceivableListItem } from "../../types/domain";
+import type { PaymentMethod, PaymentRecord, ReceivableDetail, ReceivableListItem, ReceivableStatus } from "../../types/domain";
 
 export type ListReceivablesFilters = {
   clientId?: string;
+  status?: ReceivableStatus;
 };
 
 export type CreateReceivablePaymentPayload = {
@@ -22,6 +23,10 @@ function buildQuery(filters: ListReceivablesFilters): string {
 
   if (filters.clientId) {
     params.set("clientId", filters.clientId);
+  }
+
+  if (filters.status) {
+    params.set("status", filters.status);
   }
 
   const query = params.toString();

@@ -4,7 +4,11 @@ export type CentralOverview = {
   summary: {
     productsWithStock: number;
     totalUnits: number;
-    lastMovementAt: string | null;
+    lastMovement: {
+      label: string;
+      balanceEffect: "IN" | "OUT" | "NEUTRAL";
+      createdAt: string;
+    } | null;
     canUseInitialLoad: boolean;
   };
   items: Array<{
@@ -14,7 +18,11 @@ export type CentralOverview = {
     category: string | null;
     isActive: boolean;
     currentQuantity: number;
-    lastMovementAt: string | null;
+    lastMovement: {
+      label: string;
+      balanceEffect: "IN" | "OUT" | "NEUTRAL";
+      createdAt: string;
+    } | null;
   }>;
 };
 

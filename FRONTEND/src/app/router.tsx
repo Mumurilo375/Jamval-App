@@ -6,11 +6,11 @@ import { AdminProfitPage } from "../features/admin/admin-profit-page";
 import { AdminSettingsPage } from "../features/admin/admin-settings-page";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
 import { FinancePage } from "../features/finance/finance-page";
+import { FinanceReceivablePage } from "../features/finance/finance-receivable-page";
 import { PublicOnlyRoute, ProtectedApp } from "../features/auth/route-guards";
 import { LoginPage } from "../features/auth/login-page";
 import { CatalogCreatePage } from "../features/client-catalog/catalog-create-page";
 import { CatalogEditPage } from "../features/client-catalog/catalog-edit-page";
-import { CatalogHubPage } from "../features/client-catalog/catalog-hub-page";
 import { CatalogListPage } from "../features/client-catalog/catalog-list-page";
 import { ClientCreatePage } from "../features/clients/client-create-page";
 import { ClientEditPage } from "../features/clients/client-edit-page";
@@ -53,8 +53,12 @@ export const router = createBrowserRouter([
         element: <FinancePage />
       },
       {
+        path: "/financeiro/:receivableId",
+        element: <FinanceReceivablePage />
+      },
+      {
         path: "/catalog",
-        element: <CatalogHubPage />
+        element: <Navigate to="/clients" replace />
       },
       {
         path: "/receipts",

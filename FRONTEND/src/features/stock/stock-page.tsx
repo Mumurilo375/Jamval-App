@@ -11,23 +11,22 @@ import {
   Input,
   PageHeader,
   PageLoader,
-  SectionHeader,
   Select,
-  ToneBadge,
-  WarningBanner
+  ToneBadge
 } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import {
   getCentralOverview,
   listCentralMovements,
   listCentralVisitOutflows,
-  type CentralMovementKind
+  type CentralMovementKind,
+  type CentralOverview
 } from "./stock-api";
 
 const tabs = [
   { value: "saldo", label: "Saldo atual" },
   { value: "historico", label: "Historico" },
-  { value: "saidas", label: "Saidas por visita" }
+  { value: "saidas", label: "Saidas das visitas" }
 ] as const;
 
 const movementKindOptions: Array<{ value: "" | CentralMovementKind; label: string }> = [
@@ -118,66 +117,37 @@ export function StockPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        eyebrow="Estoque principal"
-        title="Controle do estoque principal"
-        subtitle="Existe apenas um estoque principal. Aqui voce acompanha saldo atual, historico e saidas para clientes."
+        eyebrow="Estoque"
+        title="Saldo atual"
+        subtitle="Veja quanto tem, o que entrou e o que saiu sem carregar a operacao."
       />
 
-      <Card className="space-y-3">
-        <SectionHeader
-          title="Resumo operacional"
-          subtitle="Leitura curta do estoque principal neste momento."
+      <div className="grid gap-3 sm:grid-cols-3">
+        <TopMetric label="Total em estoque" value={`${summary.totalUnits} un.`} />
+        <TopMetric label="Produtos sem saldo" value={String(productsWithoutStock)} />
+        <TopMetric
+          label="Ultimo lancamento"
+          value={summary.lastMovement ? formatMovementSnapshot(summary.lastMovement) : "Sem lancamento"}
         />
-        <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryMetric label="SKUs com saldo" value={String(summary.productsWithStock)} />
-          <SummaryMetric label="SKUs sem saldo" value={String(productsWithoutStock)} />
-          <SummaryMetric label="Saldo total do estoque principal" value={`${summary.totalUnits} un.`} />
-          <SummaryMetric
-            label="Ultimo lancamento"
-            value={summary.lastMovementAt ? formatDateTime(summary.lastMovementAt) : "-"}
-          />
-        </div>
-      </Card>
+      </div>
 
-      <Card className="space-y-4">
-        <SectionHeader
-          title="Acoes do estoque"
-          subtitle="Entrada manual para novas mercadorias. Ajuste manual apenas para correcao."
-        />
-
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Link to="/stock/manual-entry" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">Entrada manual</Button>
+        </Link>
+        <Link to="/stock/manual-adjustment" className="w-full sm:w-auto">
+          <Button variant="secondary" className="w-full sm:w-auto">
+            Ajuste manual
+          </Button>
+        </Link>
         {summary.canUseInitialLoad ? (
-          <WarningBanner message="Carga inicial e um fluxo de comeco de operacao. Depois da primeira montagem do estoque, o fluxo correto para novas mercadorias passa a ser Entrada manual." />
-        ) : (
-          <p className="text-sm text-[var(--jam-subtle)]">
-            Carga inicial ficou restrita ao comeco da operacao. Para novas mercadorias, use Entrada manual.
-          </p>
-        )}
-
-        <div className="grid gap-3">
-          {summary.canUseInitialLoad ? (
-            <Link to="/stock/initial-load">
-              <Button className="w-full justify-between">
-                <span>Carga inicial</span>
-                <span>→</span>
-              </Button>
-            </Link>
-          ) : null}
-
-          <Link to="/stock/manual-entry">
-            <Button variant="secondary" className="w-full justify-between">
-              <span>Entrada manual</span>
-              <span>→</span>
+          <Link to="/stock/initial-load" className="w-full sm:w-auto">
+            <Button variant="ghost" className="w-full sm:w-auto">
+              Carga inicial
             </Button>
           </Link>
-
-          <Link to="/stock/manual-adjustment">
-            <Button variant="secondary" className="w-full justify-between">
-              <span>Ajuste manual</span>
-              <span>→</span>
-            </Button>
-          </Link>
-        </div>
-      </Card>
+        ) : null}
+      </div>
 
       <div className="grid grid-cols-3 gap-2">
         {tabs.map((tab) => (
@@ -187,7 +157,7 @@ export function StockPage() {
             onClick={() => updateStockSearchParams(searchParams, setSearchParams, { tab: tab.value })}
             className={
               activeTab === tab.value
-                ? "rounded-xl bg-[var(--jam-accent)] px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white sm:px-3 sm:text-[11px]"
+                ? "rounded-xl border border-[rgba(29,78,216,0.24)] bg-[rgba(29,78,216,0.06)] px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-accent)] sm:px-3 sm:text-[11px]"
                 : "rounded-xl border border-[var(--jam-border)] bg-white px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-subtle)] sm:px-3 sm:text-[11px]"
             }
           >
@@ -198,24 +168,22 @@ export function StockPage() {
 
       {activeTab === "saldo" ? (
         <div className="space-y-3">
-          <Card className="space-y-3">
-            <Field label="Busca por produto">
-              <Input
-                placeholder="Buscar por nome ou SKU"
-                value={balanceSearch}
-                onChange={(event) =>
-                  updateStockSearchParams(searchParams, setSearchParams, {
-                    balanceSearch: event.target.value
-                  })
-                }
-              />
-            </Field>
-          </Card>
+          <Field label="Buscar produto">
+            <Input
+              placeholder="Nome ou SKU"
+              value={balanceSearch}
+              onChange={(event) =>
+                updateStockSearchParams(searchParams, setSearchParams, {
+                  balanceSearch: event.target.value
+                })
+              }
+            />
+          </Field>
 
           {items.length === 0 ? (
             <EmptyState
               title="Nenhum produto cadastrado"
-              message="Cadastre produtos para comecar a controlar o estoque central."
+              message="Cadastre produtos para comecar a controlar o estoque."
               action={
                 <Link to="/products">
                   <Button>Ir para produtos</Button>
@@ -227,34 +195,31 @@ export function StockPage() {
               <p className="text-sm text-[var(--jam-subtle)]">Nenhum produto encontrado para essa busca.</p>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {filteredBalanceItems.map((item) => (
-                <Card key={item.productId} className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-semibold text-[var(--jam-ink)]">{item.name}</p>
-                      <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{item.sku}</p>
-                    </div>
-                    {!item.isActive ? <ToneBadge label="Inativo" tone="neutral" /> : null}
-                  </div>
+            <Card className="overflow-hidden p-0">
+              <div className="divide-y divide-[var(--jam-border)]">
+                {filteredBalanceItems.map((item) => (
+                  <article key={item.productId} className="px-4 py-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">{item.name}</p>
+                          {!item.isActive ? <ToneBadge label="Inativo" tone="neutral" /> : null}
+                        </div>
+                        <p className="mt-1 text-sm text-[var(--jam-subtle)]">{item.sku}</p>
+                      </div>
 
-                  <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Saldo atual</p>
-                      <p className="mt-1 font-display text-3xl font-semibold text-[var(--jam-ink)] sm:text-4xl">{item.currentQuantity}</p>
+                      <div className="grid gap-2 sm:min-w-[280px] sm:grid-cols-2 sm:text-right">
+                        <StockLineMetric label="Saldo atual" value={`${item.currentQuantity} un.`} emphasize />
+                        <StockLineMetric
+                          label="Ultima movimentacao"
+                          value={item.lastMovement ? formatMovementSnapshot(item.lastMovement) : "Sem lancamento"}
+                        />
+                      </div>
                     </div>
-                    <div className="text-left sm:text-right">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Ultimo lancamento</p>
-                      <p className="mt-1 text-sm font-medium text-[var(--jam-ink)]">
-                        {item.lastMovementAt ? formatDateTime(item.lastMovementAt) : "Sem historico"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {item.category ? <p className="text-sm text-[var(--jam-subtle)]">Categoria: {item.category}</p> : null}
-                </Card>
-              ))}
-            </div>
+                  </article>
+                ))}
+              </div>
+            </Card>
           )}
         </div>
       ) : null}
@@ -262,36 +227,36 @@ export function StockPage() {
       {activeTab === "historico" ? (
         <div className="space-y-3">
           <Card className="space-y-3">
-            <Field label="Busca">
-              <Input
-                placeholder="Produto, SKU, referencia ou observacao"
-                value={historySearch}
-                onChange={(event) =>
-                  updateStockSearchParams(searchParams, setSearchParams, {
-                    historySearch: event.target.value
-                  })
-                }
-              />
-            </Field>
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_220px_1fr_1fr]">
+              <Field label="Busca">
+                <Input
+                  placeholder="Produto, SKU, referencia ou observacao"
+                  value={historySearch}
+                  onChange={(event) =>
+                    updateStockSearchParams(searchParams, setSearchParams, {
+                      historySearch: event.target.value
+                    })
+                  }
+                />
+              </Field>
 
-            <Field label="Tipo de movimento">
-              <Select
-                value={historyMovementKind}
-                onChange={(event) =>
-                  updateStockSearchParams(searchParams, setSearchParams, {
-                    movementKind: event.target.value
-                  })
-                }
-              >
-                {movementKindOptions.map((option) => (
-                  <option key={option.label} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+              <Field label="Tipo">
+                <Select
+                  value={historyMovementKind}
+                  onChange={(event) =>
+                    updateStockSearchParams(searchParams, setSearchParams, {
+                      movementKind: event.target.value
+                    })
+                  }
+                >
+                  {movementKindOptions.map((option) => (
+                    <option key={option.label} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
 
-            <div className="grid gap-3 sm:grid-cols-2">
               <Field label="De">
                 <DateInput
                   value={historyDateFrom}
@@ -302,6 +267,7 @@ export function StockPage() {
                   }
                 />
               </Field>
+
               <Field label="Ate">
                 <DateInput
                   value={historyDateTo}
@@ -330,27 +296,30 @@ export function StockPage() {
             </Card>
           ) : null}
 
-          <div className="space-y-3">
-            {movementsQuery.data?.map((movement) => (
-              <Card key={movement.id} className="space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{movement.productName}</p>
-                    <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{movement.sku}</p>
-                  </div>
-                  <MovementQuantityBadge effect={movement.balanceEffect} quantity={movement.quantity} />
-                </div>
+          {movementsQuery.data && movementsQuery.data.length > 0 ? (
+            <Card className="overflow-hidden p-0">
+              <div className="divide-y divide-[var(--jam-border)]">
+                {movementsQuery.data.map((movement) => (
+                  <article key={movement.id} className="px-4 py-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{movement.productName}</p>
+                          <MovementQuantityBadge effect={movement.balanceEffect} quantity={movement.quantity} />
+                        </div>
+                        <p className="mt-1 text-sm text-[var(--jam-subtle)]">{movement.sku}</p>
+                        <p className="mt-2 text-sm font-medium text-[var(--jam-ink)]">{movement.movementLabel}</p>
+                        <p className="mt-0.5 text-sm text-[var(--jam-subtle)]">{movement.referenceLabel}</p>
+                        {movement.note ? <p className="mt-1 text-sm text-[var(--jam-subtle)]">{movement.note}</p> : null}
+                      </div>
 
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-[var(--jam-ink)]">{movement.movementLabel}</p>
-                  <p className="text-sm text-[var(--jam-subtle)]">{movement.referenceLabel}</p>
-                  <p className="text-sm text-[var(--jam-subtle)]">{formatDateTime(movement.createdAt)}</p>
-                </div>
-
-                {movement.note ? <p className="text-sm text-[var(--jam-subtle)]">{movement.note}</p> : null}
-              </Card>
-            ))}
-          </div>
+                      <p className="shrink-0 text-sm text-[var(--jam-subtle)]">{formatDateTime(movement.createdAt)}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </Card>
+          ) : null}
         </div>
       ) : null}
 
@@ -368,6 +337,7 @@ export function StockPage() {
                   }
                 />
               </Field>
+
               <Field label="Visitas ate">
                 <DateInput
                   value={outflowDateTo}
@@ -392,55 +362,64 @@ export function StockPage() {
 
           {!outflowsQuery.isPending && !outflowsQuery.isError && (outflowsQuery.data?.length ?? 0) === 0 ? (
             <Card>
-              <p className="text-sm text-[var(--jam-subtle)]">
-                Nenhuma saida vinculada a visita encontrada nesse periodo.
-              </p>
+              <p className="text-sm text-[var(--jam-subtle)]">Nenhuma saida de visita encontrada nesse periodo.</p>
             </Card>
           ) : null}
 
-          <div className="space-y-3">
-            {outflowsQuery.data?.map((group) => (
-              <Link key={group.visitId} to={`/visits/${group.visitId}`}>
-                <Card className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-semibold text-[var(--jam-ink)]">{group.clientTradeName}</p>
-                      <p className="mt-0.5 text-sm text-[var(--jam-subtle)]">
-                        {group.visitCode} · {formatDateTime(group.visitedAt)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Total enviado</p>
-                      <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{group.totalUnits} un.</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {group.items.map((item) => (
-                      <div key={item.productId} className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-[var(--jam-ink)]">{item.productName}</p>
-                          <p className="truncate text-sm text-[var(--jam-subtle)]">{item.sku}</p>
-                        </div>
-                        <p className="shrink-0 text-sm font-semibold text-[var(--jam-ink)]">{item.quantity} un.</p>
+          {outflowsQuery.data && outflowsQuery.data.length > 0 ? (
+            <Card className="overflow-hidden p-0">
+              <div className="divide-y divide-[var(--jam-border)]">
+                {outflowsQuery.data.map((group) => (
+                  <Link key={group.visitId} to={`/visits/${group.visitId}`} className="block px-4 py-3 transition hover:bg-[rgba(29,78,216,0.04)]">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">{group.clientTradeName}</p>
+                        <p className="mt-1 text-sm text-[var(--jam-subtle)]">
+                          {group.visitCode} • {formatDateTime(group.visitedAt)}
+                        </p>
+                        <p className="mt-2 text-sm text-[var(--jam-subtle)]">{summarizeOutflowItems(group.items)}</p>
                       </div>
-                    ))}
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+
+                      <div className="shrink-0 text-left sm:text-right">
+                        <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Total enviado</p>
+                        <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{group.totalUnits} un.</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          ) : null}
         </div>
       ) : null}
     </div>
   );
 }
 
-function SummaryMetric({ label, value }: { label: string; value: string }) {
+function TopMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white p-3">
+    <Card className="space-y-1.5">
       <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
-      <p className="mt-1 text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{value}</p>
+      <p className="text-sm font-semibold text-[var(--jam-ink)] sm:text-base">{value}</p>
+    </Card>
+  );
+}
+
+function StockLineMetric({
+  label,
+  value,
+  emphasize = false
+}: {
+  label: string;
+  value: string;
+  emphasize?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
+      <p className={emphasize ? "mt-1 text-sm font-semibold text-[var(--jam-ink)] sm:text-base" : "mt-1 text-sm text-[var(--jam-ink)]"}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -455,6 +434,44 @@ function MovementQuantityBadge({ effect, quantity }: { effect: "IN" | "OUT" | "N
   const sign = effect === "IN" ? "+" : effect === "OUT" ? "-" : "i";
 
   return <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${className}`}>{sign} {quantity}</span>;
+}
+
+function formatMovementSnapshot(movement: NonNullable<CentralOverview["summary"]["lastMovement"]>) {
+  return `${movement.label} • ${formatOperationalDateTime(movement.createdAt)}`;
+}
+
+function formatOperationalDateTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const today = new Date();
+  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const yesterday = new Date(midnight);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const time = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+
+  if (date >= midnight) {
+    return `hoje ${time}`;
+  }
+
+  if (date >= yesterday && date < midnight) {
+    return `ontem ${time}`;
+  }
+
+  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")} ${time}`;
+}
+
+function summarizeOutflowItems(items: Array<{ productName: string; quantity: number }>) {
+  const visibleItems = items.slice(0, 2).map((item) => `${item.productName} (${item.quantity} un.)`);
+
+  if (items.length <= 2) {
+    return visibleItems.join(" • ");
+  }
+
+  return `${visibleItems.join(" • ")} +${items.length - 2} item(ns)`;
 }
 
 function updateStockSearchParams(

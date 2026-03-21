@@ -17,12 +17,12 @@ export function CatalogCreatePage() {
   }
 
   if (clientQuery.isError || !clientQuery.data) {
-    return <EmptyState title="Cliente nao encontrado" message="Volte para a lista e tente abrir o catalogo novamente." />;
+    return <EmptyState title="Cliente nao encontrado" message="Volte para a lista e tente abrir o mix e preco novamente." />;
   }
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Novo item no catalogo" subtitle={clientQuery.data.tradeName} />
+      <PageHeader title="Adicionar ao mix e preco" subtitle={clientQuery.data.tradeName} />
       <CatalogForm client={clientQuery.data} mode="create" />
     </div>
   );

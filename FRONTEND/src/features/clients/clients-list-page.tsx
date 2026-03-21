@@ -27,7 +27,7 @@ export function ClientsListPage() {
       <PageHeader
         eyebrow="Cadastros"
         title="Clientes"
-        subtitle="Pontos de venda, contato e acesso ao catalogo configurado por cliente."
+        subtitle="Pontos de venda, contato e acesso ao mix e preco de cada cliente."
         action={
           <Link to="/clients/new">
             <Button>Novo</Button>
@@ -91,16 +91,10 @@ export function ClientsListPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Link to={`/clients/${client.id}/edit`}>
-                <Button variant="secondary" className="w-full">
-                  Editar
-                </Button>
-              </Link>
-              <Link to={`/clients/${client.id}/catalog`}>
-                <Button className="w-full">Catalogo</Button>
-              </Link>
-            </div>
+            <Link to={`/clients/${client.id}/edit`}>
+              <Button className="w-full">Abrir cliente</Button>
+            </Link>
+
           </Card>
         ))}
       </div>

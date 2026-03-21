@@ -8,6 +8,7 @@ import { formatDate } from "../../lib/format";
 import type { ReceivableListItem, Visit, VisitDetail, VisitType } from "../../types/domain";
 import { listClients } from "../clients/clients-api";
 import { listReceivables } from "../finance/finance-api";
+import { buildReceivableRoute } from "../finance/finance-utils";
 import { getVisit, listVisits } from "./visits-api";
 import { visitStatusLabel, visitStatusTone, visitTypeLabel } from "./visit-utils";
 
@@ -301,7 +302,7 @@ function resolveVisitQueueAction({
     if (!isReceivablesError && receivable && (receivable.status === "PENDING" || receivable.status === "PARTIAL" || receivable.isOverdue)) {
       return {
         label: "Receber",
-        href: `/financeiro?clientId=${visit.clientId}&visitId=${visit.id}`,
+        href: buildReceivableRoute(receivable.id, receivable.status),
         variant: "primary" as const
       };
     }
