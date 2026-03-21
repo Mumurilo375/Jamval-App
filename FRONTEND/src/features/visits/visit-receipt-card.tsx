@@ -46,15 +46,18 @@ export function VisitReceiptCard({ visit }: VisitReceiptCardProps) {
   const activeError = receiptQuery.error ?? generateMutation.error ?? downloadMutation.error;
   const receipt = receiptQuery.data;
   const isBusy = generateMutation.isPending || downloadMutation.isPending;
+  const title = visit.visitType === "SALE" ? "Comprovante de venda direta" : "Comprovante de acerto e reposição";
+  const description =
+    visit.visitType === "SALE"
+      ? "Gere o comprovante da venda concluída para impressão e assinatura manual em papel."
+      : "Gere o comprovante da visita concluída para impressão e assinatura manual em papel.";
 
   return (
     <Card className="space-y-4">
       <div>
         <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Comprovante</p>
-        <p className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">Comprovante de acerto e reposição</p>
-        <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-          Gere o comprovante da visita concluída para impressão e assinatura manual em papel.
-        </p>
+        <p className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">{title}</p>
+        <p className="mt-1 text-sm text-[var(--jam-subtle)]">{description}</p>
       </div>
 
       {activeError instanceof ApiError ? <ErrorBanner message={activeError.message} /> : null}
