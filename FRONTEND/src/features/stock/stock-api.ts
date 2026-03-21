@@ -23,6 +23,7 @@ export type CentralMovementKind =
   | "MANUAL_ENTRY"
   | "MANUAL_ADJUSTMENT"
   | "RESTOCK_TO_CLIENT"
+  | "DIRECT_SALE_OUT"
   | "DEFECTIVE_RETURN_LOG";
 
 export type CentralMovement = {
@@ -36,6 +37,7 @@ export type CentralMovement = {
     | "MANUAL_ADJUSTMENT_IN"
     | "MANUAL_ADJUSTMENT_OUT"
     | "RESTOCK_TO_CLIENT"
+    | "DIRECT_SALE_OUT"
     | "DEFECTIVE_RETURN_LOG";
   movementLabel: string;
   balanceEffect: "IN" | "OUT" | "NEUTRAL";

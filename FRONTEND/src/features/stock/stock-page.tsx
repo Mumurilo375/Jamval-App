@@ -27,7 +27,7 @@ import {
 const tabs = [
   { value: "saldo", label: "Saldo atual" },
   { value: "historico", label: "Historico" },
-  { value: "saidas", label: "Saidas para clientes" }
+  { value: "saidas", label: "Saidas por visita" }
 ] as const;
 
 const movementKindOptions: Array<{ value: "" | CentralMovementKind; label: string }> = [
@@ -36,6 +36,7 @@ const movementKindOptions: Array<{ value: "" | CentralMovementKind; label: strin
   { value: "MANUAL_ENTRY", label: "Entrada manual" },
   { value: "MANUAL_ADJUSTMENT", label: "Ajustes" },
   { value: "RESTOCK_TO_CLIENT", label: "Saidas para clientes" },
+  { value: "DIRECT_SALE_OUT", label: "Vendas diretas" },
   { value: "DEFECTIVE_RETURN_LOG", label: "Retornos com defeito" }
 ];
 
@@ -392,7 +393,7 @@ export function StockPage() {
           {!outflowsQuery.isPending && !outflowsQuery.isError && (outflowsQuery.data?.length ?? 0) === 0 ? (
             <Card>
               <p className="text-sm text-[var(--jam-subtle)]">
-                Nenhuma reposicao para cliente encontrada nesse periodo.
+                Nenhuma saida vinculada a visita encontrada nesse periodo.
               </p>
             </Card>
           ) : null}
