@@ -30,6 +30,7 @@ const MOVEMENT_TYPES_BY_KIND: Record<
     CentralStockMovementType.MANUAL_ADJUSTMENT_OUT
   ],
   RESTOCK_TO_CLIENT: [CentralStockMovementType.RESTOCK_TO_CLIENT],
+  DIRECT_SALE_OUT: [CentralStockMovementType.DIRECT_SALE_OUT],
   DEFECTIVE_RETURN_LOG: [CentralStockMovementType.DEFECTIVE_RETURN_LOG]
 };
 
@@ -421,6 +422,10 @@ function buildReferenceLabel(
     return "Saida para cliente";
   }
 
+  if (movementType === CentralStockMovementType.DIRECT_SALE_OUT) {
+    return "Venda direta";
+  }
+
   if (movementType === CentralStockMovementType.DEFECTIVE_RETURN_LOG) {
     return "Retorno com defeito";
   }
@@ -447,6 +452,10 @@ function formatMovementLabel(movementType: CentralStockMovementType): string {
 
   if (movementType === CentralStockMovementType.DEFECTIVE_RETURN_LOG) {
     return "Retorno com defeito registrado";
+  }
+
+  if (movementType === CentralStockMovementType.DIRECT_SALE_OUT) {
+    return "Saida por venda direta";
   }
 
   return "Saida para cliente";

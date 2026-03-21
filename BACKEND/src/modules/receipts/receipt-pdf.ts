@@ -35,10 +35,11 @@ export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Bu
   const totalAmount = Number(input.visit.totalAmount);
   const receivedAmount = Number(input.visit.receivedAmountOnVisit);
   const pendingAmount = Math.max(totalAmount - receivedAmount, 0);
+  const isSale = input.visit.visitType === "SALE";
   let currentY = 40;
 
   currentY = drawHeader(doc, input.companyProfile, currentY);
-  currentY = writeSectionTitle(doc, "Comprovante de acerto e reposição", currentY + 12);
+  currentY = writeSectionTitle(doc, isSale ? "Comprovante de venda direta" : "Comprovante de acerto e reposição", currentY + 12);
   currentY = writeLabelValue(doc, "Código da visita", input.visit.visitCode, currentY);
   currentY = writeLabelValue(doc, "Data da visita", formatDateTime(input.visit.visitedAt), currentY);
   currentY = writeLabelValue(doc, "Emitido em", formatDateTime(input.issuedAt), currentY);
@@ -67,22 +68,19 @@ export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Bu
     currentY
   );
 
-  currentY = writeSectionTitle(doc, "Itens da visita", currentY + 8);
-
-  for (const item of input.visit.items) {
-    currentY = drawVisitItemBlock(doc, item, currentY);
-  }
+  currentY = writeSectionTitle(doc, isSale ? "Itens da venda" : "Itens da visita", currentY + 8);
+  currentY = isSale ? drawSaleItemsTable(doc, input.visit.items, currentY) : drawConsignmentItems(doc, input.visit.items, currentY);
 
   currentY = ensurePageSpace(doc, currentY, 160);
   currentY = writeSectionTitle(doc, "Resumo financeiro", currentY + 8);
-  currentY = writeLabelValue(doc, "Total a cobrar", formatCurrency(totalAmount), currentY);
-  currentY = writeLabelValue(doc, "Valor recebido nesta visita", formatCurrency(receivedAmount), currentY);
-  currentY = writeLabelValue(doc, "Saldo pendente após esta visita", formatCurrency(pendingAmount), currentY);
+  currentY = writeLabelValue(doc, isSale ? "Total da venda" : "Total a cobrar", formatCurrency(totalAmount), currentY);
+  currentY = writeLabelValue(doc, isSale ? "Valor recebido" : "Valor recebido nesta visita", formatCurrency(receivedAmount), currentY);
+  currentY = writeLabelValue(doc, isSale ? "Saldo" : "Saldo pendente após esta visita", formatCurrency(pendingAmount), currentY);
 
   if (receivedAmount > 0 && input.initialPayment) {
     currentY = writeLabelValue(
       doc,
-      "Forma de pagamento nesta visita",
+      isSale ? "Forma de pagamento" : "Forma de pagamento nesta visita",
       formatPaymentMethod(input.initialPayment.paymentMethod),
       currentY
     );
@@ -180,6 +178,20 @@ function drawHeader(doc: PdfDocument, companyProfile: ReceiptCompanyProfile, y: 
   return nextY + 52;
 }
 
+function drawConsignmentItems(
+  doc: PdfDocument,
+  items: VisitReceiptSource["items"],
+  y: number
+): number {
+  let currentY = y;
+
+  for (const item of items) {
+    currentY = drawVisitItemBlock(doc, item, currentY);
+  }
+
+  return currentY;
+}
+
 function drawVisitItemBlock(
   doc: PdfDocument,
   item: VisitReceiptSource["items"][number],
@@ -205,6 +217,39 @@ function drawVisitItemBlock(
   writeInlineMetric(doc, 220, blockY, "Novo saldo no cliente", String(item.resultingClientQuantity));
 
   return nextY + boxHeight + 10;
+}
+
+function drawSaleItemsTable(
+  doc: PdfDocument,
+  items: VisitReceiptSource["items"],
+  y: number
+): number {
+  let currentY = ensurePageSpace(doc, y, 40);
+
+  doc.font("Helvetica-Bold").fontSize(9).fillColor("#475569");
+  doc.text("Produto", 40, currentY, { width: 250 });
+  doc.text("Quantidade", 300, currentY, { width: 70, align: "right" });
+  doc.text("Preço", 380, currentY, { width: 80, align: "right" });
+  doc.text("Subtotal", 470, currentY, { width: 85, align: "right" });
+
+  currentY += 16;
+  doc.moveTo(40, currentY).lineTo(555, currentY).stroke("#d6dde8");
+  currentY += 10;
+
+  for (const item of items) {
+    currentY = ensurePageSpace(doc, currentY, 30);
+    const quantity = item.quantitySold > 0 ? item.quantitySold : item.quantityPrevious;
+    const subtotal = formatCurrency(Number(item.subtotalAmount) || quantity * Number(item.unitPrice));
+
+    doc.font("Helvetica").fontSize(10).fillColor("#0f172a");
+    doc.text(item.productSnapshotName, 40, currentY, { width: 250 });
+    doc.text(String(quantity), 300, currentY, { width: 70, align: "right" });
+    doc.text(formatCurrency(item.unitPrice), 380, currentY, { width: 80, align: "right" });
+    doc.text(subtotal, 470, currentY, { width: 85, align: "right" });
+    currentY = doc.y + 8;
+  }
+
+  return currentY;
 }
 
 function writeInlineMetric(

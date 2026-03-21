@@ -1,0 +1,1 @@
+ALTER TYPE "CentralStockMovementType" ADD VALUE IF NOT EXISTS 'DIRECT_SALE_OUT';

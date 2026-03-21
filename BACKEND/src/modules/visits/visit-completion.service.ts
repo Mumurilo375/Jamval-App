@@ -75,7 +75,7 @@ export class VisitCompletionService {
         );
       }
 
-      const requiredCentralStock = aggregateCentralRestockRequirement(validatedItems);
+      const requiredCentralStock = aggregateRequiredCentralStock(visit.visitType, validatedItems);
       await this.ensureCentralStockSufficient(requiredCentralStock, tx);
 
       const completionClaimed = await this.visitRepository.markAsCompleted(
@@ -259,7 +259,7 @@ export class VisitCompletionService {
       .filter((item) => item.availableQuantity < item.requiredQuantity);
 
     if (insufficientProducts.length > 0) {
-      throw new AppError(409, "INSUFFICIENT_CENTRAL_STOCK", "Central stock is insufficient for visit restock", {
+      throw new AppError(409, "INSUFFICIENT_CENTRAL_STOCK", "Central stock is insufficient for this visit output", {
         visitProducts: insufficientProducts
       });
     }
@@ -270,6 +270,26 @@ export class VisitCompletionService {
     item: CompletionVisitItem,
     tx: Prisma.TransactionClient
   ): Promise<void> {
+    if (visit.visitType === "SALE") {
+      if (item.quantitySold <= 0) {
+        return;
+      }
+
+      await this.stockRepository.decreaseCentralBalance(item.item.productId, item.quantitySold, tx);
+      await this.stockRepository.createCentralMovement(
+        {
+          productId: item.item.productId,
+          movementType: "DIRECT_SALE_OUT",
+          quantity: item.quantitySold,
+          referenceType: VISIT_REFERENCE_TYPE,
+          referenceId: visit.id,
+          note: `Direct sale ${visit.visitCode}`
+        },
+        tx
+      );
+      return;
+    }
+
     const referenceId = visit.id;
     const movementNote = `Visit ${visit.visitCode}`;
 
@@ -391,16 +411,21 @@ export class VisitCompletionService {
   }
 }
 
-function aggregateCentralRestockRequirement(items: CompletionVisitItem[]): Map<string, number> {
+function aggregateRequiredCentralStock(
+  visitType: VisitWithItems["visitType"],
+  items: CompletionVisitItem[]
+): Map<string, number> {
   const quantitiesByProduct = new Map<string, number>();
 
   for (const item of items) {
-    if (item.item.restockedQuantity <= 0) {
+    const requiredQuantity = visitType === "SALE" ? item.quantitySold : item.item.restockedQuantity;
+
+    if (requiredQuantity <= 0) {
       continue;
     }
 
     const currentQuantity = quantitiesByProduct.get(item.item.productId) ?? 0;
-    quantitiesByProduct.set(item.item.productId, currentQuantity + item.item.restockedQuantity);
+    quantitiesByProduct.set(item.item.productId, currentQuantity + requiredQuantity);
   }
 
   return quantitiesByProduct;

@@ -70,6 +70,7 @@ export const movementKindSchema = z.enum([
   "MANUAL_ENTRY",
   "MANUAL_ADJUSTMENT",
   "RESTOCK_TO_CLIENT",
+  "DIRECT_SALE_OUT",
   "DEFECTIVE_RETURN_LOG"
 ]);
 

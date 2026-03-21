@@ -221,7 +221,9 @@ export class StockRepository {
   > {
     return db.centralStockMovement.findMany({
       where: {
-        movementType: "RESTOCK_TO_CLIENT",
+        movementType: {
+          in: ["RESTOCK_TO_CLIENT", "DIRECT_SALE_OUT"]
+        },
         referenceType: "VISIT",
         referenceId: {
           not: null

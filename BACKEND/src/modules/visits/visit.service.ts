@@ -97,7 +97,7 @@ export class VisitService {
 
     await prisma.$transaction(async (tx) => {
       for (const item of input.items) {
-        const writeData = await this.buildDraftItemWriteData(visit.clientId, item, tx);
+        const writeData = await this.buildDraftItemWriteData(visit.clientId, visit.visitType, item, tx);
         await this.repository.upsertItemByProduct(visit.id, item.productId, writeData, tx);
       }
 
@@ -143,6 +143,7 @@ export class VisitService {
 
       const writeData = await this.buildDraftItemWriteData(
         visit.clientId,
+        visit.visitType,
         {
           productId: existingItem.productId,
           clientProductId: nextItem.clientProductId,
@@ -262,6 +263,7 @@ export class VisitService {
 
   private async buildDraftItemWriteData(
     visitClientId: string,
+    visitType: VisitWithItems["visitType"],
     item: VisitDraftItemInput,
     db: Prisma.TransactionClient
   ) {
@@ -269,6 +271,28 @@ export class VisitService {
 
     if (!product) {
       throw new AppError(400, "INVALID_PRODUCT", "Product does not exist", { productId: item.productId });
+    }
+
+    if (visitType === "SALE") {
+      if (item.quantityPrevious <= 0) {
+        throw new AppError(400, "INVALID_VISIT_ITEM", "Sale item quantity must be greater than zero", {
+          productId: item.productId
+        });
+      }
+
+      return computeDraftVisitItem({
+        product,
+        clientProduct: null,
+        clientProductId: null,
+        quantityPrevious: item.quantityPrevious,
+        quantityGoodRemaining: 0,
+        quantityDefectiveReturn: 0,
+        quantityLoss: 0,
+        unitPrice: item.unitPrice ?? Number(product.basePrice),
+        suggestedRestockQuantity: 0,
+        restockedQuantity: 0,
+        notes: item.notes
+      });
     }
 
     const clientProduct = item.clientProductId

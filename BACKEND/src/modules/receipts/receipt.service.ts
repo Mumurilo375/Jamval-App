@@ -40,7 +40,10 @@ export class ReceiptService {
       initialPayment: getInitialPaymentSummary(visit)
     });
 
-    const fileName = `comprovante-acerto-e-reposicao-${visit.visitCode}.pdf`;
+    const fileName =
+      visit.visitType === "SALE"
+        ? `comprovante-venda-direta-${visit.visitCode}.pdf`
+        : `comprovante-acerto-e-reposicao-${visit.visitCode}.pdf`;
     const storageKey = path.posix.join("receipts", "visits", visit.id, fileName);
     const checksum = crypto.createHash("sha256").update(pdfBuffer).digest("hex");
 
