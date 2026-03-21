@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router-dom";
 import { z } from "zod";
 
 import {
@@ -63,7 +64,11 @@ const paymentFormSchema = z.object({
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
 export function FinancePage() {
-  const [selectedClientId, setSelectedClientId] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const clientIdFromQuery = searchParams.get("clientId") ?? "";
+  const visitIdFromQuery = searchParams.get("visitId") ?? "";
+
+  const [selectedClientId, setSelectedClientId] = useState(clientIdFromQuery);
   const [view, setView] = useState<FinanceView>("OPEN");
   const [selectedReceivableId, setSelectedReceivableId] = useState<string | null>(null);
 
@@ -104,6 +109,27 @@ export function FinancePage() {
     [receivablesQuery.data]
   );
 
+  useEffect(() => {
+    setSelectedClientId(clientIdFromQuery);
+  }, [clientIdFromQuery]);
+
+  useEffect(() => {
+    if (!visitIdFromQuery || receivablesQuery.isPending) {
+      return;
+    }
+
+    const matchingReceivable = (receivablesQuery.data ?? []).find((receivable) => receivable.visitId === visitIdFromQuery);
+
+    if (matchingReceivable) {
+      setView("OPEN");
+      setSelectedReceivableId(matchingReceivable.id);
+    }
+
+    updateFinanceSearchParams(searchParams, setSearchParams, {
+      visitId: ""
+    });
+  }, [receivablesQuery.data, receivablesQuery.isPending, searchParams, setSearchParams, visitIdFromQuery]);
+
   if (receivablesQuery.isPending) {
     return <PageLoader label="Carregando financeiro..." />;
   }
@@ -121,8 +147,8 @@ export function FinancePage() {
     <div className="space-y-4">
       <PageHeader
         eyebrow="Operacao"
-        title="Financeiro"
-        subtitle="Carteira em aberto, recebimentos registrados e leitura pratica dos titulos do dia a dia."
+        title="Receber"
+        subtitle="Titulos em aberto, cobrancas do dia e recebimentos ja registrados."
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -135,7 +161,19 @@ export function FinancePage() {
       <Card className="space-y-3">
         <div className="grid gap-3 lg:grid-cols-[minmax(0,280px)_1fr]">
           <Field label="Cliente">
-            <Select value={selectedClientId} onChange={(event) => setSelectedClientId(event.target.value)}>
+            <Select
+              value={selectedClientId}
+              onChange={(event) => {
+                const nextClientId = event.target.value;
+
+                setSelectedClientId(nextClientId);
+                setSelectedReceivableId(null);
+                updateFinanceSearchParams(searchParams, setSearchParams, {
+                  clientId: nextClientId,
+                  visitId: ""
+                });
+              }}
+            >
               <option value="">Todos os clientes</option>
               {clientsQuery.data?.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -494,4 +532,22 @@ function FinanceInfoRow({
       <p className="mt-1 text-sm text-[var(--jam-subtle)]">{hint}</p>
     </div>
   );
+}
+
+function updateFinanceSearchParams(
+  currentParams: URLSearchParams,
+  setSearchParams: (nextInit: URLSearchParams, navigateOptions?: { replace?: boolean }) => void,
+  updates: Record<string, string>
+) {
+  const nextParams = new URLSearchParams(currentParams);
+
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value) {
+      nextParams.set(key, value);
+    } else {
+      nextParams.delete(key);
+    }
+  });
+
+  setSearchParams(nextParams, { replace: true });
 }

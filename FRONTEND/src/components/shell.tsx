@@ -8,57 +8,54 @@ import { Button } from "./ui";
 type NavigationItem = {
   to: string;
   label: string;
-  description: string;
   icon: ReactNode;
   isActive: (pathname: string) => boolean;
 };
 
 type NavigationSection = {
   title: string;
+  variant: "primary" | "secondary";
   items: NavigationItem[];
 };
 
 const navigationSections: NavigationSection[] = [
   {
     title: "Operacao",
+    variant: "primary",
     items: [
       {
         to: "/",
         label: "Inicio",
-        description: "Centro da operacao",
         icon: <HomeIcon />,
         isActive: (pathname) => pathname === "/"
       },
       {
         to: "/visits",
         label: "Visitas",
-        description: "Conferencia e acerto",
         icon: <VisitIcon />,
         isActive: (pathname) => pathname.startsWith("/visits")
       },
       {
-        to: "/stock",
-        label: "Estoque",
-        description: "Saldo e movimentacoes",
-        icon: <StockIcon />,
-        isActive: (pathname) => pathname.startsWith("/stock")
-      },
-      {
         to: "/financeiro",
-        label: "Financeiro",
-        description: "Pendencias e cobranca",
+        label: "Receber",
         icon: <FinanceIcon />,
         isActive: (pathname) => pathname.startsWith("/financeiro") || pathname.startsWith("/pendencias")
+      },
+      {
+        to: "/stock",
+        label: "Estoque",
+        icon: <StockIcon />,
+        isActive: (pathname) => pathname.startsWith("/stock")
       }
     ]
   },
   {
-    title: "Cadastros",
+    title: "Apoio",
+    variant: "secondary",
     items: [
       {
         to: "/clients",
         label: "Clientes",
-        description: "Lojas e contatos",
         icon: <ClientIcon />,
         isActive: (pathname) =>
           pathname === "/clients" ||
@@ -68,61 +65,26 @@ const navigationSections: NavigationSection[] = [
       {
         to: "/products",
         label: "Produtos",
-        description: "SKUs e base comercial",
         icon: <ProductIcon />,
         isActive: (pathname) => pathname.startsWith("/products")
       },
       {
         to: "/catalog",
-        label: "Catalogo por cliente",
-        description: "Preco e mix por loja",
+        label: "Mix e preco do cliente",
         icon: <CatalogIcon />,
         isActive: (pathname) => pathname === "/catalog" || pathname.includes("/catalog")
-      }
-    ]
-  },
-  {
-    title: "Documentos",
-    items: [
+      },
       {
         to: "/receipts",
         label: "Comprovantes",
-        description: "Visitas concluidas",
         icon: <ReceiptIcon />,
         isActive: (pathname) => pathname.startsWith("/receipts")
-      }
-    ]
-  },
-  {
-    title: "Administracao",
-    items: [
+      },
       {
         to: "/admin/dashboard",
-        label: "Dashboard",
-        description: "Visao geral",
-        icon: <DashboardIcon />,
-        isActive: (pathname) => pathname.startsWith("/admin/dashboard")
-      },
-      {
-        to: "/admin/indicadores",
-        label: "Indicadores",
-        description: "Metricas da operacao",
-        icon: <IndicatorsIcon />,
-        isActive: (pathname) => pathname.startsWith("/admin/indicadores")
-      },
-      {
-        to: "/admin/lucro",
-        label: "Lucro",
-        description: "Margem e rentabilidade",
-        icon: <ProfitIcon />,
-        isActive: (pathname) => pathname.startsWith("/admin/lucro")
-      },
-      {
-        to: "/admin/configuracoes",
-        label: "Configuracoes",
-        description: "Empresa e parametros",
+        label: "Administracao",
         icon: <SettingsIcon />,
-        isActive: (pathname) => pathname.startsWith("/admin/configuracoes")
+        isActive: (pathname) => pathname.startsWith("/admin")
       }
     ]
   }
@@ -273,9 +235,9 @@ function NavigationPanel({
     <>
       <div className="border-b border-[var(--jam-border)] px-3.5 py-3.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
-        <p className="mt-2 font-display text-xl font-semibold text-[var(--jam-ink)]">Operacao organizada</p>
+        <p className="mt-2 font-display text-xl font-semibold text-[var(--jam-ink)]">Operacao do dia</p>
         <p className="mt-1 text-[13px] text-[var(--jam-subtle)]">
-          Navegacao preparada para crescer sem depender da barra inferior.
+          Quatro areas principais para tocar visitas, recebimentos e estoque sem excesso.
         </p>
         <div className="mt-3 rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3 py-2.5">
           <p className="text-[13px] font-medium text-[var(--jam-ink)]">{firstName}</p>
@@ -285,11 +247,18 @@ function NavigationPanel({
 
       <div className="flex-1 overflow-y-auto px-3 py-3.5">
         {navigationSections.map((section) => (
-          <div key={section.title} className="mb-4">
+          <div key={section.title} className={section.variant === "primary" ? "mb-4" : "mb-3"}>
             <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">
               {section.title}
             </p>
-            <div className="space-y-1">
+            <div
+              className={cx(
+                "space-y-1",
+                section.variant === "secondary"
+                  ? "rounded-2xl border border-[var(--jam-border)] bg-white/80 p-1.5"
+                  : null
+              )}
+            >
               {section.items.map((item) => {
                 const active = item.isActive(pathname);
 
@@ -299,24 +268,33 @@ function NavigationPanel({
                     to={item.to}
                     onClick={handleNavigate}
                     className={cx(
-                      "group flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition",
+                      section.variant === "primary"
+                        ? "group flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition"
+                        : "group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition",
                       active
-                        ? "border-[rgba(29,78,216,0.16)] bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
-                        : "border-transparent text-[var(--jam-subtle)] hover:border-[var(--jam-border)] hover:bg-white hover:text-[var(--jam-ink)]"
+                        ? section.variant === "primary"
+                          ? "border-[rgba(29,78,216,0.16)] bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
+                          : "bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
+                        : section.variant === "primary"
+                          ? "border-transparent text-[var(--jam-subtle)] hover:border-[var(--jam-border)] hover:bg-white hover:text-[var(--jam-ink)]"
+                          : "text-[var(--jam-subtle)] hover:bg-[var(--jam-panel-strong)] hover:text-[var(--jam-ink)]"
                     )}
                   >
                     <span
                       className={cx(
-                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                        active ? "bg-white text-[var(--jam-accent)]" : "bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)]"
+                        section.variant === "primary"
+                          ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                          : "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                        active
+                          ? "bg-white text-[var(--jam-accent)]"
+                          : section.variant === "primary"
+                            ? "bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)]"
+                            : "bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)]"
                       )}
                     >
                       {item.icon}
                     </span>
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-semibold sm:text-sm">{item.label}</span>
-                      <span className="block truncate text-[12px] opacity-80 sm:text-sm">{item.description}</span>
-                    </span>
+                    <span className="min-w-0 text-[13px] font-semibold sm:text-sm">{item.label}</span>
                   </Link>
                 );
               })}
@@ -428,38 +406,6 @@ function ReceiptIcon() {
       <path d="M7 3h10v18l-3-2-2 2-2-2-3 2V3Z" />
       <path d="M9 8h6" />
       <path d="M9 12h6" />
-    </svg>
-  );
-}
-
-function DashboardIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="4" width="7" height="7" rx="1.5" />
-      <rect x="13" y="4" width="7" height="11" rx="1.5" />
-      <rect x="4" y="13" width="7" height="7" rx="1.5" />
-      <rect x="13" y="17" width="7" height="3" rx="1.5" />
-    </svg>
-  );
-}
-
-function IndicatorsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 18V10" />
-      <path d="M12 18V6" />
-      <path d="M19 18v-4" />
-    </svg>
-  );
-}
-
-function ProfitIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 16 10 11l3 3 6-6" />
-      <path d="M19 8h-4" />
-      <path d="M19 8v4" />
-      <path d="M4 20h16" />
     </svg>
   );
 }
