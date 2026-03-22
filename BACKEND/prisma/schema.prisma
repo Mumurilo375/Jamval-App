@@ -175,6 +175,8 @@ model CentralStockMovement {
   productId     String                   @db.Uuid
   movementType  CentralStockMovementType
   quantity      Int
+  unitCost      Decimal?                 @db.Decimal(12, 2)
+  totalCost     Decimal?                 @db.Decimal(12, 2)
   referenceType StockReferenceType
   referenceId   String?                  @db.Uuid
   /// DEFECTIVE_RETURN_LOG registra rastreabilidade sem retornar saldo disponivel ao estoque central.

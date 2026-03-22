@@ -1,4 +1,4 @@
-import { CentralStockMovementType, StockReferenceType } from "@prisma/client";
+import { CentralStockMovementType, Prisma, StockReferenceType } from "@prisma/client";
 
 import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
@@ -104,11 +104,14 @@ export class StockService {
       id: string;
       productId: string;
       productName: string;
+      productCategory: string | null;
       sku: string;
       movementType: CentralStockMovementType;
       movementLabel: string;
       balanceEffect: BalanceEffect;
       quantity: number;
+      unitCost: number | null;
+      totalCost: number | null;
       referenceType: StockReferenceType;
       referenceLabel: string;
       note: string | null;
@@ -144,11 +147,14 @@ export class StockService {
           id: movement.id,
           productId: movement.productId,
           productName: movement.product.name,
+          productCategory: movement.product.category,
           sku: movement.product.sku,
           movementType: movement.movementType,
           movementLabel: formatMovementLabel(movement.movementType),
           balanceEffect: getBalanceEffect(movement.movementType),
           quantity: movement.quantity,
+          unitCost: movement.unitCost === null ? null : moneyToNumber(movement.unitCost),
+          totalCost: movement.totalCost === null ? null : moneyToNumber(movement.totalCost),
           referenceType: movement.referenceType,
           referenceLabel,
           note: movement.note ?? null,
@@ -288,18 +294,24 @@ export class StockService {
       const referenceId = crypto.randomUUID();
 
       for (const item of items) {
+        const unitCost = new Prisma.Decimal(item.unitCost);
+        const totalCost = unitCost.mul(item.quantity).toDecimalPlaces(2);
+
         await this.repository.increaseCentralBalance(item.productId, item.quantity, tx);
         await this.repository.createCentralMovement(
           {
             productId: item.productId,
             movementType: CentralStockMovementType.INITIAL_LOAD,
             quantity: item.quantity,
+            unitCost,
+            totalCost,
             referenceType: StockReferenceType.INITIAL_LOAD,
             referenceId,
             note: input.note
           },
           tx
         );
+        await this.repository.updateProductCostPrice(item.productId, unitCost, tx);
       }
     });
   }
@@ -314,18 +326,24 @@ export class StockService {
       const referenceId = crypto.randomUUID();
 
       for (const item of items) {
+        const unitCost = new Prisma.Decimal(item.unitCost);
+        const totalCost = unitCost.mul(item.quantity).toDecimalPlaces(2);
+
         await this.repository.increaseCentralBalance(item.productId, item.quantity, tx);
         await this.repository.createCentralMovement(
           {
             productId: item.productId,
             movementType: CentralStockMovementType.MANUAL_ENTRY,
             quantity: item.quantity,
+            unitCost,
+            totalCost,
             referenceType: StockReferenceType.MANUAL,
             referenceId,
             note: input.note
           },
           tx
         );
+        await this.repository.updateProductCostPrice(item.productId, unitCost, tx);
       }
     });
   }
@@ -374,10 +392,13 @@ export class StockService {
   }
 }
 
-function normalizeBatchItems(items: Array<{ productId: string; quantity: number }>): Array<{ productId: string; quantity: number }> {
+function normalizeBatchItems(
+  items: Array<{ productId: string; quantity: number; unitCost: number }>
+): Array<{ productId: string; quantity: number; unitCost: number }> {
   const normalized = items.map((item) => ({
     productId: item.productId,
-    quantity: Number(item.quantity)
+    quantity: Number(item.quantity),
+    unitCost: Number(item.unitCost)
   }));
   const uniqueProductIds = new Set<string>();
 
@@ -456,11 +477,11 @@ function formatMovementLabel(movementType: CentralStockMovementType): string {
   }
 
   if (movementType === CentralStockMovementType.DEFECTIVE_RETURN_LOG) {
-    return "Retorno com defeito registrado";
+    return "Retorno com defeito";
   }
 
   if (movementType === CentralStockMovementType.DIRECT_SALE_OUT) {
-    return "Saida por venda direta";
+    return "Saida por venda";
   }
 
   return "Saida para cliente";
@@ -519,4 +540,8 @@ function toMovementSnapshot(
     balanceEffect: getBalanceEffect(movement.movementType),
     createdAt: movement.createdAt
   };
+}
+
+function moneyToNumber(value: Prisma.Decimal): number {
+  return Number(value.toFixed(2));
 }

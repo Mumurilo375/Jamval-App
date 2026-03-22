@@ -18,6 +18,8 @@ type CreateCentralStockMovementInput = {
   productId: string;
   movementType: CentralStockMovementType;
   quantity: number;
+  unitCost?: Prisma.Decimal | null;
+  totalCost?: Prisma.Decimal | null;
   referenceType: StockReferenceType;
   referenceId: string;
   note?: string;
@@ -168,7 +170,9 @@ export class StockRepository {
   ): Promise<
     Array<
       Pick<CentralStockMovement, "id" | "productId" | "movementType" | "quantity" | "referenceType" | "referenceId" | "note" | "createdAt"> & {
-        product: Pick<Product, "name" | "sku">;
+        unitCost: Prisma.Decimal | null;
+        totalCost: Prisma.Decimal | null;
+        product: Pick<Product, "name" | "sku" | "category">;
       }
     >
   > {
@@ -197,6 +201,8 @@ export class StockRepository {
         productId: true,
         movementType: true,
         quantity: true,
+        unitCost: true,
+        totalCost: true,
         referenceType: true,
         referenceId: true,
         note: true,
@@ -204,12 +210,61 @@ export class StockRepository {
         product: {
           select: {
             name: true,
-            sku: true
+            sku: true,
+            category: true
           }
         }
       },
       orderBy: [{ createdAt: "desc" }]
     });
+  }
+
+  async findLatestEntryCostsByProductIds(
+    productIds: string[],
+    completedBefore: Date,
+    db: DbClient = prisma
+  ): Promise<Array<{ productId: string; unitCost: Prisma.Decimal }>> {
+    if (productIds.length === 0) {
+      return [];
+    }
+
+    const movements = await db.centralStockMovement.findMany({
+      where: {
+        productId: {
+          in: productIds
+        },
+        movementType: {
+          in: ["INITIAL_LOAD", "MANUAL_ENTRY"]
+        },
+        unitCost: {
+          not: null
+        },
+        createdAt: {
+          lte: completedBefore
+        }
+      },
+      select: {
+        productId: true,
+        unitCost: true,
+        createdAt: true
+      },
+      orderBy: [{ createdAt: "desc" }]
+    });
+
+    const latestByProductId = new Map<string, Prisma.Decimal>();
+
+    for (const movement of movements) {
+      if (!movement.unitCost || latestByProductId.has(movement.productId)) {
+        continue;
+      }
+
+      latestByProductId.set(movement.productId, movement.unitCost);
+    }
+
+    return [...latestByProductId.entries()].map(([productId, unitCost]) => ({
+      productId,
+      unitCost
+    }));
   }
 
   async listCentralVisitOutflowMovements(
@@ -315,6 +370,21 @@ export class StockRepository {
     db: DbClient = prisma
   ): Promise<CentralStockMovement> {
     return db.centralStockMovement.create({ data });
+  }
+
+  async updateProductCostPrice(
+    productId: string,
+    costPrice: Prisma.Decimal,
+    db: DbClient = prisma
+  ): Promise<Product> {
+    return db.product.update({
+      where: {
+        id: productId
+      },
+      data: {
+        costPrice
+      }
+    });
   }
 
   async createConsignedMovement(

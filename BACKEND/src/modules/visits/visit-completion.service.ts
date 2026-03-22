@@ -51,8 +51,9 @@ export class VisitCompletionService {
 
       ensureVisitCanBeCompleted(visit);
 
+      const completedAt = new Date();
       const clientProductsById = await this.loadClientProductsById(visit.items, tx);
-      const productsById = await this.loadProductsById(visit.items, tx);
+      const costSnapshotsByProductId = await this.loadCostSnapshotsByProductId(visit.items, completedAt, tx);
       const validatedItems = visit.items.map((item) =>
         this.validateVisitItem(visit.clientId, item, clientProductsById)
       );
@@ -81,7 +82,7 @@ export class VisitCompletionService {
       const completionClaimed = await this.visitRepository.markAsCompleted(
         visit.id,
         totalAmount,
-        new Date(),
+        completedAt,
         tx
       );
 
@@ -110,7 +111,7 @@ export class VisitCompletionService {
             quantitySold: item.quantitySold,
             subtotalAmount: item.subtotalAmount,
             resultingClientQuantity: item.resultingClientQuantity,
-            costPriceSnapshot: productsById.get(item.item.productId)?.costPrice ?? null
+            costPriceSnapshot: costSnapshotsByProductId.get(item.item.productId) ?? null
           },
           tx
         );
@@ -179,14 +180,21 @@ export class VisitCompletionService {
     return new Map(clientProducts.map((clientProduct) => [clientProduct.id, clientProduct]));
   }
 
-  private async loadProductsById(
+  private async loadCostSnapshotsByProductId(
     items: VisitWithItems["items"],
+    completedAt: Date,
     tx: Prisma.TransactionClient
-  ): Promise<Map<string, { id: string; costPrice: Prisma.Decimal | null }>> {
+  ): Promise<Map<string, Prisma.Decimal | null>> {
     const productIds = Array.from(new Set(items.map((item) => item.productId)));
+    const latestEntryCosts = await this.stockRepository.findLatestEntryCostsByProductIds(productIds, completedAt, tx);
     const products = await this.visitRepository.findProductsByIds(productIds, tx);
+    const latestCostByProductId = new Map(
+      latestEntryCosts.map((movement) => [movement.productId, movement.unitCost])
+    );
 
-    return new Map(products.map((product) => [product.id, { id: product.id, costPrice: product.costPrice }]));
+    return new Map(
+      products.map((product) => [product.id, latestCostByProductId.get(product.id) ?? product.costPrice ?? null])
+    );
   }
 
   private validateVisitItem(

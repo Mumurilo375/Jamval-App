@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const positiveIntSchema = z.coerce.number().int().min(1);
+const nonNegativeMoneySchema = z.coerce.number().min(0);
 const optionalTextSchema = z.preprocess((value) => {
   if (value === undefined || value === null || value === "") {
     return undefined;
@@ -31,7 +32,8 @@ const simpleDateSchema = z.preprocess((value) => {
 
 const stockBatchItemSchema = z.object({
   productId: z.string().uuid(),
-  quantity: positiveIntSchema
+  quantity: positiveIntSchema,
+  unitCost: nonNegativeMoneySchema
 });
 
 const stockBatchBodySchema = z
