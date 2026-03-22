@@ -5,6 +5,7 @@ import type { VisitReceiptSource } from "./receipt.types";
 
 type PdfDocument = InstanceType<typeof PDFDocument>;
 type ReceiptItem = VisitReceiptSource["items"][number];
+type PdfFont = "Helvetica" | "Helvetica-Bold" | "Helvetica-Oblique";
 
 type RenderReceiptPdfInput = {
   visit: VisitReceiptSource;
@@ -31,16 +32,28 @@ type TableColumn<T> = {
   header: string;
   width: number;
   align?: "left" | "right";
-  font?: "Helvetica" | "Helvetica-Bold";
+  font?: PdfFont;
+  size?: number;
   value: (row: T) => string;
 };
 
 const COLORS = {
-  ink: "#0f172a",
-  muted: "#475569",
-  line: "#cbd5e1",
-  lineStrong: "#94a3b8"
+  ink: "#111827",
+  muted: "#4b5563",
+  subtle: "#6b7280",
+  line: "#d1d5db",
+  lineSoft: "#e5e7eb",
+  lineStrong: "#9ca3af",
+  bandFill: "#f5f5f4",
+  panelFill: "#fafaf9",
+  tableHeaderFill: "#f3f4f6",
+  tableStripe: "#fafafa",
+  summaryFill: "#f5f5f4",
+  signatureFill: "#fafaf9"
 } as const;
+
+const SUMMARY_WIDTH = 220;
+const SIGNATURE_HEIGHT = 96;
 
 export async function renderReceiptPdf(input: RenderReceiptPdfInput): Promise<Buffer> {
   const doc = new PDFDocument({
@@ -76,56 +89,60 @@ function renderSaleReceipt(doc: PdfDocument, input: RenderReceiptPdfInput, amoun
   const continuationPage = () => startSalePage(doc, input, true);
   let currentY = startSalePage(doc, input, false);
 
-  currentY = drawClientBlock(doc, input.visit, currentY + 10);
-  currentY = drawSectionLabel(doc, "Itens da venda", currentY + 14);
-  currentY = drawTable(
+  currentY = drawClientBlock(doc, input.visit, currentY + 12);
+  currentY = drawSectionLabel(doc, "Itens da venda", currentY + 18);
+  currentY = drawTable(doc, {
+    y: currentY + 8,
+    rows: input.visit.items,
+    columns: saleColumns(),
+    continuationPage
+  });
+
+  currentY = ensureSectionSpace(doc, currentY + 18, 170, continuationPage);
+  currentY = drawFinancialSummary(
     doc,
+    currentY,
     {
-      y: currentY + 8,
-      rows: input.visit.items,
-      columns: saleColumns(),
-      continuationPage
+      title: "Resumo financeiro",
+      totalLabel: "Total da venda",
+      totalValue: formatCurrency(amounts.totalAmount),
+      receivedLabel: "Valor recebido",
+      receivedValue: formatCurrency(amounts.receivedAmount),
+      balanceLabel: "Saldo",
+      balanceValue: formatCurrency(amounts.pendingAmount)
     }
   );
 
-  currentY = ensureSectionSpace(doc, currentY, 190, continuationPage);
-  currentY = drawFinancialSummary(doc, currentY + 8, {
-    totalLabel: "Total",
-    totalValue: formatCurrency(amounts.totalAmount),
-    receivedLabel: "Valor recebido",
-    receivedValue: formatCurrency(amounts.receivedAmount),
-    balanceLabel: "Saldo",
-    balanceValue: formatCurrency(amounts.pendingAmount)
-  });
-
-  currentY = drawPaymentDetails(doc, currentY + 12, input.initialPayment, amounts.receivedAmount);
+  currentY = drawPaymentDetailsPanel(doc, currentY + 12, input.initialPayment, amounts.receivedAmount);
 
   if (input.visit.notes) {
-    currentY = drawCompactParagraph(doc, "Observações", input.visit.notes, currentY + 12, continuationPage);
+    currentY = drawCompactParagraph(doc, "Observações", input.visit.notes, currentY + 14, continuationPage);
   }
 
-  drawSignatureBlocks(doc, currentY + 18);
+  drawSignatureBand(doc, currentY + 22, continuationPage);
 }
 
 function renderConsignmentReceipt(doc: PdfDocument, input: RenderReceiptPdfInput, amounts: ReceiptAmounts): void {
   const settlementContinuationPage = () => startConsignmentSettlementPage(doc, input, true);
   let currentY = startConsignmentSettlementPage(doc, input, false);
 
-  currentY = drawClientBlock(doc, input.visit, currentY + 10);
-  currentY = drawSectionLabel(doc, "Acerto do período", currentY + 14);
-  currentY = drawTable(
-    doc,
-    {
-      y: currentY + 8,
-      rows: input.visit.items,
-      columns: consignmentSettlementColumns(),
-      continuationPage: settlementContinuationPage
-    }
-  );
+  currentY = drawClientBlock(doc, input.visit, currentY + 12);
+  currentY = drawSectionLabel(doc, "Acerto do período", currentY + 18);
+  currentY = drawTable(doc, {
+    y: currentY + 8,
+    rows: input.visit.items,
+    columns: consignmentSettlementColumns(),
+    continuationPage: settlementContinuationPage
+  });
 
-  currentY = ensureSectionSpace(doc, currentY, 220, settlementContinuationPage);
-  currentY = drawFinancialSummary(doc, currentY + 8, {
-    totalLabel: "Total geral",
+  const occurrences = buildConsignmentOccurrences(input.visit.items);
+  const footerStartY = ensureSectionSpace(doc, currentY + 18, 172, settlementContinuationPage);
+  const leftColumnX = contentLeft(doc);
+  const leftColumnWidth = contentWidth(doc) - SUMMARY_WIDTH - 18;
+  let leftY = footerStartY;
+  let rightY = drawFinancialSummary(doc, footerStartY, {
+    title: "Resumo financeiro",
+    totalLabel: "Total do acerto",
     totalValue: formatCurrency(amounts.totalAmount),
     receivedLabel: "Valor recebido",
     receivedValue: formatCurrency(amounts.receivedAmount),
@@ -133,47 +150,45 @@ function renderConsignmentReceipt(doc: PdfDocument, input: RenderReceiptPdfInput
     balanceValue: formatCurrency(amounts.pendingAmount)
   });
 
-  currentY = drawPaymentDetails(doc, currentY + 12, input.initialPayment, amounts.receivedAmount);
-
-  const occurrences = buildConsignmentOccurrences(input.visit.items);
+  rightY = drawPaymentDetailsPanel(doc, rightY + 12, input.initialPayment, amounts.receivedAmount);
 
   if (occurrences.length > 0) {
-    currentY = drawCompactList(doc, "Ocorrências registradas", occurrences, currentY + 12, settlementContinuationPage);
+    leftY = drawFlowList(doc, leftColumnX, leftColumnWidth, "Ocorrências registradas", occurrences, leftY);
   }
 
   if (input.visit.notes) {
-    currentY = drawCompactParagraph(doc, "Observações", input.visit.notes, currentY + 12, settlementContinuationPage);
+    leftY = drawFlowParagraph(doc, leftColumnX, leftColumnWidth, "Observações", input.visit.notes, leftY + 10);
   }
 
-  drawSignatureBlocks(doc, currentY + 18);
+  currentY = Math.max(leftY, rightY);
+
+  drawSignatureBand(doc, currentY + 20, settlementContinuationPage);
 
   doc.addPage();
 
   const baseContinuationPage = () => startConsignmentBasePage(doc, input, true);
   currentY = startConsignmentBasePage(doc, input, false);
-  currentY = drawTable(
+  currentY = drawSectionLabel(doc, "Base da próxima visita", currentY + 16);
+  currentY = drawTable(doc, {
+    y: currentY + 8,
+    rows: input.visit.items.filter((item) => item.resultingClientQuantity > 0),
+    columns: consignmentBaseColumns(),
+    emptyMessage: "Nenhum item ficou em consignação para a próxima visita.",
+    continuationPage: baseContinuationPage
+  });
+
+  currentY = drawInstructionNote(
     doc,
-    {
-      y: currentY + 12,
-      rows: input.visit.items.filter((item) => item.resultingClientQuantity > 0),
-      columns: consignmentBaseColumns(),
-      emptyMessage: "Nenhum item ficou em consignação para a próxima visita.",
-      continuationPage: baseContinuationPage
-    }
+    "Esta folha deve ser usada como base de conferência na próxima visita.",
+    currentY + 16,
+    baseContinuationPage
   );
 
-  currentY = ensureSectionSpace(doc, currentY, 130, baseContinuationPage);
-  currentY = drawInstructionLine(
-    doc,
-    "Este quadro serve como base de conferência para a próxima visita.",
-    currentY + 12
-  );
-
-  drawSignatureBlocks(doc, currentY + 18);
+  drawSignatureBand(doc, currentY + 22, baseContinuationPage);
 }
 
 function startSalePage(doc: PdfDocument, input: RenderReceiptPdfInput, compact: boolean): number {
-  const currentY = drawDocumentHeader(doc, input.companyProfile, "Comprovante de venda direta", compact);
+  const currentY = drawDocumentHeader(doc, input.companyProfile, "Comprovante de venda", compact);
 
   return drawMetadataBand(
     doc,
@@ -188,12 +203,12 @@ function startSalePage(doc: PdfDocument, input: RenderReceiptPdfInput, compact: 
           { label: "Data da venda", value: formatDateTime(input.visit.visitedAt) },
           { label: "Emitido em", value: formatDateTime(input.issuedAt) }
         ],
-    currentY + 4
+    currentY + 2
   );
 }
 
 function startConsignmentSettlementPage(doc: PdfDocument, input: RenderReceiptPdfInput, compact: boolean): number {
-  const currentY = drawDocumentHeader(doc, input.companyProfile, "Comprovante de acerto de consignação", compact);
+  const currentY = drawDocumentHeader(doc, input.companyProfile, "Comprovante de acerto e reposição", compact);
 
   return drawMetadataBand(
     doc,
@@ -208,7 +223,7 @@ function startConsignmentSettlementPage(doc: PdfDocument, input: RenderReceiptPd
           { label: "Data da visita", value: formatDateTime(input.visit.visitedAt) },
           { label: "Emitido em", value: formatDateTime(input.issuedAt) }
         ],
-    currentY + 4
+    currentY + 2
   );
 }
 
@@ -222,7 +237,7 @@ function startConsignmentBasePage(doc: PdfDocument, input: RenderReceiptPdfInput
       { label: "Data da visita", value: formatDate(input.visit.visitedAt) },
       { label: "Visita", value: input.visit.visitCode }
     ],
-    currentY + 4
+    currentY + 2
   );
 }
 
@@ -234,77 +249,88 @@ function drawDocumentHeader(
 ): number {
   const left = contentLeft(doc);
   const width = contentWidth(doc);
-  let currentY = doc.page.margins.top;
+  const currentY = doc.page.margins.top;
 
-  doc.font("Helvetica-Bold").fontSize(compact ? 15 : 18).fillColor(COLORS.ink).text(companyProfile.name, left, currentY, {
+  doc.font("Helvetica-Bold").fontSize(compact ? 10 : 10.5).fillColor(COLORS.muted).text(companyProfile.name, left, currentY, {
     width
   });
-  currentY = doc.y + 2;
 
+  let infoY = doc.y + 2;
   const headerLines = buildCompanyHeaderLines(companyProfile);
 
-  doc.font("Helvetica").fontSize(9.5).fillColor(COLORS.muted);
+  doc.font("Helvetica").fontSize(compact ? 8.3 : 8.7).fillColor(COLORS.subtle);
 
   for (const line of headerLines) {
-    doc.text(line, left, currentY, { width });
-    currentY = doc.y + 1;
+    doc.text(line, left, infoY, { width });
+    infoY = doc.y + 1;
   }
 
-  currentY += compact ? 10 : 12;
+  const titleY = infoY + (compact ? 9 : 12);
 
-  doc.font("Helvetica-Bold").fontSize(compact ? 13 : 15).fillColor(COLORS.ink).text(title, left, currentY, { width });
-  currentY = doc.y + 8;
+  doc.font("Helvetica-Bold").fontSize(compact ? 16 : 20).fillColor(COLORS.ink).text(title, left, titleY, {
+    width
+  });
 
-  doc.moveTo(left, currentY).lineTo(contentRight(doc), currentY).stroke(COLORS.lineStrong);
+  const dividerY = doc.y + 6;
 
-  return currentY + 4;
+  doc.lineWidth(1.2).moveTo(left, dividerY).lineTo(contentRight(doc), dividerY).stroke(COLORS.lineStrong);
+
+  return dividerY + 8;
 }
 
 function drawMetadataBand(doc: PdfDocument, entries: MetadataEntry[], y: number): number {
-  const nextY = ensurePageSpace(doc, y, 54);
   const left = contentLeft(doc);
   const totalWidth = contentWidth(doc);
   const columnWidth = totalWidth / entries.length;
-
-  doc.moveTo(left, nextY).lineTo(contentRight(doc), nextY).stroke(COLORS.line);
+  const paddingX = 12;
+  const paddingTop = 8;
+  const paddingBottom = 10;
 
   let tallest = 0;
 
-  for (let index = 0; index < entries.length; index += 1) {
-    const entry = entries[index];
-    const x = left + index * columnWidth;
-    const innerWidth = columnWidth - 10;
-    const labelHeight = measureTextHeight(doc, entry.label.toUpperCase(), "Helvetica-Bold", 8, innerWidth);
-    const valueHeight = measureTextHeight(doc, entry.value, "Helvetica", 10.5, innerWidth);
-
-    doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.muted).text(entry.label.toUpperCase(), x, nextY + 8, {
-      width: innerWidth
-    });
-    doc.font("Helvetica").fontSize(10.5).fillColor(COLORS.ink).text(entry.value, x, nextY + 12 + labelHeight, {
-      width: innerWidth
-    });
-
-    tallest = Math.max(tallest, 12 + labelHeight + valueHeight);
+  for (const entry of entries) {
+    const innerWidth = columnWidth - paddingX * 2;
+    const labelHeight = measureTextHeight(doc, entry.label.toUpperCase(), "Helvetica-Bold", 7.8, innerWidth);
+    const valueHeight = measureTextHeight(doc, entry.value, "Helvetica-Bold", 10.4, innerWidth);
+    tallest = Math.max(tallest, labelHeight + valueHeight);
   }
 
-  const bottomY = nextY + tallest + 8;
+  const bandHeight = paddingTop + tallest + paddingBottom;
+  const nextY = ensurePageSpace(doc, y, bandHeight + 4);
 
-  doc.moveTo(left, bottomY).lineTo(contentRight(doc), bottomY).stroke(COLORS.line);
+  doc.rect(left, nextY, totalWidth, bandHeight).fill(COLORS.bandFill);
+  doc.moveTo(left, nextY).lineTo(contentRight(doc), nextY).stroke(COLORS.lineStrong);
+  doc.moveTo(left, nextY + bandHeight).lineTo(contentRight(doc), nextY + bandHeight).stroke(COLORS.lineStrong);
 
-  return bottomY + 6;
+  let x = left;
+
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    const innerWidth = columnWidth - paddingX * 2;
+
+    if (index > 0) {
+      doc.moveTo(x, nextY + 8).lineTo(x, nextY + bandHeight - 8).stroke(COLORS.line);
+    }
+
+    doc.font("Helvetica-Bold").fontSize(7.8).fillColor(COLORS.subtle).text(entry.label.toUpperCase(), x + paddingX, nextY + paddingTop, {
+      width: innerWidth
+    });
+
+    doc.font("Helvetica-Bold").fontSize(10.4).fillColor(COLORS.ink).text(entry.value, x + paddingX, nextY + paddingTop + 12, {
+      width: innerWidth
+    });
+
+    x += columnWidth;
+  }
+
+  return nextY + bandHeight + 10;
 }
 
 function drawClientBlock(doc: PdfDocument, visit: VisitReceiptSource, y: number): number {
-  const nextY = ensurePageSpace(doc, y, 72);
   const left = contentLeft(doc);
   const width = contentWidth(doc);
-  let currentY = drawSectionLabel(doc, "Cliente", nextY);
-
-  doc.font("Helvetica-Bold").fontSize(12).fillColor(COLORS.ink).text(visit.client.tradeName, left, currentY + 6, {
-    width
-  });
-  currentY = doc.y + 2;
-
+  const innerX = left + 12;
+  const innerWidth = width - 24;
   const contactLine = [visit.client.contactName, visit.client.phone].filter((value): value is string => Boolean(value)).join(" | ");
   const addressLine = formatAddress(
     visit.client.addressLine,
@@ -312,30 +338,57 @@ function drawClientBlock(doc: PdfDocument, visit: VisitReceiptSource, y: number)
     visit.client.addressState,
     visit.client.addressZipcode
   );
+  const detailLines = [contactLine, addressLine].filter((value): value is string => Boolean(value));
 
-  doc.font("Helvetica").fontSize(9.5).fillColor(COLORS.muted);
+  const titleHeight = measureTextHeight(doc, "CLIENTE", "Helvetica-Bold", 8, innerWidth);
+  const nameHeight = measureTextHeight(doc, visit.client.tradeName, "Helvetica-Bold", 12.5, innerWidth);
+  const detailsHeight = detailLines.reduce(
+    (total, line) => total + measureTextHeight(doc, line, "Helvetica", 9.3, innerWidth) + 2,
+    0
+  );
+  const panelHeight = 12 + titleHeight + 6 + nameHeight + (detailLines.length > 0 ? 4 + detailsHeight : 0) + 10;
+  const nextY = ensurePageSpace(doc, y, panelHeight + 4);
 
-  if (contactLine) {
-    doc.text(contactLine, left, currentY, { width });
-    currentY = doc.y + 1;
+  doc.rect(left, nextY, width, panelHeight).fill(COLORS.panelFill);
+  doc.rect(left, nextY, width, panelHeight).stroke(COLORS.line);
+
+  let currentY = nextY + 10;
+
+  doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.subtle).text("CLIENTE", innerX, currentY, {
+    width: innerWidth
+  });
+  currentY = doc.y + 5;
+
+  doc.font("Helvetica-Bold").fontSize(12.5).fillColor(COLORS.ink).text(visit.client.tradeName, innerX, currentY, {
+    width: innerWidth
+  });
+  currentY = doc.y + 4;
+
+  doc.font("Helvetica").fontSize(9.3).fillColor(COLORS.muted);
+
+  for (const line of detailLines) {
+    doc.text(line, innerX, currentY, { width: innerWidth });
+    currentY = doc.y + 2;
   }
 
-  if (addressLine) {
-    doc.text(addressLine, left, currentY, { width });
-    currentY = doc.y + 1;
-  }
-
-  return currentY + 4;
+  return nextY + panelHeight + 6;
 }
 
 function drawSectionLabel(doc: PdfDocument, label: string, y: number): number {
   const nextY = ensurePageSpace(doc, y, 18);
+  const left = contentLeft(doc);
+  const right = contentRight(doc);
 
-  doc.font("Helvetica-Bold").fontSize(9).fillColor(COLORS.muted).text(label.toUpperCase(), contentLeft(doc), nextY, {
-    width: contentWidth(doc)
+  doc.font("Helvetica-Bold").fontSize(8.2).fillColor(COLORS.subtle).text(label.toUpperCase(), left, nextY, {
+    width: 180
   });
 
-  return nextY + 12;
+  const labelWidth = doc.widthOfString(label.toUpperCase());
+  const lineStart = Math.min(left + labelWidth + 12, right - 20);
+
+  doc.moveTo(lineStart, nextY + 6).lineTo(right, nextY + 6).stroke(COLORS.line);
+
+  return nextY + 14;
 }
 
 function drawTable<T>(doc: PdfDocument, input: {
@@ -351,7 +404,8 @@ function drawTable<T>(doc: PdfDocument, input: {
     return drawEmptyTableMessage(doc, input.emptyMessage ?? "Nenhum item para exibir.", currentY);
   }
 
-  for (const row of input.rows) {
+  for (let index = 0; index < input.rows.length; index += 1) {
+    const row = input.rows[index];
     const rowHeight = measureRowHeight(doc, row, input.columns);
 
     if (currentY + rowHeight > pageBottom(doc)) {
@@ -359,31 +413,51 @@ function drawTable<T>(doc: PdfDocument, input: {
       currentY = drawTableHeader(doc, input.columns, input.continuationPage());
     }
 
-    currentY = drawTableRow(doc, row, input.columns, currentY, rowHeight);
+    currentY = drawTableRow(doc, row, input.columns, currentY, rowHeight, index);
   }
 
   return currentY + 4;
 }
 
 function drawTableHeader<T>(doc: PdfDocument, columns: TableColumn<T>[], y: number): number {
-  const nextY = ensurePageSpace(doc, y, 32);
-  let x = contentLeft(doc);
+  const left = contentLeft(doc);
+  const width = contentWidth(doc);
+  const paddingX = 10;
+  const paddingTop = 8;
+  const paddingBottom = 8;
 
-  doc.font("Helvetica-Bold").fontSize(8.5).fillColor(COLORS.muted);
+  let tallest = 0;
 
   for (const column of columns) {
-    doc.text(column.header.toUpperCase(), x + 4, nextY, {
-      width: column.width - 8,
+    tallest = Math.max(
+      tallest,
+      measureTextHeight(doc, column.header.toUpperCase(), "Helvetica-Bold", 7.8, column.width - paddingX * 2)
+    );
+  }
+
+  const headerHeight = paddingTop + tallest + paddingBottom;
+  const nextY = ensurePageSpace(doc, y, headerHeight + 4);
+  let x = left;
+
+  doc.rect(left, nextY, width, headerHeight).fill(COLORS.tableHeaderFill);
+  doc.rect(left, nextY, width, headerHeight).stroke(COLORS.lineStrong);
+
+  for (let index = 0; index < columns.length; index += 1) {
+    const column = columns[index];
+
+    if (index > 0) {
+      doc.moveTo(x, nextY).lineTo(x, nextY + headerHeight).stroke(COLORS.line);
+    }
+
+    doc.font("Helvetica-Bold").fontSize(7.8).fillColor(COLORS.subtle).text(column.header.toUpperCase(), x + paddingX, nextY + paddingTop, {
+      width: column.width - paddingX * 2,
       align: column.align ?? "left"
     });
+
     x += column.width;
   }
 
-  const dividerY = nextY + 14;
-
-  doc.moveTo(contentLeft(doc), dividerY).lineTo(contentRight(doc), dividerY).stroke(COLORS.lineStrong);
-
-  return dividerY + 6;
+  return nextY + headerHeight;
 }
 
 function drawTableRow<T>(
@@ -391,94 +465,116 @@ function drawTableRow<T>(
   row: T,
   columns: TableColumn<T>[],
   y: number,
-  rowHeight: number
+  rowHeight: number,
+  index: number
 ): number {
-  let x = contentLeft(doc);
+  const left = contentLeft(doc);
+  const paddingX = 10;
+  const paddingTop = 7;
+  let x = left;
 
-  for (const column of columns) {
-    const value = column.value(row);
-    doc.font(column.font ?? "Helvetica").fontSize(10).fillColor(COLORS.ink).text(value, x + 4, y, {
-      width: column.width - 8,
-      align: column.align ?? "left"
-    });
+  if (index % 2 === 1) {
+    doc.rect(left, y, contentWidth(doc), rowHeight).fill(COLORS.tableStripe);
+  }
+
+  for (let columnIndex = 0; columnIndex < columns.length; columnIndex += 1) {
+    const column = columns[columnIndex];
+
+    if (columnIndex > 0) {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke(COLORS.lineSoft);
+    }
+
+    doc
+      .font(column.font ?? "Helvetica")
+      .fontSize(column.size ?? 10)
+      .fillColor(COLORS.ink)
+      .text(column.value(row), x + paddingX, y + paddingTop, {
+        width: column.width - paddingX * 2,
+        align: column.align ?? "left"
+      });
+
     x += column.width;
   }
 
-  const dividerY = y + rowHeight - 8;
-
-  doc.moveTo(contentLeft(doc), dividerY).lineTo(contentRight(doc), dividerY).stroke(COLORS.line);
+  doc.moveTo(left, y + rowHeight).lineTo(contentRight(doc), y + rowHeight).stroke(COLORS.lineSoft);
 
   return y + rowHeight;
 }
 
 function drawEmptyTableMessage(doc: PdfDocument, message: string, y: number): number {
-  const nextY = ensurePageSpace(doc, y, 40);
+  const nextY = ensurePageSpace(doc, y, 48);
 
-  doc.font("Helvetica").fontSize(10).fillColor(COLORS.muted).text(message, contentLeft(doc), nextY, {
-    width: contentWidth(doc)
+  doc.rect(contentLeft(doc), nextY, contentWidth(doc), 42).fill(COLORS.panelFill);
+  doc.rect(contentLeft(doc), nextY, contentWidth(doc), 42).stroke(COLORS.line);
+  doc.font("Helvetica").fontSize(9.8).fillColor(COLORS.muted).text(message, contentLeft(doc) + 12, nextY + 13, {
+    width: contentWidth(doc) - 24
   });
 
-  const dividerY = doc.y + 8;
-
-  doc.moveTo(contentLeft(doc), dividerY).lineTo(contentRight(doc), dividerY).stroke(COLORS.line);
-
-  return dividerY + 4;
+  return nextY + 48;
 }
 
-function drawFinancialSummary(doc: PdfDocument, y: number, summary: {
-  totalLabel: string;
-  totalValue: string;
-  receivedLabel: string;
-  receivedValue: string;
-  balanceLabel: string;
-  balanceValue: string;
-}): number {
-  const nextY = ensurePageSpace(doc, y, 90);
-  const left = contentLeft(doc);
-  const right = contentRight(doc);
-  const labelX = right - 210;
-  const valueX = right - 90;
-  let currentY = nextY;
+function drawFinancialSummary(
+  doc: PdfDocument,
+  y: number,
+  summary: {
+    title: string;
+    totalLabel: string;
+    totalValue: string;
+    receivedLabel: string;
+    receivedValue: string;
+    balanceLabel: string;
+    balanceValue: string;
+  }
+): number {
+  const blockHeight = 104;
+  const nextY = ensurePageSpace(doc, y, blockHeight + 4);
+  const x = contentRight(doc) - SUMMARY_WIDTH;
 
-  doc.moveTo(left, currentY).lineTo(right, currentY).stroke(COLORS.lineStrong);
-  currentY += 10;
+  doc.rect(x, nextY, SUMMARY_WIDTH, blockHeight).fill(COLORS.summaryFill);
+  doc.rect(x, nextY, SUMMARY_WIDTH, blockHeight).stroke(COLORS.lineStrong);
 
-  doc.font("Helvetica-Bold").fontSize(9).fillColor(COLORS.muted).text("RESUMO FINANCEIRO", left, currentY, {
-    width: 180
+  doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.subtle).text(summary.title.toUpperCase(), x + 14, nextY + 10, {
+    width: SUMMARY_WIDTH - 28
   });
-  currentY += 14;
 
-  currentY = drawSummaryRow(doc, summary.totalLabel, summary.totalValue, labelX, valueX, currentY);
-  currentY = drawSummaryRow(doc, summary.receivedLabel, summary.receivedValue, labelX, valueX, currentY);
-  currentY = drawSummaryRow(doc, summary.balanceLabel, summary.balanceValue, labelX, valueX, currentY, true);
+  let currentY = nextY + 26;
+  currentY = drawSummaryRow(doc, summary.totalLabel, summary.totalValue, x, currentY, true);
+  currentY = drawSummaryRow(doc, summary.receivedLabel, summary.receivedValue, x, currentY);
+  currentY = drawSummaryRow(doc, summary.balanceLabel, summary.balanceValue, x, currentY, true, true);
 
-  return currentY + 4;
+  return nextY + blockHeight;
 }
 
 function drawSummaryRow(
   doc: PdfDocument,
   label: string,
   value: string,
-  labelX: number,
-  valueX: number,
+  x: number,
   y: number,
-  emphasize = false
+  emphasize = false,
+  finalRow = false
 ): number {
-  const rowY = y + 2;
+  const rowHeight = 22;
+  const labelX = x + 14;
+  const valueX = x + 114;
+  const valueFontSize = finalRow ? 13 : emphasize ? 12.6 : 11.2;
 
-  doc.font("Helvetica").fontSize(10).fillColor(COLORS.ink).text(label, labelX, rowY, {
-    width: 110,
+  doc.font("Helvetica").fontSize(9.8).fillColor(COLORS.ink).text(label, labelX, y + 5, {
+    width: 92
+  });
+  doc.font("Helvetica-Bold").fontSize(valueFontSize).fillColor(COLORS.ink).text(value, valueX, y + 3, {
+    width: 92,
     align: "right"
   });
-  doc.font("Helvetica-Bold").fontSize(emphasize ? 11.5 : 11).fillColor(COLORS.ink).text(value, valueX, rowY - 1, {
-    width: 90,
-    align: "right"
-  });
 
-  return rowY + 18;
+  if (!finalRow) {
+    doc.moveTo(x + 14, y + rowHeight).lineTo(x + SUMMARY_WIDTH - 14, y + rowHeight).stroke(COLORS.line);
+  }
+
+  return y + rowHeight;
 }
 
-function drawPaymentDetails(
+function drawPaymentDetailsPanel(
   doc: PdfDocument,
   y: number,
   payment: RenderReceiptPdfInput["initialPayment"],
@@ -488,26 +584,38 @@ function drawPaymentDetails(
     return y;
   }
 
-  let currentY = drawCompactDetailLine(doc, "Forma de pagamento", formatPaymentMethod(payment.paymentMethod), y);
+  const rowCount = payment.reference ? 2 : 1;
+  const blockHeight = 28 + rowCount * 16;
+  const nextY = ensurePageSpace(doc, y, blockHeight + 4);
+  const x = contentRight(doc) - SUMMARY_WIDTH;
+
+  doc.rect(x, nextY, SUMMARY_WIDTH, blockHeight).fill(COLORS.panelFill);
+  doc.rect(x, nextY, SUMMARY_WIDTH, blockHeight).stroke(COLORS.line);
+
+  doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.subtle).text("PAGAMENTO", x + 14, nextY + 10, {
+    width: SUMMARY_WIDTH - 28
+  });
+
+  let currentY = nextY + 20;
+  currentY = drawCompactDetailRow(doc, x, currentY, "Forma de pagamento", formatPaymentMethod(payment.paymentMethod));
 
   if (payment.reference) {
-    currentY = drawCompactDetailLine(doc, "Referência", payment.reference, currentY + 2);
+    currentY = drawCompactDetailRow(doc, x, currentY, "Referência", payment.reference);
   }
 
-  return currentY;
+  return nextY + blockHeight;
 }
 
-function drawCompactDetailLine(doc: PdfDocument, label: string, value: string, y: number): number {
-  const nextY = ensurePageSpace(doc, y, 20);
-
-  doc.font("Helvetica-Bold").fontSize(9).fillColor(COLORS.muted).text(`${label.toUpperCase()}:`, contentLeft(doc), nextY, {
-    continued: true
+function drawCompactDetailRow(doc: PdfDocument, x: number, y: number, label: string, value: string): number {
+  doc.font("Helvetica-Bold").fontSize(7.8).fillColor(COLORS.subtle).text(label.toUpperCase(), x + 14, y + 2, {
+    width: 96
   });
-  doc.font("Helvetica").fontSize(9.5).fillColor(COLORS.ink).text(` ${value}`, {
-    width: contentWidth(doc)
+  doc.font("Helvetica").fontSize(9.5).fillColor(COLORS.ink).text(value, x + 118, y + 2, {
+    width: SUMMARY_WIDTH - 132,
+    align: "right"
   });
 
-  return doc.y + 2;
+  return y + 16;
 }
 
 function drawCompactParagraph(
@@ -517,16 +625,15 @@ function drawCompactParagraph(
   y: number,
   continuationPage?: () => number
 ): number {
-  const neededHeight = measureTextHeight(doc, value, "Helvetica", 9.5, contentWidth(doc)) + 28;
+  const neededHeight = measureTextHeight(doc, value, "Helvetica", 9.5, contentWidth(doc)) + 30;
   const nextY = continuationPage ? ensureSectionSpace(doc, y, neededHeight, continuationPage) : ensurePageSpace(doc, y, neededHeight);
   const left = contentLeft(doc);
-  const width = contentWidth(doc);
 
-  doc.font("Helvetica-Bold").fontSize(9).fillColor(COLORS.muted).text(label.toUpperCase(), left, nextY, {
-    width
+  doc.font("Helvetica-Bold").fontSize(8.4).fillColor(COLORS.subtle).text(label.toUpperCase(), left, nextY, {
+    width: contentWidth(doc)
   });
   doc.font("Helvetica").fontSize(9.5).fillColor(COLORS.ink).text(value, left, nextY + 12, {
-    width
+    width: contentWidth(doc)
   });
 
   return doc.y + 2;
@@ -544,7 +651,7 @@ function drawCompactList(
   const width = contentWidth(doc);
   let currentY = nextY;
 
-  doc.font("Helvetica-Bold").fontSize(9).fillColor(COLORS.muted).text(label.toUpperCase(), left, currentY, {
+  doc.font("Helvetica-Bold").fontSize(8.4).fillColor(COLORS.subtle).text(label.toUpperCase(), left, currentY, {
     width
   });
   currentY += 14;
@@ -553,13 +660,8 @@ function drawCompactList(
     const neededHeight = measureTextHeight(doc, value, "Helvetica", 9.5, width - 12) + 4;
 
     if (currentY + neededHeight > pageBottom(doc)) {
-      if (continuationPage) {
-        currentY = ensureSectionSpace(doc, currentY, neededHeight + 18, continuationPage);
-      } else {
-        doc.addPage();
-        currentY = doc.page.margins.top;
-      }
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(COLORS.muted).text(label.toUpperCase(), left, currentY, {
+      currentY = continuationPage ? ensureSectionSpace(doc, currentY, neededHeight + 18, continuationPage) : ensurePageSpace(doc, currentY, neededHeight + 18);
+      doc.font("Helvetica-Bold").fontSize(8.4).fillColor(COLORS.subtle).text(label.toUpperCase(), left, currentY, {
         width
       });
       currentY += 14;
@@ -574,41 +676,90 @@ function drawCompactList(
   return currentY;
 }
 
-function drawInstructionLine(doc: PdfDocument, text: string, y: number): number {
-  const nextY = ensurePageSpace(doc, y, 24);
+function drawInstructionNote(
+  doc: PdfDocument,
+  text: string,
+  y: number,
+  continuationPage?: () => number
+): number {
+  const noteHeight = 46;
+  const nextY = continuationPage ? ensureSectionSpace(doc, y, noteHeight, continuationPage) : ensurePageSpace(doc, y, noteHeight);
+  const left = contentLeft(doc);
+  const width = contentWidth(doc);
 
-  doc.font("Helvetica").fontSize(9.5).fillColor(COLORS.muted).text(text, contentLeft(doc), nextY, {
-    width: contentWidth(doc)
+  doc.rect(left, nextY, width, noteHeight).fill(COLORS.panelFill);
+  doc.rect(left, nextY, width, noteHeight).stroke(COLORS.line);
+
+  doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.subtle).text("USO DESTA FOLHA", left + 12, nextY + 9, {
+    width: width - 24
+  });
+  doc.font("Helvetica").fontSize(9.4).fillColor(COLORS.ink).text(text, left + 12, nextY + 22, {
+    width: width - 24
+  });
+
+  return nextY + noteHeight;
+}
+
+function drawFlowParagraph(doc: PdfDocument, x: number, width: number, label: string, value: string, y: number): number {
+  doc.font("Helvetica-Bold").fontSize(8.4).fillColor(COLORS.subtle).text(label.toUpperCase(), x, y, {
+    width
+  });
+  doc.font("Helvetica").fontSize(9.4).fillColor(COLORS.ink).text(value, x, y + 12, {
+    width
   });
 
   return doc.y + 2;
 }
 
-function drawSignatureBlocks(doc: PdfDocument, y: number): number {
-  const nextY = ensurePageSpace(doc, y, 92);
-  const left = contentLeft(doc);
-  const columnGap = 36;
-  const columnWidth = (contentWidth(doc) - columnGap) / 2;
-  const top = Math.max(nextY + 22, pageBottom(doc) - 58);
-  const rightColumnX = left + columnWidth + columnGap;
+function drawFlowList(doc: PdfDocument, x: number, width: number, label: string, values: string[], y: number): number {
+  let currentY = y;
 
-  doc.moveTo(left, top).lineTo(left + columnWidth, top).stroke(COLORS.lineStrong);
-  doc.moveTo(rightColumnX, top).lineTo(rightColumnX + columnWidth, top).stroke(COLORS.lineStrong);
-
-  doc.font("Helvetica").fontSize(10).fillColor(COLORS.ink).text("Assinatura do cliente", left, top + 8, {
-    width: columnWidth,
-    align: "center"
+  doc.font("Helvetica-Bold").fontSize(8.4).fillColor(COLORS.subtle).text(label.toUpperCase(), x, currentY, {
+    width
   });
-  doc.text("Assinatura do representante", rightColumnX, top + 8, {
-    width: columnWidth,
-    align: "center"
-  });
+  currentY += 14;
 
-  return top + 34;
+  for (const value of values) {
+    doc.font("Helvetica").fontSize(9.4).fillColor(COLORS.ink).text(`- ${value}`, x, currentY, {
+      width
+    });
+    currentY = doc.y + 2;
+  }
+
+  return currentY;
 }
 
-function drawCompactContinuationAnchor(doc: PdfDocument): number {
-  return doc.page.margins.top;
+function drawSignatureBand(doc: PdfDocument, y: number, continuationPage?: () => number): number {
+  const nextY = continuationPage ? ensureSectionSpace(doc, y, SIGNATURE_HEIGHT, continuationPage) : ensurePageSpace(doc, y, SIGNATURE_HEIGHT);
+  const left = contentLeft(doc);
+  const width = contentWidth(doc);
+  const columnGap = 38;
+  const columnWidth = (width - columnGap - 24) / 2;
+  const bandTop = Math.max(nextY + 4, pageBottom(doc) - SIGNATURE_HEIGHT + 4);
+  const lineY = bandTop + 46;
+  const leftLineX = left + 12;
+  const rightLineX = leftLineX + columnWidth + columnGap;
+
+  doc.rect(left, bandTop, width, SIGNATURE_HEIGHT - 8).fill(COLORS.signatureFill);
+  doc.moveTo(left, bandTop).lineTo(contentRight(doc), bandTop).stroke(COLORS.lineStrong);
+
+  doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.subtle).text("ASSINATURAS", left + 12, bandTop + 9, {
+    width: width - 24
+  });
+
+  doc.lineWidth(1).moveTo(leftLineX, lineY).lineTo(leftLineX + columnWidth, lineY).stroke(COLORS.lineStrong);
+  doc.moveTo(rightLineX, lineY).lineTo(rightLineX + columnWidth, lineY).stroke(COLORS.lineStrong);
+
+  doc.font("Helvetica").fontSize(9.3).fillColor(COLORS.ink).text("Assinatura do cliente", leftLineX, lineY + 7, {
+    width: columnWidth,
+    align: "center"
+  });
+  doc.text("Assinatura do representante", rightLineX, lineY + 7, {
+    width: columnWidth,
+    align: "center"
+  });
+
+  return bandTop + SIGNATURE_HEIGHT;
 }
 
 function ensureSectionSpace(doc: PdfDocument, y: number, neededHeight: number, continuationPage: () => number): number {
@@ -628,32 +779,36 @@ function ensurePageSpace(doc: PdfDocument, y: number, neededHeight: number): num
 
   doc.addPage();
 
-  return drawCompactContinuationAnchor(doc);
+  return doc.page.margins.top;
 }
 
 function saleColumns(): TableColumn<ReceiptItem>[] {
   return [
     {
       header: "Produto",
-      width: 265,
+      width: 260,
+      font: "Helvetica-Bold",
+      size: 10.3,
       value: (item) => item.productSnapshotName
     },
     {
       header: "Quantidade",
-      width: 70,
+      width: 75,
       align: "right",
       value: (item) => String(item.quantitySold > 0 ? item.quantitySold : item.quantityPrevious)
     },
     {
-      header: "Preço unit.",
-      width: 90,
+      header: "Preço unitário",
+      width: 85,
       align: "right",
       value: (item) => formatCurrency(item.unitPrice)
     },
     {
       header: "Subtotal",
-      width: 90,
+      width: 95,
       align: "right",
+      font: "Helvetica-Bold",
+      size: 10.3,
       value: (item) => formatCurrency(Number(item.subtotalAmount) || saleQuantity(item) * Number(item.unitPrice))
     }
   ];
@@ -662,8 +817,10 @@ function saleColumns(): TableColumn<ReceiptItem>[] {
 function consignmentSettlementColumns(): TableColumn<ReceiptItem>[] {
   return [
     {
-      header: "Produto",
+      header: "Descrição",
       width: 225,
+      font: "Helvetica-Bold",
+      size: 10.2,
       value: (item) => item.productSnapshotName
     },
     {
@@ -679,7 +836,7 @@ function consignmentSettlementColumns(): TableColumn<ReceiptItem>[] {
       value: (item) => String(item.quantitySold)
     },
     {
-      header: "Preço unit.",
+      header: "Preço unitário",
       width: 70,
       align: "right",
       value: (item) => formatCurrency(item.unitPrice)
@@ -688,6 +845,8 @@ function consignmentSettlementColumns(): TableColumn<ReceiptItem>[] {
       header: "Total",
       width: 70,
       align: "right",
+      font: "Helvetica-Bold",
+      size: 10.3,
       value: (item) => formatCurrency(item.subtotalAmount)
     }
   ];
@@ -697,36 +856,45 @@ function consignmentBaseColumns(): TableColumn<ReceiptItem>[] {
   return [
     {
       header: "Produto",
-      width: 315,
+      width: 305,
+      font: "Helvetica-Bold",
+      size: 10.2,
       value: (item) => item.productSnapshotName
     },
     {
       header: "Qtd. que ficará",
-      width: 100,
+      width: 110,
       align: "right",
       value: (item) => String(item.resultingClientQuantity)
     },
     {
-      header: "Preço unit.",
+      header: "Preço unitário",
       width: 100,
       align: "right",
+      font: "Helvetica-Bold",
+      size: 10.2,
       value: (item) => formatCurrency(item.unitPrice)
     }
   ];
 }
 
 function buildCompanyHeaderLines(companyProfile: ReceiptCompanyProfile): string[] {
-  const lines = [
-    [companyProfile.document ? `CNPJ ${companyProfile.document}` : null, companyProfile.phone ? `Telefone ${companyProfile.phone}` : null]
-      .filter((value): value is string => Boolean(value))
-      .join(" | "),
-    companyProfile.address ?? "",
-    [companyProfile.contactName ? `Contato ${companyProfile.contactName}` : null, companyProfile.email ? `E-mail ${companyProfile.email}` : null]
-      .filter((value): value is string => Boolean(value))
-      .join(" | ")
-  ];
+  const firstLine = [
+    companyProfile.document ? `CNPJ ${companyProfile.document}` : null,
+    companyProfile.phone ? `Telefone ${companyProfile.phone}` : null
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" | ");
 
-  return lines.filter((line) => line.trim().length > 0);
+  const secondLine = [
+    companyProfile.address,
+    companyProfile.contactName ? `Contato ${companyProfile.contactName}` : null,
+    companyProfile.email ? `E-mail ${companyProfile.email}` : null
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" | ");
+
+  return [firstLine, secondLine].filter((line) => line.trim().length > 0);
 }
 
 function buildConsignmentOccurrences(items: ReceiptItem[]): string[] {
@@ -762,20 +930,20 @@ function measureRowHeight<T>(doc: PdfDocument, row: T, columns: TableColumn<T>[]
   let tallest = 0;
 
   for (const column of columns) {
-    const height = measureTextHeight(doc, column.value(row), column.font ?? "Helvetica", 10, column.width - 8);
+    const height = measureTextHeight(
+      doc,
+      column.value(row),
+      column.font ?? "Helvetica",
+      column.size ?? 10,
+      column.width - 20
+    );
     tallest = Math.max(tallest, height);
   }
 
-  return Math.max(24, tallest + 12);
+  return Math.max(28, tallest + 14);
 }
 
-function measureTextHeight(
-  doc: PdfDocument,
-  value: string,
-  font: "Helvetica" | "Helvetica-Bold",
-  size: number,
-  width: number
-): number {
+function measureTextHeight(doc: PdfDocument, value: string, font: PdfFont, size: number, width: number): number {
   doc.font(font).fontSize(size);
 
   return doc.heightOfString(value || "-", { width });
