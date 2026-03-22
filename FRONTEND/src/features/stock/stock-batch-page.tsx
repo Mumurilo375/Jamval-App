@@ -81,9 +81,9 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
     ? {
         eyebrow: "Estoque central",
         title: "Carga inicial",
-        subtitle: "Monte o estoque pela primeira vez e depois siga com Entrada manual para novas mercadorias.",
+        subtitle: "Monte o estoque pela primeira vez com o custo real desta entrada inicial.",
         bannerMessage:
-          "Use carga inicial apenas para montar o estoque pela primeira vez. Depois disso, o fluxo correto para novas mercadorias e Entrada manual.",
+          "Use carga inicial apenas no comeco. Informe aqui o custo real desta entrada; o cadastro do produto serve apenas como referencia.",
         noteLabel: "Observacao da carga inicial",
         notePlaceholder: "Ex.: saldo contado no inicio da operacao",
         submitLabel: "Salvar carga inicial"
@@ -91,8 +91,8 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
     : {
         eyebrow: "Estoque central",
         title: "Entrada manual",
-        subtitle: "Use quando novas mercadorias entrarem no estoque central no dia a dia.",
-        bannerMessage: "Use quando novas mercadorias entrarem no estoque central.",
+        subtitle: "Use quando novas mercadorias entrarem no estoque central, sempre com o custo real desta entrada.",
+        bannerMessage: "Informe o custo real desta entrada. O custo do produto no cadastro serve apenas como referencia inicial.",
         noteLabel: "Observacao da entrada",
         notePlaceholder: "Ex.: mercadoria recebida do fornecedor",
         submitLabel: "Salvar entrada manual"
@@ -248,8 +248,8 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                   </Field>
 
                   <Field
-                    label="Custo unitario"
-                    hint="Informe o custo desta entrada. Pode ser diferente do custo anterior."
+                    label="Custo unitario desta entrada"
+                    hint="Se houver custo de referencia no produto, ele aparece como sugestao inicial. Confirme aqui o custo real desta entrada."
                   >
                     <Input
                       inputMode="decimal"

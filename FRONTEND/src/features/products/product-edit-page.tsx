@@ -22,7 +22,7 @@ export function ProductEditPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Editar produto" subtitle={productQuery.data.sku} />
+      <PageHeader title="Editar produto" subtitle={`${productQuery.data.sku} · preco base e custo de referencia`} />
       <ProductForm mode="edit" product={productQuery.data} />
     </div>
   );

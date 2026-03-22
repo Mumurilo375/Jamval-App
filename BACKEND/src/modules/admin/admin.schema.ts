@@ -34,18 +34,30 @@ const optionalNullableText = (maxLength: number) =>
     return value;
   }, z.string().max(maxLength).nullable().optional());
 
-export const adminProfitQuerySchema = z
-  .object({
-    dateFrom: simpleDateSchema.optional(),
-    dateTo: simpleDateSchema.optional()
-  })
-  .refine((value) => {
+const adminDateRangeQueryBaseSchema = z.object({
+  dateFrom: simpleDateSchema.optional(),
+  dateTo: simpleDateSchema.optional()
+});
+
+const adminDateRangeQuerySchema = adminDateRangeQueryBaseSchema.refine((value) => {
     if (!value.dateFrom || !value.dateTo) {
       return true;
     }
 
     return value.dateFrom.getTime() <= value.dateTo.getTime();
   }, "dateFrom must be before or equal to dateTo");
+
+export const adminProfitQuerySchema = adminDateRangeQuerySchema;
+
+export const adminDashboardQuerySchema = adminDateRangeQueryBaseSchema.extend({
+  range: z.enum(["7d", "30d", "month"]).optional().default("30d")
+}).refine((value) => {
+  if (!value.dateFrom || !value.dateTo) {
+    return true;
+  }
+
+  return value.dateFrom.getTime() <= value.dateTo.getTime();
+}, "dateFrom must be before or equal to dateTo");
 
 export const adminCompanyProfileBodySchema = z.object({
   companyName: z.string().trim().min(1, "companyName is required").max(200),

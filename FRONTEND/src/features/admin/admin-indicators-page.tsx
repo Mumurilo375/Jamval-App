@@ -52,7 +52,7 @@ export function AdminIndicatorsPage() {
           tone={counts.productsWithoutCentralStock > 0 ? "warning" : "success"}
         />
         <AdminMetricCard
-          label="Produtos sem custo cadastrado"
+          label="Produtos sem custo de referencia"
           value={String(counts.productsWithoutCost)}
           tone={counts.productsWithoutCost > 0 ? "warning" : "success"}
         />
@@ -98,7 +98,7 @@ export function AdminIndicatorsPage() {
         <AdminSectionCard
           eyebrow="Cobertura"
           title="Cobertura de custo"
-          description="Produtos que ainda precisam de custo para dar mais confianca ao lucro bruto estimado."
+          description="Produtos que ainda precisam de custo de referencia para reduzir fallback no lucro."
           action={
             <Link to="/products">
               <Button variant="secondary" className="w-full sm:w-auto">
@@ -109,8 +109,8 @@ export function AdminIndicatorsPage() {
         >
           {productsWithoutCost.length === 0 ? (
             <AdminEmptyBlock
-              title="Boa cobertura de custo"
-              message="Os produtos listados nesta amostra ja possuem custo cadastrado."
+              title="Boa cobertura de referencia"
+              message="Os produtos listados nesta amostra ja possuem custo de referencia cadastrado."
             />
           ) : (
             <div className="space-y-2">

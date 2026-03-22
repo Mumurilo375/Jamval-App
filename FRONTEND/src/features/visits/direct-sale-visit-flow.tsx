@@ -31,7 +31,7 @@ type DirectSaleVisitFlowProps = {
   clientName: string;
 };
 
-type SalePaymentStatus = "PAID_TOTAL" | "PAID_PARTIAL" | "PENDING";
+type SalePendingAction = "CONCLUDE" | "CANCEL" | null;
 
 type SaleRowDraft = {
   itemId: string | null;
@@ -70,14 +70,16 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
   const [rows, setRows] = useState<SaleRowDraft[]>(() => buildSaleRows(visit));
   const [removedItems, setRemovedItems] = useState<RemovedItem[]>([]);
   const [searchInput, setSearchInput] = useState("");
-  const [receivedAmountInput, setReceivedAmountInput] = useState(String(visitNumber(visit.receivedAmountOnVisit)));
-  const [paymentStatus, setPaymentStatus] = useState<SalePaymentStatus>(() => inferPaymentStatus(visit.receivedAmountOnVisit, visit.totalAmount));
+  const [receivedAmountInput, setReceivedAmountInput] = useState(() =>
+    visitNumber(visit.receivedAmountOnVisit) > 0 ? String(visitNumber(visit.receivedAmountOnVisit)) : ""
+  );
   const [visitNotesInput, setVisitNotesInput] = useState(visit.notes ?? "");
   const [isPaymentDrawerOpen, setIsPaymentDrawerOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<SalePendingAction>(null);
   const deferredSearch = useDeferredValue(searchInput.trim());
 
   const productsQuery = useQuery({
@@ -88,27 +90,19 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
 
   const rowViews = useMemo(() => rows.map((row) => buildSaleRowView(row)), [rows]);
   const totalAmount = useMemo(() => Number(rowViews.reduce((sum, row) => sum + row.subtotal, 0).toFixed(2)), [rowViews]);
-  const effectiveReceivedAmount = useMemo(() => {
-    if (paymentStatus === "PAID_TOTAL") {
-      return totalAmount;
-    }
-
-    if (paymentStatus === "PENDING") {
-      return 0;
-    }
-
-    const parsed = parseMoneyInput(receivedAmountInput);
-    return Number.isNaN(parsed) ? Number.NaN : parsed;
-  }, [paymentStatus, receivedAmountInput, totalAmount]);
+  const receivedAmountValue = useMemo(() => parseMoneyInput(receivedAmountInput), [receivedAmountInput]);
+  const safeReceivedAmount = useMemo(
+    () => (Number.isNaN(receivedAmountValue) ? 0 : receivedAmountValue),
+    [receivedAmountValue]
+  );
   const pendingAmount = useMemo(() => {
-    const received = Number.isNaN(effectiveReceivedAmount) ? 0 : effectiveReceivedAmount;
-    return Number(Math.max(totalAmount - received, 0).toFixed(2));
-  }, [effectiveReceivedAmount, totalAmount]);
-  const paymentError = buildPaymentError(paymentStatus, effectiveReceivedAmount, totalAmount);
+    return Number(Math.max(totalAmount - safeReceivedAmount, 0).toFixed(2));
+  }, [safeReceivedAmount, totalAmount]);
+  const paymentError = buildReceivedAmountError(receivedAmountInput, receivedAmountValue, totalAmount);
   const itemsHaveChanges = rowViews.some((row) => row.hasChanges);
   const rowErrors = rowViews.flatMap((row) => row.errors);
   const metadataHasChanges =
-    normalizeMoneyValue(Number.isNaN(effectiveReceivedAmount) ? 0 : effectiveReceivedAmount) !== normalizeMoneyValue(visitNumber(visit.receivedAmountOnVisit)) ||
+    normalizeMoneyValue(safeReceivedAmount) !== normalizeMoneyValue(visitNumber(visit.receivedAmountOnVisit)) ||
     visitNotesInput !== (visit.notes ?? "");
 
   const availableProductIds = useMemo(() => new Set(rows.map((row) => row.productId)), [rows]);
@@ -143,10 +137,6 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
 
   const onConfirmPaymentAndConclude = async () => {
     if (!paymentMethod) {
-      return;
-    }
-
-    if (!window.confirm("Confirmar conclusao da venda?")) {
       return;
     }
 
@@ -193,7 +183,7 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
 
       if (metadataHasChanges) {
         await saveMetadataMutation.mutateAsync({
-          receivedAmountOnVisit: normalizeMoneyValue(Number.isNaN(effectiveReceivedAmount) ? 0 : effectiveReceivedAmount),
+          receivedAmountOnVisit: normalizeMoneyValue(safeReceivedAmount),
           notes: visitNotesInput.trim()
         });
       }
@@ -216,16 +206,27 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
       return;
     }
 
-    if (normalizeMoneyValue(effectiveReceivedAmount) > 0) {
+    if (normalizeMoneyValue(safeReceivedAmount) > 0) {
       setIsPaymentDrawerOpen(true);
       return;
     }
 
-    if (!window.confirm("Concluir esta venda agora?")) {
+    setPendingAction("CONCLUDE");
+  };
+
+  const onConfirmPendingAction = async () => {
+    const action = pendingAction;
+    setPendingAction(null);
+
+    if (action === "CONCLUDE") {
+      await completeMutation.mutateAsync(undefined);
       return;
     }
 
-    await completeMutation.mutateAsync(undefined);
+    if (action === "CANCEL") {
+      await cancelMutation.mutateAsync();
+      navigate("/visits", { replace: true });
+    }
   };
 
   const productSearchHelp = !isDraft
@@ -342,34 +343,36 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
       </Card>
 
       <Card className="space-y-4">
-        <StepHeader step="Etapa 2" title="Pagamento e fechamento" subtitle="Escolha o status do recebimento e veja total, recebido e saldo." />
-        <div className="grid gap-2 sm:grid-cols-3">
-          {paymentOptions.map((option) => (
-            <button key={option.value} type="button" disabled={isReadOnly} onClick={() => selectPaymentStatus(option.value, totalAmount, effectiveReceivedAmount, setPaymentStatus, setReceivedAmountInput)} className={cx("rounded-xl border px-3 py-2 text-left text-sm font-semibold transition", paymentStatus === option.value ? "border-[var(--jam-accent)] bg-[var(--jam-accent)] text-white" : "border-[var(--jam-border)] bg-white text-[var(--jam-ink)]", isReadOnly ? "cursor-default opacity-80" : null)}>
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <StepHeader
+          step="Etapa 2"
+          title="Pagamento e fechamento"
+          subtitle="Informe apenas quanto recebeu agora. O restante o sistema calcula sozinho."
+        />
 
-        {paymentStatus === "PAID_PARTIAL" ? (
+        {isDraft ? (
           <div className="max-w-md">
             <Field label="Valor recebido agora" error={paymentError ?? undefined}>
-              <Input value={receivedAmountInput} inputMode="decimal" disabled={isReadOnly} onChange={(event) => setReceivedAmountInput(event.target.value)} placeholder="0,00" />
+              <Input value={receivedAmountInput} inputMode="decimal" disabled={isReadOnly} onChange={(event) => setReceivedAmountInput(event.target.value)} placeholder="Deixe em branco se nada foi recebido" />
             </Field>
+            <p className="mt-2 text-sm text-[var(--jam-subtle)]">Se nada foi recebido agora, deixe o campo em branco.</p>
           </div>
         ) : null}
 
         <div className="grid gap-3 sm:grid-cols-3">
           <MetricCell label="Total" value={formatCurrency(totalAmount)} emphasize />
-          <MetricCell label="Recebido" value={formatCurrency(Number.isNaN(effectiveReceivedAmount) ? 0 : effectiveReceivedAmount)} />
+          <MetricCell label="Recebido" value={formatCurrency(safeReceivedAmount)} />
           <MetricCell label="Saldo" value={formatCurrency(pendingAmount)} />
         </div>
 
+        <p className="text-sm font-medium text-[var(--jam-subtle)]">
+          Situacao calculada: {describePaymentStatus(safeReceivedAmount, totalAmount)}
+        </p>
+
         {validationError ? <ErrorBanner message={validationError} /> : null}
-        {saveItemsMutation.error instanceof ApiError ? <ErrorBanner message={saveItemsMutation.error.message} /> : null}
-        {saveMetadataMutation.error instanceof ApiError ? <ErrorBanner message={saveMetadataMutation.error.message} /> : null}
-        {deleteItemMutation.error instanceof ApiError ? <ErrorBanner message={deleteItemMutation.error.message} /> : null}
-        {completeMutation.error instanceof ApiError ? <ErrorBanner message={completeMutation.error.message} /> : null}
+        {saveItemsMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(saveItemsMutation.error)} /> : null}
+        {saveMetadataMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(saveMetadataMutation.error)} /> : null}
+        {deleteItemMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(deleteItemMutation.error)} /> : null}
+        {completeMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(completeMutation.error)} /> : null}
 
         {isDraft ? (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -397,7 +400,7 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
       {isDraft ? (
         <Card className="space-y-3">
           <StepHeader step="Nao finalizada" title="Acoes da venda" />
-          <Button variant="danger" className="w-full" disabled={cancelMutation.isPending} onClick={() => { if (window.confirm("Cancelar esta venda nao finalizada?")) { void cancelMutation.mutateAsync().then(() => navigate("/visits", { replace: true })); } }}>
+          <Button variant="danger" className="w-full" disabled={cancelMutation.isPending} onClick={() => setPendingAction("CANCEL")}>
             {cancelMutation.isPending ? "Cancelando..." : "Cancelar venda"}
           </Button>
         </Card>
@@ -407,7 +410,7 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <MetricCell label="Total" value={formatCurrency(totalAmount)} />
-            <MetricCell label="Recebido" value={formatCurrency(Number.isNaN(effectiveReceivedAmount) ? 0 : effectiveReceivedAmount)} />
+            <MetricCell label="Recebido" value={formatCurrency(safeReceivedAmount)} />
             <MetricCell label="Saldo" value={formatCurrency(pendingAmount)} />
           </div>
           <Field label="Forma de pagamento">
@@ -424,15 +427,54 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
           </Field>
         </div>
       </DrawerPanel>
+
+      <DrawerPanel
+        open={pendingAction !== null}
+        onClose={() => setPendingAction(null)}
+        title={pendingAction === "CANCEL" ? "Cancelar venda" : "Concluir venda"}
+        description={
+          pendingAction === "CANCEL"
+            ? "Essa venda nao finalizada sera cancelada e vai sair da sua fila de trabalho."
+            : "Depois de concluir, a venda fica somente para leitura e entra no fluxo financeiro."
+        }
+        footer={
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button variant="ghost" onClick={() => setPendingAction(null)} disabled={completeMutation.isPending || cancelMutation.isPending}>
+              Voltar
+            </Button>
+            <Button
+              variant={pendingAction === "CANCEL" ? "danger" : "primary"}
+              onClick={() => void onConfirmPendingAction()}
+              disabled={completeMutation.isPending || cancelMutation.isPending}
+            >
+              {pendingAction === "CANCEL"
+                ? cancelMutation.isPending
+                  ? "Cancelando..."
+                  : "Confirmar cancelamento"
+                : completeMutation.isPending
+                  ? "Concluindo..."
+                  : "Confirmar conclusao"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {pendingAction === "CONCLUDE" ? (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <MetricCell label="Total" value={formatCurrency(totalAmount)} />
+              <MetricCell label="Recebido" value={formatCurrency(safeReceivedAmount)} />
+              <MetricCell label="Saldo" value={formatCurrency(pendingAmount)} />
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--jam-subtle)]">
+              Se voce ainda precisar revisar itens ou pagamento, volte agora antes de cancelar.
+            </p>
+          )}
+        </div>
+      </DrawerPanel>
     </div>
   );
 }
-
-const paymentOptions: Array<{ value: SalePaymentStatus; label: string }> = [
-  { value: "PAID_TOTAL", label: "Pago total" },
-  { value: "PAID_PARTIAL", label: "Pago parcial" },
-  { value: "PENDING", label: "Pendente" }
-];
 
 function buildSaleRows(visit: VisitDetail): SaleRowDraft[] {
   return visit.items.map((item) => ({
@@ -488,37 +530,33 @@ function parseMoneyInput(value: string): number {
   return parseDecimalInput(value);
 }
 
-function inferPaymentStatus(receivedAmount: number | string, totalAmount: number | string): SalePaymentStatus {
-  const received = normalizeMoneyValue(visitNumber(receivedAmount));
-  const total = normalizeMoneyValue(visitNumber(totalAmount));
-  if (received === 0) {
-    return "PENDING";
-  }
-  if (total > 0 && received >= total) {
-    return "PAID_TOTAL";
-  }
-  return "PAID_PARTIAL";
-}
-
-function buildPaymentError(status: SalePaymentStatus, receivedAmount: number, totalAmount: number): string | null {
-  if (status !== "PAID_PARTIAL") {
+function buildReceivedAmountError(inputValue: string, receivedAmount: number, totalAmount: number): string | null {
+  if (inputValue.trim() === "") {
     return null;
   }
-  if (Number.isNaN(receivedAmount) || receivedAmount <= 0) {
-    return "Informe um valor recebido valido para pagamento parcial.";
+  if (Number.isNaN(receivedAmount) || receivedAmount < 0) {
+    return "Informe um valor recebido valido.";
   }
-  if (receivedAmount >= totalAmount) {
-    return "No pagamento parcial, o valor recebido precisa ser menor que o total.";
+  if (receivedAmount > totalAmount) {
+    return "O valor recebido nao pode ser maior que o total da venda.";
   }
   return null;
 }
 
-function normalizeMoneyValue(value: number): number {
-  return Number.isFinite(value) ? Number(value.toFixed(2)) : 0;
+function describePaymentStatus(receivedAmount: number, totalAmount: number): string {
+  if (receivedAmount <= 0) {
+    return "Pendente";
+  }
+
+  if (totalAmount > 0 && receivedAmount < totalAmount) {
+    return "Pago parcial";
+  }
+
+  return "Pago total";
 }
 
-function formatMoneyInput(value: number): string {
-  return value === 0 ? "0" : value.toFixed(2).replace(/\.00$/, "");
+function normalizeMoneyValue(value: number): number {
+  return Number.isFinite(value) ? Number(value.toFixed(2)) : 0;
 }
 
 function addProductRow(product: Product, setRows: Dispatch<SetStateAction<SaleRowDraft[]>>, setRemovedItems: Dispatch<SetStateAction<RemovedItem[]>>, setSearchInput: Dispatch<SetStateAction<string>>) {
@@ -538,17 +576,6 @@ function updateRow(productId: string, field: "quantityInput" | "unitPriceInput",
   setRows((current) => current.map((row) => row.productId === productId ? { ...row, [field]: value } : row));
 }
 
-function selectPaymentStatus(status: SalePaymentStatus, totalAmount: number, receivedAmount: number, setPaymentStatus: Dispatch<SetStateAction<SalePaymentStatus>>, setReceivedAmountInput: Dispatch<SetStateAction<string>>) {
-  setPaymentStatus(status);
-  if (status === "PAID_TOTAL") {
-    setReceivedAmountInput(formatMoneyInput(totalAmount));
-  } else if (status === "PENDING") {
-    setReceivedAmountInput("0");
-  } else if (!(receivedAmount > 0 && receivedAmount < totalAmount)) {
-    setReceivedAmountInput("");
-  }
-}
-
 function handleVisitMutationSuccess(queryClient: QueryClient) {
   return async (nextVisit: VisitDetail) => {
     await queryClient.invalidateQueries({ queryKey: ["visits"] });
@@ -563,6 +590,38 @@ function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
   if (method === "CARD") return "Cartao";
   if (method === "PIX") return "PIX";
   return "Outro";
+}
+
+function formatApiErrorMessage(error: ApiError) {
+  if (error.code !== "INTERNAL_SERVER_ERROR") {
+    return error.message;
+  }
+
+  const details = extractApiErrorDetail(error.details);
+
+  if (details) {
+    return details;
+  }
+
+  return error.message;
+}
+
+function extractApiErrorDetail(details: unknown): string | null {
+  if (!details || typeof details !== "object") {
+    return null;
+  }
+
+  const record = details as Record<string, unknown>;
+
+  if (typeof record.message === "string" && record.message.trim().length > 0) {
+    return record.message;
+  }
+
+  if (typeof record.name === "string" && record.name.trim().length > 0) {
+    return record.name;
+  }
+
+  return null;
 }
 
 function StepHeader({ step, title, subtitle }: { step: string; title: string; subtitle?: string }) {

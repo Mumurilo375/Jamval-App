@@ -67,6 +67,12 @@ type AvailableProductOption = {
   suggestedPrevious: number | null;
 };
 
+type PendingConsignmentAction =
+  | { type: "CONCLUDE" }
+  | { type: "REMOVE_ITEM"; itemId: string; itemName: string }
+  | { type: "CANCEL" }
+  | null;
+
 type RowViewModel = {
   item: VisitItem;
   draft: ItemDraftState;
@@ -108,6 +114,7 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
   const [paymentNotes, setPaymentNotes] = useState("");
   const [draftValidationError, setDraftValidationError] = useState<string | null>(null);
   const [autoPopulateCount, setAutoPopulateCount] = useState(0);
+  const [pendingAction, setPendingAction] = useState<PendingConsignmentAction>(null);
 
   const shouldAutopopulate = Boolean(isDraft && visit.items.length === 0);
   const clientCatalogQuery = useQuery({
@@ -398,23 +405,11 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
       return;
     }
 
-    if (!window.confirm("Concluir esta visita agora?")) {
-      return;
-    }
-
-    try {
-      await completeMutation.mutateAsync(undefined);
-    } catch {
-      return;
-    }
+    setPendingAction({ type: "CONCLUDE" });
   };
 
   const onConfirmPaymentAndConclude = async () => {
     if (!paymentMethod) {
-      return;
-    }
-
-    if (!window.confirm("Confirmar conclusao da visita?")) {
       return;
     }
 
@@ -427,6 +422,35 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
     } catch {
       return;
     }
+  };
+
+  const onConfirmPendingAction = async () => {
+    const action = pendingAction;
+    setPendingAction(null);
+
+    if (!action) {
+      return;
+    }
+
+    if (action.type === "CONCLUDE") {
+      try {
+        await completeMutation.mutateAsync(undefined);
+      } catch {
+        return;
+      }
+
+      return;
+    }
+
+    if (action.type === "REMOVE_ITEM") {
+      void deleteItemMutation.mutateAsync({ itemId: action.itemId }).catch(() => undefined);
+      return;
+    }
+
+    void cancelMutation
+      .mutateAsync()
+      .then(() => navigate("/visits", { replace: true }))
+      .catch(() => undefined);
   };
 
   const addProductQuantityError =
@@ -683,13 +707,13 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
                             type="button"
                             variant="danger"
                             disabled={deleteItemMutation.isPending}
-                            onClick={() => {
-                        if (!window.confirm("Remover este produto da visita nao finalizada?")) {
-                          return;
-                        }
-
-                              void deleteItemMutation.mutateAsync({ itemId: row.item.id }).catch(() => undefined);
-                            }}
+                            onClick={() =>
+                              setPendingAction({
+                                type: "REMOVE_ITEM",
+                                itemId: row.item.id,
+                                itemName: row.item.productSnapshotName
+                              })
+                            }
                           >
                             Remover produto
                           </Button>
@@ -862,21 +886,77 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
             variant="danger"
             className="w-full"
             disabled={cancelMutation.isPending}
-            onClick={() => {
-              if (!window.confirm("Cancelar esta visita nao finalizada?")) {
-                return;
-              }
-
-              void cancelMutation
-                .mutateAsync()
-                .then(() => navigate("/visits", { replace: true }))
-                .catch(() => undefined);
-            }}
+            onClick={() => setPendingAction({ type: "CANCEL" })}
           >
             {cancelMutation.isPending ? "Cancelando..." : "Cancelar visita"}
           </Button>
         </Card>
       ) : null}
+
+      <DrawerPanel
+        open={pendingAction !== null}
+        onClose={() => setPendingAction(null)}
+        title={
+          pendingAction?.type === "REMOVE_ITEM"
+            ? "Remover produto"
+            : pendingAction?.type === "CANCEL"
+              ? "Cancelar visita"
+              : "Concluir visita"
+        }
+        description={
+          pendingAction?.type === "REMOVE_ITEM"
+            ? `O produto ${pendingAction.itemName} sera removido desta visita nao finalizada.`
+            : pendingAction?.type === "CANCEL"
+              ? "Essa visita nao finalizada sera cancelada e vai sair da sua fila de trabalho."
+              : "Depois de concluir, a visita fica somente para leitura e segue para o financeiro."
+        }
+        footer={
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button
+              variant="ghost"
+              onClick={() => setPendingAction(null)}
+              disabled={completeMutation.isPending || cancelMutation.isPending || deleteItemMutation.isPending}
+            >
+              Voltar
+            </Button>
+            <Button
+              variant={pendingAction?.type === "CANCEL" || pendingAction?.type === "REMOVE_ITEM" ? "danger" : "primary"}
+              onClick={() => void onConfirmPendingAction()}
+              disabled={completeMutation.isPending || cancelMutation.isPending || deleteItemMutation.isPending}
+            >
+              {pendingAction?.type === "REMOVE_ITEM"
+                ? deleteItemMutation.isPending
+                  ? "Removendo..."
+                  : "Confirmar remocao"
+                : pendingAction?.type === "CANCEL"
+                  ? cancelMutation.isPending
+                    ? "Cancelando..."
+                    : "Confirmar cancelamento"
+                  : completeMutation.isPending
+                    ? "Concluindo..."
+                    : "Confirmar conclusao"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {pendingAction?.type === "CONCLUDE" ? (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <MetricCell label="Total do acerto" value={formatCurrency(totals.totalAmount)} />
+              <MetricCell label="Valor recebido" value={formatCurrency(safeReceivedAmount)} />
+              <MetricCell label="Saldo" value={formatCurrency(pendingAmount)} />
+            </div>
+          ) : pendingAction?.type === "REMOVE_ITEM" ? (
+            <p className="text-sm text-[var(--jam-subtle)]">
+              Se este produto ainda precisa ficar na conferência do periodo, volte agora antes de remover.
+            </p>
+          ) : (
+            <p className="text-sm text-[var(--jam-subtle)]">
+              Se voce ainda precisa revisar conferencia, recebimento ou reposicao, volte agora antes de cancelar.
+            </p>
+          )}
+        </div>
+      </DrawerPanel>
 
       <DrawerPanel
         open={isAddProductOpen}

@@ -110,7 +110,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
 
         <Field
           label="Custo de referencia"
-          hint="Opcional. O custo real das entradas passa a ser registrado no estoque."
+          hint="Opcional. Use como referencia inicial. O custo real usado na operacao vem das entradas de estoque."
           error={errors.costPrice?.message}
         >
           <Input inputMode="decimal" placeholder="18.50" {...register("costPrice")} />

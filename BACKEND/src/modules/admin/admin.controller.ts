@@ -1,14 +1,15 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { parseWithZod } from "../../shared/validation/parse-with-zod";
-import { adminCompanyProfileBodySchema, adminProfitQuerySchema } from "./admin.schema";
+import { adminCompanyProfileBodySchema, adminDashboardQuerySchema, adminProfitQuerySchema } from "./admin.schema";
 import { AdminService } from "./admin.service";
 
 export class AdminController {
   constructor(private readonly service = new AdminService()) {}
 
-  getDashboard = async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    const dashboard = await this.service.getDashboard();
+  getDashboard = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const query = parseWithZod(adminDashboardQuerySchema, request.query);
+    const dashboard = await this.service.getDashboard(query);
 
     reply.send({ data: dashboard });
   };

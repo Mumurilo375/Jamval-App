@@ -90,10 +90,6 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
   const requiresInitialPayment = receivedAmount > 0;
 
   const onDirectComplete = async () => {
-    if (!window.confirm("Concluir esta visita agora?")) {
-      return;
-    }
-
     await completionMutation.mutateAsync(undefined);
   };
 

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, ReceivableStatus, VisitType } from "@prisma/client";
 
 import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
@@ -83,6 +83,37 @@ export class AdminRepository {
     });
   }
 
+  async listCompletedVisits(
+    filters: { dateFrom?: Date; dateTo?: Date },
+    db: DbClient = prisma
+  ): Promise<
+    Array<{
+      visitedAt: Date;
+      visitType: VisitType;
+      totalAmount: Prisma.Decimal;
+    }>
+  > {
+    return db.visit.findMany({
+      where: {
+        status: "COMPLETED",
+        ...(filters.dateFrom || filters.dateTo
+          ? {
+              visitedAt: {
+                ...(filters.dateFrom ? { gte: startOfDay(filters.dateFrom) } : {}),
+                ...(filters.dateTo ? { lte: endOfDay(filters.dateTo) } : {})
+              }
+            }
+          : {})
+      },
+      select: {
+        visitedAt: true,
+        visitType: true,
+        totalAmount: true
+      },
+      orderBy: [{ visitedAt: "asc" }]
+    });
+  }
+
   async sumCompletedVisitTotalAmount(db: DbClient = prisma): Promise<Prisma.Decimal> {
     const result = await db.visit.aggregate({
       where: {
@@ -114,6 +145,54 @@ export class AdminRepository {
     });
 
     return result._sum.amountOutstanding ?? new Prisma.Decimal(0);
+  }
+
+  async listPayments(
+    filters: { dateFrom?: Date; dateTo?: Date },
+    db: DbClient = prisma
+  ): Promise<
+    Array<{
+      paidAt: Date;
+      amount: Prisma.Decimal;
+    }>
+  > {
+    return db.payment.findMany({
+      where: {
+        ...(filters.dateFrom || filters.dateTo
+          ? {
+              paidAt: {
+                ...(filters.dateFrom ? { gte: startOfDay(filters.dateFrom) } : {}),
+                ...(filters.dateTo ? { lte: endOfDay(filters.dateTo) } : {})
+              }
+            }
+          : {})
+      },
+      select: {
+        paidAt: true,
+        amount: true
+      },
+      orderBy: [{ paidAt: "asc" }]
+    });
+  }
+
+  async summarizeReceivablesByStatus(
+    db: DbClient = prisma
+  ): Promise<Array<{ status: ReceivableStatus; count: number; amount: Prisma.Decimal }>> {
+    const rows = await db.receivable.groupBy({
+      by: ["status"],
+      _count: {
+        _all: true
+      },
+      _sum: {
+        originalAmount: true
+      }
+    });
+
+    return rows.map((row) => ({
+      status: row.status,
+      count: row._count._all,
+      amount: row._sum.originalAmount ?? new Prisma.Decimal(0)
+    }));
   }
 
   async sumCentralStockUnits(db: DbClient = prisma): Promise<number> {
@@ -190,7 +269,18 @@ export class AdminRepository {
         quantitySold: true,
         unitPrice: true,
         costPriceSnapshot: true,
-        subtotalAmount: true
+        subtotalAmount: true,
+        visit: {
+          select: {
+            completedAt: true,
+            visitedAt: true
+          }
+        },
+        product: {
+          select: {
+            costPrice: true
+          }
+        }
       }
     });
   }

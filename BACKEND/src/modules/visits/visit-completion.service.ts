@@ -187,14 +187,11 @@ export class VisitCompletionService {
   ): Promise<Map<string, Prisma.Decimal | null>> {
     const productIds = Array.from(new Set(items.map((item) => item.productId)));
     const latestEntryCosts = await this.stockRepository.findLatestEntryCostsByProductIds(productIds, completedAt, tx);
-    const products = await this.visitRepository.findProductsByIds(productIds, tx);
     const latestCostByProductId = new Map(
       latestEntryCosts.map((movement) => [movement.productId, movement.unitCost])
     );
 
-    return new Map(
-      products.map((product) => [product.id, latestCostByProductId.get(product.id) ?? product.costPrice ?? null])
-    );
+    return new Map(productIds.map((productId) => [productId, latestCostByProductId.get(productId) ?? null]));
   }
 
   private validateVisitItem(
