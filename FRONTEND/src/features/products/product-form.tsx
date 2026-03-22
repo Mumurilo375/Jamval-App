@@ -109,8 +109,8 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         </div>
 
         <Field
-          label="Custo de compra"
-          hint="Usado na Administracao para lucro bruto estimado. Deixe em branco se ainda nao souber."
+          label="Custo de referencia"
+          hint="Opcional. O custo real das entradas passa a ser registrado no estoque."
           error={errors.costPrice?.message}
         >
           <Input inputMode="decimal" placeholder="18.50" {...register("costPrice")} />

@@ -38,6 +38,7 @@ export type CentralMovement = {
   id: string;
   productId: string;
   productName: string;
+  productCategory: string | null;
   sku: string;
   movementType:
     | "INITIAL_LOAD"
@@ -50,6 +51,8 @@ export type CentralMovement = {
   movementLabel: string;
   balanceEffect: "IN" | "OUT" | "NEUTRAL";
   quantity: number;
+  unitCost: number | null;
+  totalCost: number | null;
   referenceType: "VISIT" | "MANUAL" | "INITIAL_LOAD" | "ADJUSTMENT";
   referenceLabel: string;
   note: string | null;
@@ -88,6 +91,7 @@ export type StockBatchPayload = {
   items: Array<{
     productId: string;
     quantity: number;
+    unitCost: number;
   }>;
 };
 

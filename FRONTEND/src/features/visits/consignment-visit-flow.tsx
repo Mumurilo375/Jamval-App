@@ -571,6 +571,7 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
                       <Input
                         value={row.draft.quantitySold}
                         inputMode="decimal"
+                        placeholder="0"
                         disabled={isReadOnly}
                         onChange={(event) => {
                           const value = event.target.value;
@@ -795,6 +796,7 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
                     <Input
                       value={row.draft.restockedQuantity}
                       inputMode="decimal"
+                      placeholder="0"
                       disabled={isReadOnly}
                       onChange={(event) => {
                         const value = event.target.value;
@@ -1040,13 +1042,17 @@ function buildItemDraftMap(items: VisitItem[]): Record<string, ItemDraftState> {
 
 function createItemDraft(item: VisitItem): ItemDraftState {
   return {
-    quantitySold: String(item.quantitySold),
+    quantitySold: formatCountDraftValue(item.quantitySold),
     quantityDefectiveReturn: String(item.quantityDefectiveReturn),
     quantityLoss: String(item.quantityLoss),
     unitPrice: String(visitNumber(item.unitPrice)),
-    restockedQuantity: String(item.restockedQuantity),
+    restockedQuantity: formatCountDraftValue(item.restockedQuantity),
     notes: item.notes ?? ""
   };
+}
+
+function formatCountDraftValue(value: number) {
+  return value === 0 ? "" : String(value);
 }
 
 function buildRowViewModel({

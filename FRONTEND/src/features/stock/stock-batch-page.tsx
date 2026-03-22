@@ -28,6 +28,7 @@ type StockBatchRow = {
   id: string;
   productId: string;
   quantity: string;
+  unitCost: string;
 };
 
 export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
@@ -70,6 +71,10 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
   const selectedProductIds = useMemo(
     () => rows.map((row) => row.productId).filter(Boolean),
     [rows]
+  );
+  const productById = useMemo(
+    () => new Map(productsQuery.data?.map((product) => [product.id, product]) ?? []),
+    [productsQuery.data]
   );
 
   const pageCopy = isInitialLoad
@@ -197,9 +202,19 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                     value={row.productId}
                     onChange={(event) => {
                       setFormError(null);
+                      const selectedProduct = productById.get(event.target.value);
                       setRows((currentRows) =>
                         currentRows.map((entry) =>
-                          entry.id === row.id ? { ...entry, productId: event.target.value } : entry
+                          entry.id === row.id
+                            ? {
+                                ...entry,
+                                productId: event.target.value,
+                                unitCost:
+                                  selectedProduct?.costPrice !== null && selectedProduct?.costPrice !== undefined
+                                    ? String(selectedProduct.costPrice)
+                                    : ""
+                              }
+                            : entry
                         )
                       );
                     }}
@@ -207,27 +222,50 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                     <option value="">Selecione um produto</option>
                     {availableProducts.map((product) => (
                       <option key={product.id} value={product.id}>
-                        {product.name} ({product.sku}){product.isActive ? "" : " - inativo"}
+                        {product.name}
+                        {product.category ? ` - ${product.category}` : ""}
+                        {product.isActive ? "" : " - inativo"}
                       </option>
                     ))}
                   </Select>
                 </Field>
 
-                <Field label="Quantidade">
-                  <Input
-                    inputMode="numeric"
-                    placeholder="0"
-                    value={row.quantity}
-                    onChange={(event) => {
-                      setFormError(null);
-                      setRows((currentRows) =>
-                        currentRows.map((entry) =>
-                          entry.id === row.id ? { ...entry, quantity: event.target.value } : entry
-                        )
-                      );
-                    }}
-                  />
-                </Field>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Quantidade">
+                    <Input
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={row.quantity}
+                      onChange={(event) => {
+                        setFormError(null);
+                        setRows((currentRows) =>
+                          currentRows.map((entry) =>
+                            entry.id === row.id ? { ...entry, quantity: event.target.value } : entry
+                          )
+                        );
+                      }}
+                    />
+                  </Field>
+
+                  <Field
+                    label="Custo unitario"
+                    hint="Informe o custo desta entrada. Pode ser diferente do custo anterior."
+                  >
+                    <Input
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      value={row.unitCost}
+                      onChange={(event) => {
+                        setFormError(null);
+                        setRows((currentRows) =>
+                          currentRows.map((entry) =>
+                            entry.id === row.id ? { ...entry, unitCost: event.target.value } : entry
+                          )
+                        );
+                      }}
+                    />
+                  </Field>
+                </div>
               </Card>
             );
           })}
@@ -283,9 +321,10 @@ function buildBatchItems(rows: StockBatchRow[]) {
   const items = rows
     .map((row) => ({
       productId: row.productId,
-      quantity: row.quantity.trim()
+      quantity: row.quantity.trim(),
+      unitCost: normalizeDecimalInput(row.unitCost)
     }))
-    .filter((row) => row.productId || row.quantity.length > 0);
+    .filter((row) => row.productId || row.quantity.length > 0 || row.unitCost.length > 0);
 
   for (const item of items) {
     if (!item.productId) {
@@ -294,6 +333,10 @@ function buildBatchItems(rows: StockBatchRow[]) {
 
     if (!/^\d+$/.test(item.quantity) || Number(item.quantity) <= 0) {
       throw new Error("Informe quantidades inteiras maiores que zero para cada produto preenchido.");
+    }
+
+    if (item.unitCost.length === 0 || Number.isNaN(Number(item.unitCost)) || Number(item.unitCost) < 0) {
+      throw new Error("Informe um custo unitario valido para cada produto preenchido.");
     }
   }
 
@@ -309,7 +352,8 @@ function buildBatchItems(rows: StockBatchRow[]) {
 
   return items.map((item) => ({
     productId: item.productId,
-    quantity: Number(item.quantity)
+    quantity: Number(item.quantity),
+    unitCost: Number(item.unitCost)
   }));
 }
 
@@ -317,6 +361,11 @@ function createEmptyRow(): StockBatchRow {
   return {
     id: window.crypto.randomUUID(),
     productId: "",
-    quantity: ""
+    quantity: "",
+    unitCost: ""
   };
+}
+
+function normalizeDecimalInput(value: string) {
+  return value.trim().replace(",", ".");
 }
