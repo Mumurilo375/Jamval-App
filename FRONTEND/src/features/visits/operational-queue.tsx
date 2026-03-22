@@ -1,8 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { Button, Card, EmptyState, ErrorBanner, ToneBadge } from "../../components/ui";
-import { ApiError } from "../../lib/api";
 import { cx } from "../../lib/cx";
 import { formatCurrency, formatDate } from "../../lib/format";
 import type {
@@ -11,58 +9,12 @@ import type {
   OperationalReturnQueueItem,
   VisitType
 } from "../../types/domain";
-import { createVisit } from "./visits-api";
+import {
+  formatDaysSince,
+  formatReturnQueueSummary,
+  historyActionLabel
+} from "./operational-queue-utils";
 import { visitTypeLabel } from "./visit-utils";
-
-type StartVisitErrorDetails = {
-  visitId?: string;
-};
-
-export function useStartConsignmentVisit() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: async (clientId: string) =>
-      createVisit({
-        clientId,
-        visitType: "CONSIGNMENT"
-      }),
-    onSuccess: async (visit) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["visits"] }),
-        queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] })
-      ]);
-      queryClient.setQueryData(["visit", visit.id], visit);
-      await navigate(`/visits/${visit.id}`);
-    }
-  });
-
-  const startVisit = async (clientId: string) => {
-    try {
-      await mutation.mutateAsync(clientId);
-    } catch (error) {
-      if (error instanceof ApiError && error.code === "VISIT_ALREADY_OPEN") {
-        const visitId = (error.details as StartVisitErrorDetails | null)?.visitId;
-
-        if (visitId) {
-          await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
-          await navigate(`/visits/${visitId}`);
-          return;
-        }
-      }
-
-      throw error;
-    }
-  };
-
-  return {
-    startVisit,
-    isPending: mutation.isPending,
-    pendingClientId: mutation.isPending ? (mutation.variables ?? null) : null,
-    error: mutation.error,
-    reset: mutation.reset
-  };
-}
 
 export function StartVisitErrorBanner({ error }: { error: unknown }) {
   if (!error) {
@@ -282,37 +234,6 @@ export function QueueSegmentControl({
       ))}
     </div>
   );
-}
-
-export function formatDaysSince(value: string): string {
-  const target = new Date(value);
-  const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const targetStart = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-  const diffMs = todayStart.getTime() - targetStart.getTime();
-  const diffDays = Math.max(0, Math.floor(diffMs / 86_400_000));
-
-  if (diffDays === 0) {
-    return "hoje";
-  }
-
-  if (diffDays === 1) {
-    return "ha 1 dia";
-  }
-
-  return `ha ${diffDays} dias`;
-}
-
-export function formatReturnQueueSummary(item: OperationalReturnQueueItem): string {
-  if (item.baseQuantity <= 0) {
-    return "Base zerada";
-  }
-
-  return `${formatItemCount(item.itemCount)} • base atual ${item.baseQuantity}`;
-}
-
-export function historyActionLabel(item: OperationalHistoryVisit): string {
-  return item.hasReceipt ? "Comprovante" : "Ver";
 }
 
 function formatItemCount(itemCount: number): string {

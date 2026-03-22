@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 
-import { EmptyState, PageHeader, PageLoader, ToneBadge } from "../../components/ui";
+import { EmptyState, PageHeader, PageLoader, PaginationControls, ToneBadge } from "../../components/ui";
 import { formatCurrency, formatDate } from "../../lib/format";
+import { paginateItems } from "../../lib/pagination";
 import { listReceivables } from "./finance-api";
 import {
   buildReceivableRoute,
@@ -15,8 +16,11 @@ import {
   sortReceivablesForQueue
 } from "./finance-utils";
 
+const RECEIVABLES_PAGE_SIZE = 6;
+
 export function FinancePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(1);
   const activeStatus = normalizeFinanceQueueStatus(searchParams.get("status"));
 
   const receivablesQuery = useQuery({
@@ -28,6 +32,7 @@ export function FinancePage() {
     () => sortReceivablesForQueue(receivablesQuery.data ?? []),
     [receivablesQuery.data]
   );
+  const paginatedReceivables = paginateItems(receivables, page, RECEIVABLES_PAGE_SIZE);
 
   if (receivablesQuery.isPending) {
     return <PageLoader label="Carregando fila de recebimento..." />;
@@ -58,6 +63,7 @@ export function FinancePage() {
             onClick={() => {
               const nextParams = new URLSearchParams(searchParams);
               nextParams.set("status", option.value);
+              setPage(1);
               setSearchParams(nextParams, { replace: true });
             }}
             className={[
@@ -79,7 +85,7 @@ export function FinancePage() {
         />
       ) : (
         <div className="space-y-2.5">
-          {receivables.map((receivable) => (
+          {paginatedReceivables.pageItems.map((receivable) => (
             <Link
               key={receivable.id}
               to={buildReceivableRoute(receivable.id, activeStatus)}
@@ -112,6 +118,15 @@ export function FinancePage() {
           ))}
         </div>
       )}
+
+      <PaginationControls
+        page={paginatedReceivables.page}
+        totalPages={paginatedReceivables.totalPages}
+        totalItems={receivables.length}
+        pageSize={RECEIVABLES_PAGE_SIZE}
+        itemLabel="titulos"
+        onPageChange={setPage}
+      />
     </div>
   );
 }

@@ -2,13 +2,17 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, ToneBadge } from "../../components/ui";
+import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, PaginationControls, ToneBadge } from "../../components/ui";
 import { formatCurrency, formatDate } from "../../lib/format";
+import { paginateItems } from "../../lib/pagination";
 import { listClients } from "../clients/clients-api";
 import { listVisits } from "../visits/visits-api";
 
+const RECEIPTS_PAGE_SIZE = 6;
+
 export function ReceiptsPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const visitsQuery = useQuery({
     queryKey: ["receipts-page", "completed-visits"],
     queryFn: () => listVisits({ status: "COMPLETED" })
@@ -33,6 +37,7 @@ export function ReceiptsPage() {
       return `${visit.visitCode} ${clientName}`.toLocaleLowerCase().includes(term);
     });
   }, [clientNameById, search, visitsQuery.data]);
+  const paginatedVisits = paginateItems(filteredVisits, page, RECEIPTS_PAGE_SIZE);
 
   return (
     <div className="space-y-4">
@@ -50,7 +55,10 @@ export function ReceiptsPage() {
         <Field label="Buscar visita ou cliente">
           <Input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="Buscar por codigo da visita ou cliente"
           />
         </Field>
@@ -70,7 +78,7 @@ export function ReceiptsPage() {
       ) : null}
 
       <div className="space-y-3">
-        {filteredVisits.map((visit) => (
+        {paginatedVisits.pageItems.map((visit) => (
           <Card key={visit.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -102,6 +110,15 @@ export function ReceiptsPage() {
           </Card>
         ))}
       </div>
+
+      <PaginationControls
+        page={paginatedVisits.page}
+        totalPages={paginatedVisits.totalPages}
+        totalItems={filteredVisits.length}
+        pageSize={RECEIPTS_PAGE_SIZE}
+        itemLabel="comprovantes"
+        onPageChange={setPage}
+      />
     </div>
   );
 }

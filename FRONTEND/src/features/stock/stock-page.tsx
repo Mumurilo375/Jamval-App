@@ -12,11 +12,13 @@ import {
   Input,
   PageHeader,
   PageLoader,
+  PaginationControls,
   Select,
   ToneBadge
 } from "../../components/ui";
 import { cx } from "../../lib/cx";
 import { formatCurrency, formatDateTime } from "../../lib/format";
+import { paginateItems } from "../../lib/pagination";
 import {
   getCentralOverview,
   listCentralMovements,
@@ -43,10 +45,16 @@ const movementKindOptions: Array<{ value: "" | CentralMovementKind; label: strin
 ];
 
 const ATTENTION_LIMIT = 6;
+const STOCK_BALANCE_PAGE_SIZE = 8;
+const STOCK_HISTORY_PAGE_SIZE = 8;
+const STOCK_OUTFLOW_PAGE_SIZE = 6;
 
 export function StockPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
+  const [balancePage, setBalancePage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [outflowPage, setOutflowPage] = useState(1);
   const activeTab =
     searchParams.get("tab") === "historico" || searchParams.get("tab") === "saidas"
       ? searchParams.get("tab")!
@@ -123,6 +131,9 @@ export function StockPage() {
       })
       .sort(compareItemsByOperationalPriority);
   }, [balanceSearch, overviewQuery.data?.items, selectedCategorySet]);
+  const paginatedBalanceItems = paginateItems(filteredBalanceItems, balancePage, STOCK_BALANCE_PAGE_SIZE);
+  const paginatedMovements = paginateItems(movementsQuery.data ?? [], historyPage, STOCK_HISTORY_PAGE_SIZE);
+  const paginatedOutflows = paginateItems(outflowsQuery.data ?? [], outflowPage, STOCK_OUTFLOW_PAGE_SIZE);
 
   if (overviewQuery.isPending) {
     return <PageLoader label="Carregando estoque..." />;
@@ -158,18 +169,41 @@ export function StockPage() {
       ? `Filtrar categorias (${selectedCategories.length})`
       : "Filtrar categorias";
 
-  const updateParams = (updates: Record<string, string>) =>
+  const updateParams = (
+    updates: Record<string, string>,
+    resetPages?: {
+      balance?: boolean;
+      history?: boolean;
+      outflow?: boolean;
+    }
+  ) => {
+    if (resetPages?.balance) {
+      setBalancePage(1);
+    }
+
+    if (resetPages?.history) {
+      setHistoryPage(1);
+    }
+
+    if (resetPages?.outflow) {
+      setOutflowPage(1);
+    }
+
     updateStockSearchParams(searchParams, setSearchParams, updates);
+  };
 
   const toggleCategory = (category: string) => {
     const next = selectedCategorySet.has(category)
       ? selectedCategories.filter((entry) => entry !== category)
       : [...selectedCategories, category].sort((left, right) => left.localeCompare(right));
 
-    updateParams({
-      balanceCategories: next.join(","),
-      balanceCategory: ""
-    });
+    updateParams(
+      {
+        balanceCategories: next.join(","),
+        balanceCategory: ""
+      },
+      { balance: true }
+    );
   };
 
   return (
@@ -273,7 +307,9 @@ export function StockPage() {
                   <Input
                     placeholder="Produto ou categoria"
                     value={balanceSearch}
-                    onChange={(event) => updateParams({ balanceSearch: event.target.value })}
+                    onChange={(event) =>
+                      updateParams({ balanceSearch: event.target.value }, { balance: true })
+                    }
                   />
                 </Field>
               </div>
@@ -296,7 +332,9 @@ export function StockPage() {
                 <button
                   type="button"
                   className="text-sm font-medium text-[var(--jam-accent)]"
-                  onClick={() => updateParams({ balanceCategories: "", balanceCategory: "" })}
+                  onClick={() =>
+                    updateParams({ balanceCategories: "", balanceCategory: "" }, { balance: true })
+                  }
                 >
                   Limpar
                 </button>
@@ -346,7 +384,7 @@ export function StockPage() {
 
               <Card className="overflow-hidden p-0">
                 <div className="divide-y divide-[var(--jam-border)]">
-                  {filteredBalanceItems.map((item) => (
+                  {paginatedBalanceItems.pageItems.map((item) => (
                     <article
                       key={item.productId}
                       className={cx(
@@ -393,6 +431,15 @@ export function StockPage() {
                   ))}
                 </div>
               </Card>
+
+              <PaginationControls
+                page={paginatedBalanceItems.page}
+                totalPages={paginatedBalanceItems.totalPages}
+                totalItems={filteredBalanceItems.length}
+                pageSize={STOCK_BALANCE_PAGE_SIZE}
+                itemLabel="produtos"
+                onPageChange={setBalancePage}
+              />
             </>
           )}
         </div>
@@ -406,14 +453,18 @@ export function StockPage() {
                 <Input
                   placeholder="Produto, referencia ou observacao"
                   value={historySearch}
-                  onChange={(event) => updateParams({ historySearch: event.target.value })}
+                  onChange={(event) =>
+                    updateParams({ historySearch: event.target.value }, { history: true })
+                  }
                 />
               </Field>
 
               <Field label="Tipo">
                 <Select
                   value={historyMovementKind}
-                  onChange={(event) => updateParams({ movementKind: event.target.value })}
+                  onChange={(event) =>
+                    updateParams({ movementKind: event.target.value }, { history: true })
+                  }
                 >
                   {movementKindOptions.map((option) => (
                     <option key={option.label} value={option.value}>
@@ -426,14 +477,18 @@ export function StockPage() {
               <Field label="De">
                 <DateInput
                   value={historyDateFrom}
-                  onValueChange={(value) => updateParams({ historyDateFrom: value })}
+                  onValueChange={(value) =>
+                    updateParams({ historyDateFrom: value }, { history: true })
+                  }
                 />
               </Field>
 
               <Field label="Ate">
                 <DateInput
                   value={historyDateTo}
-                  onValueChange={(value) => updateParams({ historyDateTo: value })}
+                  onValueChange={(value) =>
+                    updateParams({ historyDateTo: value }, { history: true })
+                  }
                 />
               </Field>
             </div>
@@ -466,7 +521,7 @@ export function StockPage() {
               </div>
 
               <div className="divide-y divide-[var(--jam-border)]">
-                {movementsQuery.data.map((movement) => (
+                {paginatedMovements.pageItems.map((movement) => (
                   <article key={movement.id} className="px-4 py-3">
                     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_160px_96px_148px] lg:items-start">
                       <div className="min-w-0">
@@ -499,6 +554,15 @@ export function StockPage() {
               </div>
             </Card>
           ) : null}
+
+          <PaginationControls
+            page={paginatedMovements.page}
+            totalPages={paginatedMovements.totalPages}
+            totalItems={movementsQuery.data?.length ?? 0}
+            pageSize={STOCK_HISTORY_PAGE_SIZE}
+            itemLabel="movimentos"
+            onPageChange={setHistoryPage}
+          />
         </div>
       ) : null}
 
@@ -509,14 +573,18 @@ export function StockPage() {
               <Field label="Visitas desde">
                 <DateInput
                   value={outflowDateFrom}
-                  onValueChange={(value) => updateParams({ outflowDateFrom: value })}
+                  onValueChange={(value) =>
+                    updateParams({ outflowDateFrom: value }, { outflow: true })
+                  }
                 />
               </Field>
 
               <Field label="Visitas ate">
                 <DateInput
                   value={outflowDateTo}
-                  onValueChange={(value) => updateParams({ outflowDateTo: value })}
+                  onValueChange={(value) =>
+                    updateParams({ outflowDateTo: value }, { outflow: true })
+                  }
                 />
               </Field>
             </div>
@@ -542,7 +610,7 @@ export function StockPage() {
           {outflowsQuery.data && outflowsQuery.data.length > 0 ? (
             <Card className="overflow-hidden p-0">
               <div className="divide-y divide-[var(--jam-border)]">
-                {outflowsQuery.data.map((group) => (
+                {paginatedOutflows.pageItems.map((group) => (
                   <Link
                     key={group.visitId}
                     to={`/visits/${group.visitId}`}
@@ -576,6 +644,15 @@ export function StockPage() {
               </div>
             </Card>
           ) : null}
+
+          <PaginationControls
+            page={paginatedOutflows.page}
+            totalPages={paginatedOutflows.totalPages}
+            totalItems={outflowsQuery.data?.length ?? 0}
+            pageSize={STOCK_OUTFLOW_PAGE_SIZE}
+            itemLabel="visitas"
+            onPageChange={setOutflowPage}
+          />
         </div>
       ) : null}
 
@@ -588,7 +665,9 @@ export function StockPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <Button
               variant="ghost"
-              onClick={() => updateParams({ balanceCategories: "", balanceCategory: "" })}
+              onClick={() =>
+                updateParams({ balanceCategories: "", balanceCategory: "" }, { balance: true })
+              }
             >
               Limpar
             </Button>

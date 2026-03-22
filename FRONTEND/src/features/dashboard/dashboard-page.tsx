@@ -6,9 +6,9 @@ import {
   HistoryList,
   InProgressList,
   ReturnQueueList,
-  StartVisitErrorBanner,
-  useStartConsignmentVisit
+  StartVisitErrorBanner
 } from "../visits/operational-queue";
+import { useStartConsignmentVisit } from "../visits/use-start-consignment-visit";
 import { listOperationalVisitQueue } from "../visits/visits-api";
 
 export function DashboardPage() {

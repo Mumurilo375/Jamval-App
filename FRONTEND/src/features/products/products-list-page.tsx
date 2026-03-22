@@ -2,13 +2,17 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, Select, StatusBadge } from "../../components/ui";
+import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, PaginationControls, Select, StatusBadge } from "../../components/ui";
 import { formatCurrency } from "../../lib/format";
+import { paginateItems } from "../../lib/pagination";
 import { listProducts } from "./products-api";
+
+const PRODUCTS_PAGE_SIZE = 6;
 
 export function ProductsListPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+  const [page, setPage] = useState(1);
 
   const filters = useMemo(
     () => ({
@@ -22,6 +26,7 @@ export function ProductsListPage() {
     queryKey: ["products", filters],
     queryFn: () => listProducts(filters)
   });
+  const paginatedProducts = paginateItems(productsQuery.data ?? [], page, PRODUCTS_PAGE_SIZE);
 
   return (
     <div className="space-y-4">
@@ -38,11 +43,24 @@ export function ProductsListPage() {
 
       <Card className="space-y-3">
         <Field label="Busca">
-          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por SKU, nome ou marca" />
+          <Input
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+            placeholder="Buscar por SKU, nome ou marca"
+          />
         </Field>
 
         <Field label="Status">
-          <Select value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>
+          <Select
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as typeof status);
+              setPage(1);
+            }}
+          >
             <option value="all">Todos</option>
             <option value="active">Ativos</option>
             <option value="inactive">Inativos</option>
@@ -69,7 +87,7 @@ export function ProductsListPage() {
       ) : null}
 
       <div className="space-y-3">
-        {productsQuery.data?.map((product) => (
+        {paginatedProducts.pageItems.map((product) => (
           <Card key={product.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -98,6 +116,15 @@ export function ProductsListPage() {
           </Card>
         ))}
       </div>
+
+      <PaginationControls
+        page={paginatedProducts.page}
+        totalPages={paginatedProducts.totalPages}
+        totalItems={productsQuery.data?.length ?? 0}
+        pageSize={PRODUCTS_PAGE_SIZE}
+        itemLabel="produtos"
+        onPageChange={setPage}
+      />
     </div>
   );
 }

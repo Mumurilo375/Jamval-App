@@ -628,6 +628,63 @@ export function SectionHeader({
   );
 }
 
+export function PaginationControls({
+  page,
+  totalPages,
+  totalItems,
+  pageSize,
+  itemLabel = "itens",
+  onPageChange
+}: {
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  itemLabel?: string;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, totalItems);
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-[var(--jam-border)] bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-[var(--jam-subtle)]">
+        Mostrando {start}-{end} de {totalItems} {itemLabel}
+      </p>
+
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:flex sm:items-center">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="min-w-[96px]"
+        >
+          Anterior
+        </Button>
+
+        <p className="text-center text-sm font-semibold text-[var(--jam-ink)]">
+          Pagina {page} de {totalPages}
+        </p>
+
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="min-w-[96px]"
+        >
+          Proxima
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function CompactLinkRow({
   title,
   subtitle,

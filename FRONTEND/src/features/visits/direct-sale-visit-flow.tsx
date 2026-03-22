@@ -1,4 +1,4 @@
-import { type Dispatch, type ReactNode, type SetStateAction, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { type Dispatch, type ReactNode, type SetStateAction, useDeferredValue, useMemo, useState } from "react";
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -59,6 +59,10 @@ type RemovedItem = {
 };
 
 export function DirectSaleVisitFlow({ visit, clientName }: DirectSaleVisitFlowProps) {
+  return <DirectSaleVisitFlowContent key={`${visit.id}:${visit.updatedAt}`} visit={visit} clientName={clientName} />;
+}
+
+function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isDraft = visit.status === "DRAFT";
@@ -75,20 +79,6 @@ export function DirectSaleVisitFlow({ visit, clientName }: DirectSaleVisitFlowPr
   const [paymentNotes, setPaymentNotes] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const deferredSearch = useDeferredValue(searchInput.trim());
-
-  useEffect(() => {
-    setRows(buildSaleRows(visit));
-    setRemovedItems([]);
-    setSearchInput("");
-    setReceivedAmountInput(String(visitNumber(visit.receivedAmountOnVisit)));
-    setPaymentStatus(inferPaymentStatus(visit.receivedAmountOnVisit, visit.totalAmount));
-    setVisitNotesInput(visit.notes ?? "");
-    setValidationError(null);
-    setIsPaymentDrawerOpen(false);
-    setPaymentMethod("");
-    setPaymentReference("");
-    setPaymentNotes("");
-  }, [visit]);
 
   const productsQuery = useQuery({
     queryKey: ["products", "direct-sale-search", deferredSearch],
@@ -120,17 +110,6 @@ export function DirectSaleVisitFlow({ visit, clientName }: DirectSaleVisitFlowPr
   const metadataHasChanges =
     normalizeMoneyValue(Number.isNaN(effectiveReceivedAmount) ? 0 : effectiveReceivedAmount) !== normalizeMoneyValue(visitNumber(visit.receivedAmountOnVisit)) ||
     visitNotesInput !== (visit.notes ?? "");
-
-  useEffect(() => {
-    if (paymentStatus === "PAID_TOTAL") {
-      setReceivedAmountInput(formatMoneyInput(totalAmount));
-      return;
-    }
-
-    if (paymentStatus === "PENDING") {
-      setReceivedAmountInput("0");
-    }
-  }, [paymentStatus, totalAmount]);
 
   const availableProductIds = useMemo(() => new Set(rows.map((row) => row.productId)), [rows]);
   const searchResults = useMemo(

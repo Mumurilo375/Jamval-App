@@ -1,13 +1,23 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
-import { Button, Card, EmptyState, PageHeader, PageLoader, StatusBadge } from "../../components/ui";
+import { Button, Card, EmptyState, PageHeader, PageLoader, PaginationControls, StatusBadge } from "../../components/ui";
 import { formatCurrency } from "../../lib/format";
+import { paginateItems } from "../../lib/pagination";
 import { getClient } from "../clients/clients-api";
 import { listClientCatalog } from "./catalog-api";
 
+const CATALOG_PAGE_SIZE = 6;
+
 export function CatalogListPage() {
   const { clientId = "" } = useParams();
+
+  return <CatalogListPageContent key={clientId} clientId={clientId} />;
+}
+
+function CatalogListPageContent({ clientId }: { clientId: string }) {
+  const [page, setPage] = useState(1);
   const clientQuery = useQuery({
     queryKey: ["client", clientId],
     queryFn: () => getClient(clientId)
@@ -16,6 +26,8 @@ export function CatalogListPage() {
     queryKey: ["client-catalog", clientId],
     queryFn: () => listClientCatalog(clientId)
   });
+  const catalogItems = catalogQuery.data ?? [];
+  const paginatedCatalog = paginateItems(catalogItems, page, CATALOG_PAGE_SIZE);
 
   if (clientQuery.isPending || catalogQuery.isPending) {
     return <PageLoader label="Carregando mix e preco..." />;
@@ -43,7 +55,7 @@ export function CatalogListPage() {
         <p className="text-sm text-[var(--jam-subtle)]">Nao mostra o estoque fisico atual da loja.</p>
       </Card>
 
-      {catalogQuery.data.length === 0 ? (
+      {catalogItems.length === 0 ? (
         <EmptyState
           title="Mix vazio"
           message="Adicione os primeiros produtos ao mix e preco deste cliente."
@@ -56,7 +68,7 @@ export function CatalogListPage() {
       ) : null}
 
       <div className="space-y-3">
-        {catalogQuery.data.map((item) => (
+        {paginatedCatalog.pageItems.map((item) => (
           <Card key={item.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -98,6 +110,15 @@ export function CatalogListPage() {
           </Card>
         ))}
       </div>
+
+      <PaginationControls
+        page={paginatedCatalog.page}
+        totalPages={paginatedCatalog.totalPages}
+        totalItems={catalogItems.length}
+        pageSize={CATALOG_PAGE_SIZE}
+        itemLabel="produtos"
+        onPageChange={setPage}
+      />
     </div>
   );
 }

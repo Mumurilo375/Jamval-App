@@ -2,12 +2,16 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, Select, StatusBadge } from "../../components/ui";
+import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, PaginationControls, Select, StatusBadge } from "../../components/ui";
+import { paginateItems } from "../../lib/pagination";
 import { listClients } from "./clients-api";
+
+const CLIENTS_PAGE_SIZE = 6;
 
 export function ClientsListPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+  const [page, setPage] = useState(1);
 
   const filters = useMemo(
     () => ({
@@ -21,6 +25,7 @@ export function ClientsListPage() {
     queryKey: ["clients", filters],
     queryFn: () => listClients(filters)
   });
+  const paginatedClients = paginateItems(clientsQuery.data ?? [], page, CLIENTS_PAGE_SIZE);
 
   return (
     <div className="space-y-4">
@@ -37,11 +42,24 @@ export function ClientsListPage() {
 
       <Card className="space-y-3">
         <Field label="Busca">
-          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, documento ou contato" />
+          <Input
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+            placeholder="Buscar por nome, documento ou contato"
+          />
         </Field>
 
         <Field label="Status">
-          <Select value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>
+          <Select
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as typeof status);
+              setPage(1);
+            }}
+          >
             <option value="all">Todos</option>
             <option value="active">Ativos</option>
             <option value="inactive">Inativos</option>
@@ -68,7 +86,7 @@ export function ClientsListPage() {
       ) : null}
 
       <div className="space-y-3">
-        {clientsQuery.data?.map((client) => (
+        {paginatedClients.pageItems.map((client) => (
           <Card key={client.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -98,6 +116,15 @@ export function ClientsListPage() {
           </Card>
         ))}
       </div>
+
+      <PaginationControls
+        page={paginatedClients.page}
+        totalPages={paginatedClients.totalPages}
+        totalItems={clientsQuery.data?.length ?? 0}
+        pageSize={CLIENTS_PAGE_SIZE}
+        itemLabel="clientes"
+        onPageChange={setPage}
+      />
     </div>
   );
 }

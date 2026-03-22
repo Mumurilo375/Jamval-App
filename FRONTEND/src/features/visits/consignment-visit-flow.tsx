@@ -85,6 +85,10 @@ type RowViewModel = {
 };
 
 export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlowProps) {
+  return <ConsignmentVisitFlowContent key={`${visit.id}:${visit.updatedAt}`} visit={visit} clientName={clientName} />;
+}
+
+function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlowProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const autoPopulateAttemptedRef = useRef<string | null>(null);
@@ -104,28 +108,6 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
   const [paymentNotes, setPaymentNotes] = useState("");
   const [draftValidationError, setDraftValidationError] = useState<string | null>(null);
   const [autoPopulateCount, setAutoPopulateCount] = useState(0);
-
-  useEffect(() => {
-    setItemDrafts((current) => {
-      const next: Record<string, ItemDraftState> = {};
-
-      visit.items.forEach((item) => {
-        next[item.id] = current[item.id] ?? createItemDraft(item);
-      });
-
-      return next;
-    });
-  }, [visit.items]);
-
-  useEffect(() => {
-    setReceivedAmountInput(String(visitNumber(visit.receivedAmountOnVisit)));
-    setVisitNotesInput(visit.notes ?? "");
-    setDraftValidationError(null);
-    setIsPaymentDrawerOpen(false);
-    setPaymentMethod("");
-    setPaymentReference("");
-    setPaymentNotes("");
-  }, [visit.id]);
 
   const shouldAutopopulate = Boolean(isDraft && visit.items.length === 0);
   const clientCatalogQuery = useQuery({
@@ -277,15 +259,6 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
     () => availableProducts.find((product) => product.productId === addProductId) ?? null,
     [addProductId, availableProducts]
   );
-
-  useEffect(() => {
-    if (!selectedProductOption) {
-      return;
-    }
-
-    setAddProductUnitPriceInput(String(selectedProductOption.unitPrice));
-    setAddProductPreviousInput(selectedProductOption.suggestedPrevious === null ? "" : String(selectedProductOption.suggestedPrevious));
-  }, [selectedProductOption]);
 
   useEffect(() => {
     if (!shouldAutopopulate || !clientCatalogQuery.isSuccess || !completedHistoryQuery.isSuccess) {
@@ -942,7 +915,21 @@ export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlow
           ) : (
             <>
               <Field label="Produto">
-                <Select value={addProductId} onChange={(event) => setAddProductId(event.target.value)}>
+                <Select
+                  value={addProductId}
+                  onChange={(event) => {
+                    const nextProductId = event.target.value;
+                    const option = availableProducts.find((product) => product.productId === nextProductId) ?? null;
+
+                    setAddProductId(nextProductId);
+                    setAddProductUnitPriceInput(option ? String(option.unitPrice) : "");
+                    setAddProductPreviousInput(
+                      option?.suggestedPrevious === null || option?.suggestedPrevious === undefined
+                        ? ""
+                        : String(option.suggestedPrevious)
+                    );
+                  }}
+                >
                   <option value="">Selecione</option>
                   {availableProducts.map((product) => (
                     <option key={product.productId} value={product.productId}>
