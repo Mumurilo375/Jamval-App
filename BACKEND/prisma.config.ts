@@ -1,5 +1,8 @@
 import "dotenv/config";
 
+import { readdirSync } from "node:fs";
+import path from "node:path";
+
 import { defineConfig } from "prisma/config";
 
 const databaseUrl = resolveDatabaseUrl(process.env);
@@ -10,6 +13,11 @@ if (!databaseUrl) {
 }
 
 process.env.DATABASE_URL = databaseUrl;
+
+logPrismaConfigDiagnostics({
+  databaseUrl,
+  directDatabaseUrl
+});
 
 export default defineConfig({
   engine: "classic",
@@ -55,4 +63,36 @@ function resolveDirectDatabaseUrl(processEnv: NodeJS.ProcessEnv): string | undef
     processEnv.PRISMA_DIRECT_URL?.trim();
 
   return explicitDirectDatabaseUrl || undefined;
+}
+
+function logPrismaConfigDiagnostics(input: {
+  databaseUrl: string;
+  directDatabaseUrl?: string;
+}): void {
+  const migrationDirectory = path.join(process.cwd(), "prisma", "migrations");
+  const migrationNames = safeReadMigrationNames(migrationDirectory);
+
+  console.log("[prisma-config] DATABASE_URL host:", safeExtractHost(input.databaseUrl));
+  console.log("[prisma-config] DIRECT_URL host:", input.directDatabaseUrl ? safeExtractHost(input.directDatabaseUrl) : "<not set>");
+  console.log("[prisma-config] migration dir:", migrationDirectory);
+  console.log("[prisma-config] migrations:", migrationNames.length > 0 ? migrationNames.join(", ") : "<none found>");
+}
+
+function safeReadMigrationNames(migrationDirectory: string): string[] {
+  try {
+    return readdirSync(migrationDirectory, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+function safeExtractHost(connectionString: string): string {
+  try {
+    return new URL(connectionString).host;
+  } catch {
+    return "<invalid url>";
+  }
 }
