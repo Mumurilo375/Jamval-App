@@ -1,5 +1,7 @@
 # Jamval Codex
 
+Aplicação web em desenvolvimento para apoiar vendas/gestão de um pequeno negócio familiar, com frontend React e backend Fastify/Prisma.
+
 Workspace com dois aplicativos:
 
 - `BACKEND`: API Fastify + Prisma
