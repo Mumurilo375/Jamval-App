@@ -2,11 +2,15 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, StatusBadge } from "../../components/ui";
+import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, PaginationControls, StatusBadge } from "../../components/ui";
+import { paginateItems } from "../../lib/pagination";
 import { listClients } from "../clients/clients-api";
+
+const CATALOG_CLIENTS_PAGE_SIZE = 6;
 
 export function CatalogHubPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const clientsQuery = useQuery({
     queryKey: ["catalog-hub", "clients"],
     queryFn: () => listClients({})
@@ -24,6 +28,7 @@ export function CatalogHubPage() {
         .includes(term);
     });
   }, [clientsQuery.data, search]);
+  const paginatedClients = paginateItems(filteredClients, page, CATALOG_CLIENTS_PAGE_SIZE);
 
   return (
     <div className="space-y-4">
@@ -53,7 +58,10 @@ export function CatalogHubPage() {
         <Field label="Buscar cliente">
           <Input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="Buscar por nome, contato ou telefone"
           />
         </Field>
@@ -72,8 +80,8 @@ export function CatalogHubPage() {
         />
       ) : null}
 
-      <div className="space-y-3">
-        {filteredClients.map((client) => (
+      <div className="grid gap-3 sm:grid-cols-2">
+        {paginatedClients.pageItems.map((client) => (
           <Card key={client.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -98,6 +106,15 @@ export function CatalogHubPage() {
           </Card>
         ))}
       </div>
+
+      <PaginationControls
+        page={paginatedClients.page}
+        totalPages={paginatedClients.totalPages}
+        totalItems={filteredClients.length}
+        pageSize={CATALOG_CLIENTS_PAGE_SIZE}
+        itemLabel="clientes"
+        onPageChange={setPage}
+      />
     </div>
   );
 }

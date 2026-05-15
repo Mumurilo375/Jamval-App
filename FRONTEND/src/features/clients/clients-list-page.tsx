@@ -85,7 +85,7 @@ export function ClientsListPage() {
         />
       ) : null}
 
-      <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {paginatedClients.pageItems.map((client) => (
           <Card key={client.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
