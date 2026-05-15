@@ -151,7 +151,6 @@ export function AppShell() {
 
           <div className="rounded-full border border-[var(--jam-border)] bg-white px-2.5 py-1 text-right sm:px-3 sm:py-1.5">
             <p className="text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">{firstName}</p>
-            <p className="hidden text-[11px] text-[var(--jam-subtle)] sm:block">Sessao ativa</p>
           </div>
         </div>
       </header>
