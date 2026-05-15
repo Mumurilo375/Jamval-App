@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const loginBodySchema = z
   .object({
-    email: z.string().trim().email().transform((value) => value.toLowerCase()),
+    email: z.string().trim().email().max(200).transform((value) => value.toLowerCase()),
     password: z.string().min(1).max(200)
   })
   .strict();

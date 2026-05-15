@@ -1,45 +1,26 @@
 import { z } from "zod";
 
-const positiveIntSchema = z.coerce.number().int().min(1);
-const nonNegativeMoneySchema = z.coerce.number().min(0);
-const optionalTextSchema = z.preprocess((value) => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
+import {
+  dateRangeRefinement,
+  nonNegativeMoneySchema,
+  optionalTrimmedString,
+  positiveIntSchema,
+  requiredTrimmedString,
+  simpleDateSchema
+} from "../../shared/validation/schemas";
 
-  return value;
-}, z.string().trim().min(1).max(500).optional());
-
-const simpleDateSchema = z.preprocess((value) => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-
-  if (value instanceof Date) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
-      return value;
-    }
-
-    return new Date(`${value.trim()}T00:00:00.000Z`);
-  }
-
-  return value;
-}, z.date());
-
-const stockBatchItemSchema = z.object({
-  productId: z.string().uuid(),
-  quantity: positiveIntSchema,
-  unitCost: nonNegativeMoneySchema
-});
+const stockBatchItemSchema = z
+  .object({
+    productId: z.string().uuid(),
+    quantity: positiveIntSchema,
+    unitCost: nonNegativeMoneySchema
+  })
+  .strict();
 
 const stockBatchBodySchema = z
   .object({
-    note: optionalTextSchema,
-    items: z.array(stockBatchItemSchema).min(1)
+    note: optionalTrimmedString(500),
+    items: z.array(stockBatchItemSchema).min(1).max(200)
   })
   .strict();
 
@@ -64,7 +45,7 @@ export const centralBalancesQuerySchema = z.object({
     }
 
     return value;
-  }, z.array(z.string().uuid()).min(1))
+  }, z.array(z.string().uuid()).min(1).max(200))
 });
 
 export const movementKindSchema = z.enum([
@@ -78,31 +59,25 @@ export const movementKindSchema = z.enum([
 
 export const centralMovementsQuerySchema = z
   .object({
-    search: z.string().trim().optional(),
+    search: optionalTrimmedString(120),
     movementKind: movementKindSchema.optional(),
     dateFrom: simpleDateSchema.optional(),
     dateTo: simpleDateSchema.optional()
   })
-  .refine(
-    (value) => !value.dateFrom || !value.dateTo || value.dateFrom.getTime() <= value.dateTo.getTime(),
-    {
-      message: "dateFrom cannot be greater than dateTo",
-      path: ["dateFrom"]
-    }
-  );
+  .refine(dateRangeRefinement, {
+    message: "dateFrom cannot be greater than dateTo",
+    path: ["dateFrom"]
+  });
 
 export const centralVisitOutflowsQuerySchema = z
   .object({
     dateFrom: simpleDateSchema.optional(),
     dateTo: simpleDateSchema.optional()
   })
-  .refine(
-    (value) => !value.dateFrom || !value.dateTo || value.dateFrom.getTime() <= value.dateTo.getTime(),
-    {
-      message: "dateFrom cannot be greater than dateTo",
-      path: ["dateFrom"]
-    }
-  );
+  .refine(dateRangeRefinement, {
+    message: "dateFrom cannot be greater than dateTo",
+    path: ["dateFrom"]
+  });
 
 export const centralInitialLoadBodySchema = stockBatchBodySchema;
 export const centralManualEntryBodySchema = stockBatchBodySchema;
@@ -112,6 +87,6 @@ export const centralManualAdjustmentBodySchema = z
     productId: z.string().uuid(),
     direction: z.enum(["IN", "OUT"]),
     quantity: positiveIntSchema,
-    reason: z.string().trim().min(1).max(500)
+    reason: requiredTrimmedString(500, "Informe o motivo do ajuste")
   })
   .strict();

@@ -1,44 +1,17 @@
 import { PaymentMethod, VisitStatus, VisitType } from "@prisma/client";
 import { z } from "zod";
 
-const nonNegativeIntSchema = z.coerce.number().int().min(0);
-const nonNegativeNumberSchema = z.coerce.number().min(0);
-
-const dateTimeSchema = z.preprocess((value) => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-
-  if (value instanceof Date) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    return new Date(value);
-  }
-
-  return value;
-}, z.date());
-
-const simpleDateSchema = z.preprocess((value) => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-
-  if (value instanceof Date) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
-      return value;
-    }
-
-    return new Date(`${value.trim()}T00:00:00.000Z`);
-  }
-
-  return value;
-}, z.date());
+import {
+  dateRangeRefinement,
+  dateTimeSchema,
+  nonNegativeIntSchema,
+  nonNegativeMoneySchema,
+  optionalNonNegativeIntSchema,
+  optionalNonNegativeMoneySchema,
+  optionalTrimmedString,
+  simpleDateSchema,
+  requiredTrimmedString
+} from "../../shared/validation/schemas";
 
 export const visitIdParamSchema = z.object({
   id: z.string().uuid()
@@ -49,64 +22,88 @@ export const visitItemParamsSchema = z.object({
   itemId: z.string().uuid()
 });
 
-export const createVisitBodySchema = z.object({
-  clientId: z.string().uuid(),
-  visitType: z.nativeEnum(VisitType).optional().default(VisitType.CONSIGNMENT),
-  visitedAt: dateTimeSchema.optional(),
-  notes: z.string().trim().optional(),
-  receivedAmountOnVisit: nonNegativeNumberSchema.optional().default(0),
-  dueDate: simpleDateSchema.optional()
-});
+export const createVisitBodySchema = z
+  .object({
+    clientId: z.string().uuid(),
+    visitType: z.nativeEnum(VisitType).optional().default(VisitType.CONSIGNMENT),
+    visitedAt: dateTimeSchema.optional(),
+    notes: optionalTrimmedString(2000),
+    receivedAmountOnVisit: optionalNonNegativeMoneySchema.default(0),
+    dueDate: simpleDateSchema.optional()
+  })
+  .strict();
 
 export const updateVisitBodySchema = z
   .object({
     visitType: z.nativeEnum(VisitType).optional(),
     visitedAt: dateTimeSchema.optional(),
-    notes: z.string().trim().optional(),
-    receivedAmountOnVisit: nonNegativeNumberSchema.optional(),
+    notes: optionalTrimmedString(2000),
+    receivedAmountOnVisit: optionalNonNegativeMoneySchema,
     dueDate: simpleDateSchema.nullable().optional()
   })
+  .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one field must be provided"
   });
 
-export const visitListQuerySchema = z.object({
-  clientId: z.string().uuid().optional(),
-  status: z.nativeEnum(VisitStatus).optional(),
-  visitType: z.nativeEnum(VisitType).optional(),
-  dateFrom: simpleDateSchema.optional(),
-  dateTo: simpleDateSchema.optional()
-});
+export const visitListQuerySchema = z
+  .object({
+    clientId: z.string().uuid().optional(),
+    status: z.nativeEnum(VisitStatus).optional(),
+    visitType: z.nativeEnum(VisitType).optional(),
+    dateFrom: simpleDateSchema.optional(),
+    dateTo: simpleDateSchema.optional()
+  })
+  .refine(dateRangeRefinement, {
+    message: "dateFrom cannot be greater than dateTo",
+    path: ["dateFrom"]
+  });
 
-export const visitDraftItemInputSchema = z.object({
-  productId: z.string().uuid(),
-  clientProductId: z.string().uuid().nullable().optional(),
-  quantityPrevious: nonNegativeIntSchema,
-  quantityGoodRemaining: nonNegativeIntSchema,
-  quantityDefectiveReturn: nonNegativeIntSchema,
-  quantityLoss: nonNegativeIntSchema,
-  unitPrice: nonNegativeNumberSchema.optional(),
-  suggestedRestockQuantity: nonNegativeIntSchema.optional().default(0),
-  restockedQuantity: nonNegativeIntSchema.optional().default(0),
-  notes: z.string().trim().optional()
-});
+export const visitDraftItemInputSchema = z
+  .object({
+    productId: z.string().uuid(),
+    clientProductId: z.string().uuid().nullable().optional(),
+    quantityPrevious: nonNegativeIntSchema,
+    quantityGoodRemaining: nonNegativeIntSchema,
+    quantityDefectiveReturn: nonNegativeIntSchema,
+    quantityLoss: nonNegativeIntSchema,
+    unitPrice: optionalNonNegativeMoneySchema,
+    suggestedRestockQuantity: optionalNonNegativeIntSchema.default(0),
+    restockedQuantity: optionalNonNegativeIntSchema.default(0),
+    notes: optionalTrimmedString(1000)
+  })
+  .strict()
+  .superRefine((item, context) => {
+    const accountedQuantity = item.quantityGoodRemaining + item.quantityDefectiveReturn + item.quantityLoss;
 
-export const bulkUpsertVisitItemsBodySchema = z.object({
-  items: z.array(visitDraftItemInputSchema).min(1)
-});
+    if (accountedQuantity > item.quantityPrevious) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "A soma de saldo restante, trocas e perdas nao pode passar da quantidade anterior",
+        path: ["quantityGoodRemaining"]
+      });
+    }
+  });
+
+export const bulkUpsertVisitItemsBodySchema = z
+  .object({
+    items: z.array(visitDraftItemInputSchema).min(1).max(200)
+  })
+  .strict();
 
 export const patchVisitItemBodySchema = z
   .object({
     clientProductId: z.string().uuid().nullable().optional(),
-    quantityPrevious: nonNegativeIntSchema.optional(),
-    quantityGoodRemaining: nonNegativeIntSchema.optional(),
-    quantityDefectiveReturn: nonNegativeIntSchema.optional(),
-    quantityLoss: nonNegativeIntSchema.optional(),
-    unitPrice: nonNegativeNumberSchema.optional(),
-    suggestedRestockQuantity: nonNegativeIntSchema.optional(),
-    restockedQuantity: nonNegativeIntSchema.optional(),
-    notes: z.string().trim().optional()
+    quantityPrevious: optionalNonNegativeIntSchema,
+    quantityGoodRemaining: optionalNonNegativeIntSchema,
+    quantityDefectiveReturn: optionalNonNegativeIntSchema,
+    quantityLoss: optionalNonNegativeIntSchema,
+    unitPrice: optionalNonNegativeMoneySchema,
+    suggestedRestockQuantity: optionalNonNegativeIntSchema,
+    restockedQuantity: optionalNonNegativeIntSchema,
+    notes: optionalTrimmedString(1000)
   })
+  .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one field must be provided"
   });
@@ -114,8 +111,8 @@ export const patchVisitItemBodySchema = z
 const initialPaymentSchema = z
   .object({
     paymentMethod: z.nativeEnum(PaymentMethod),
-    reference: z.string().trim().optional(),
-    notes: z.string().trim().optional()
+    reference: optionalTrimmedString(160),
+    notes: optionalTrimmedString(2000)
   })
   .strict();
 
@@ -130,8 +127,8 @@ const supportedSignatureMimeTypeSchema = z.enum(["image/png", "image/jpeg", "ima
 
 export const putVisitSignatureBodySchema = z
   .object({
-    signatureName: z.string().trim().min(1).max(160),
+    signatureName: requiredTrimmedString(160),
     mimeType: supportedSignatureMimeTypeSchema,
-    signatureImageBase64: z.string().trim().min(1)
+    signatureImageBase64: z.string().trim().min(1).max(7_000_000)
   })
   .strict();

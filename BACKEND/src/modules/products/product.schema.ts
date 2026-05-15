@@ -1,45 +1,45 @@
 import { z } from "zod";
 
-const nonEmptyString = z.string().trim().min(1);
-const optionalText = z.string().trim().min(1).optional();
-const optionalMoney = z.preprocess((value) => {
-  if (value === undefined || value === "") {
-    return undefined;
-  }
-
-  if (value === null) {
-    return null;
-  }
-
-  return value;
-}, z.coerce.number().min(0).nullable().optional());
+import {
+  booleanQuerySchema,
+  nonNegativeMoneySchema,
+  optionalNullableNonNegativeMoneySchema,
+  optionalTrimmedString,
+  requiredTrimmedString
+} from "../../shared/validation/schemas";
 
 export const productIdParamSchema = z.object({
   id: z.string().uuid()
 });
 
 export const productListQuerySchema = z.object({
-  search: z.string().trim().optional(),
-  isActive: z.coerce.boolean().optional()
+  search: optionalTrimmedString(120),
+  isActive: booleanQuerySchema
 });
 
-export const createProductBodySchema = z.object({
-  sku: nonEmptyString.max(120),
-  name: nonEmptyString.max(200),
-  category: optionalText,
-  brand: optionalText,
-  model: optionalText,
-  color: optionalText,
-  voltage: optionalText,
-  connectorType: optionalText,
-  basePrice: z.coerce.number().min(0).default(0),
-  costPrice: optionalMoney,
-  isActive: z.boolean().optional().default(true)
-});
+export const createProductBodySchema = z
+  .object({
+    sku: requiredTrimmedString(120),
+    name: requiredTrimmedString(200),
+    category: optionalTrimmedString(120),
+    brand: optionalTrimmedString(120),
+    model: optionalTrimmedString(120),
+    color: optionalTrimmedString(80),
+    voltage: optionalTrimmedString(80),
+    connectorType: optionalTrimmedString(80),
+    basePrice: nonNegativeMoneySchema.default(0),
+    costPrice: optionalNullableNonNegativeMoneySchema,
+    isActive: z.boolean().optional().default(true)
+  })
+  .strict();
 
 export const updateProductBodySchema = createProductBodySchema
   .omit({ sku: true })
   .partial()
   .extend({
-    sku: nonEmptyString.max(120).optional()
+    sku: requiredTrimmedString(120).optional()
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "Informe ao menos um campo para atualizar"
   });
