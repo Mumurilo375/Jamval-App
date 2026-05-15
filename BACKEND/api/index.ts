@@ -13,7 +13,10 @@ async function getApp() {
   return appPromise;
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+) {
   const app = await getApp();
   await app.ready();
   app.server.emit("request", req, res);

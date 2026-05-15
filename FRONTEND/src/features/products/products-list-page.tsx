@@ -2,7 +2,18 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, PaginationControls, Select, StatusBadge } from "../../components/ui";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Input,
+  PageHeader,
+  PageLoader,
+  PaginationControls,
+  Select,
+  StatusBadge,
+} from "../../components/ui";
 import { formatCurrency } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import { listProducts } from "./products-api";
@@ -17,16 +28,20 @@ export function ProductsListPage() {
   const filters = useMemo(
     () => ({
       search: search.trim() || undefined,
-      isActive: status === "all" ? undefined : status === "active"
+      isActive: status === "all" ? undefined : status === "active",
     }),
-    [search, status]
+    [search, status],
   );
 
   const productsQuery = useQuery({
     queryKey: ["products", filters],
-    queryFn: () => listProducts(filters)
+    queryFn: () => listProducts(filters),
   });
-  const paginatedProducts = paginateItems(productsQuery.data ?? [], page, PRODUCTS_PAGE_SIZE);
+  const paginatedProducts = paginateItems(
+    productsQuery.data ?? [],
+    page,
+    PRODUCTS_PAGE_SIZE,
+  );
 
   return (
     <div className="space-y-4">
@@ -42,8 +57,12 @@ export function ProductsListPage() {
       />
 
       <Card className="space-y-2">
-        <p className="text-sm font-semibold text-[var(--jam-ink)]">Custo de referencia do produto</p>
-        <p className="text-sm text-[var(--jam-subtle)]">O custo real usado na operacao vem das entradas de estoque.</p>
+        <p className="text-sm font-semibold text-[var(--jam-ink)]">
+          Custo de referencia do produto
+        </p>
+        <p className="text-sm text-[var(--jam-subtle)]">
+          O custo real usado na operacao vem das entradas de estoque.
+        </p>
       </Card>
 
       <Card className="space-y-3">
@@ -73,13 +92,20 @@ export function ProductsListPage() {
         </Field>
       </Card>
 
-      {productsQuery.isPending ? <PageLoader label="Carregando produtos..." /> : null}
-
-      {productsQuery.isError ? (
-        <EmptyState title="Falha ao carregar produtos" message="Confira a conexao com o backend e tente novamente." />
+      {productsQuery.isPending ? (
+        <PageLoader label="Carregando produtos..." />
       ) : null}
 
-      {!productsQuery.isPending && !productsQuery.isError && productsQuery.data?.length === 0 ? (
+      {productsQuery.isError ? (
+        <EmptyState
+          title="Falha ao carregar produtos"
+          message="Confira a conexao com o backend e tente novamente."
+        />
+      ) : null}
+
+      {!productsQuery.isPending &&
+      !productsQuery.isError &&
+      productsQuery.data?.length === 0 ? (
         <EmptyState
           title="Nenhum produto encontrado"
           message="Comece cadastrando os itens principais do consignado."
@@ -91,24 +117,36 @@ export function ProductsListPage() {
         />
       ) : null}
 
-      <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {paginatedProducts.pageItems.map((product) => (
           <Card key={product.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-base font-semibold text-[var(--jam-ink)]">{product.name}</p>
-                <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{product.sku}</p>
+                <p className="truncate text-base font-semibold text-[var(--jam-ink)]">
+                  {product.name}
+                </p>
+                <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">
+                  {product.sku}
+                </p>
               </div>
               <StatusBadge active={product.isActive} />
             </div>
 
             <div className="grid grid-cols-[1fr_auto] items-center gap-3 text-sm">
               <div className="min-w-0">
-                <p className="truncate text-sm text-[var(--jam-subtle)]">{product.brand ?? "Sem marca"} · {product.category ?? "Sem categoria"}</p>
+                <p className="truncate text-sm text-[var(--jam-subtle)]">
+                  {product.brand ?? "Sem marca"} ·{" "}
+                  {product.category ?? "Sem categoria"}
+                </p>
                 <div className="mt-2 grid gap-1">
-                  <p className="text-sm font-semibold text-[var(--jam-ink)]">Preco base: {formatCurrency(Number(product.basePrice))}</p>
+                  <p className="text-sm font-semibold text-[var(--jam-ink)]">
+                    Preco base: {formatCurrency(Number(product.basePrice))}
+                  </p>
                   <p className="text-sm text-[var(--jam-subtle)]">
-                    Custo de referencia: {product.costPrice === null ? "Sem referencia cadastrada" : formatCurrency(Number(product.costPrice))}
+                    Custo de referencia:{" "}
+                    {product.costPrice === null
+                      ? "Sem referencia cadastrada"
+                      : formatCurrency(Number(product.costPrice))}
                   </p>
                 </div>
               </div>
