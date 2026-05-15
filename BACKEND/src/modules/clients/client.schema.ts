@@ -6,6 +6,7 @@ import {
   optionalCnpjSchema,
   optionalPhoneSchema,
   optionalPositiveVisitCycleDaysSchema,
+  optionalStateRegistrationSchema,
   optionalTrimmedString,
   optionalZipcodeSchema,
   requiredTrimmedString
@@ -25,7 +26,7 @@ export const createClientBodySchema = z
     tradeName: requiredTrimmedString(200),
     legalName: optionalTrimmedString(200),
     documentNumber: optionalCnpjSchema,
-    stateRegistration: optionalTrimmedString(32),
+    stateRegistration: optionalStateRegistrationSchema,
     contactName: optionalTrimmedString(160),
     phone: optionalPhoneSchema,
     addressLine: optionalTrimmedString(200),

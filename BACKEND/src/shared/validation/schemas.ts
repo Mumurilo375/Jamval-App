@@ -155,6 +155,16 @@ export const optionalBrazilStateSchema = z.preprocess(
     .optional()
 );
 
+export const optionalStateRegistrationSchema = z.preprocess(
+  emptyStringToUndefined,
+  z
+    .string()
+    .trim()
+    .refine((value) => /^\d{8,12}$/.test(onlyDigits(value)), "Informe uma inscricao estadual com 8 a 12 digitos")
+    .transform(onlyDigits)
+    .optional()
+);
+
 export const optionalPositiveVisitCycleDaysSchema = z.preprocess(
   parseOptionalNumericValue,
   z.number().int().positive().max(MAX_VISIT_CYCLE_DAYS).optional()

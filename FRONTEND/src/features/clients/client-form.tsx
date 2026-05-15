@@ -23,7 +23,9 @@ const clientFormSchema = z.object({
   documentNumber: z
     .string()
     .refine((value) => value.trim() === "" || onlyDigits(value).length === 14, "Informe o CNPJ no formato 00.000.000/0001-00"),
-  stateRegistration: z.string().max(32, "Use ate 32 caracteres"),
+  stateRegistration: z
+    .string()
+    .refine((value) => value.trim() === "" || /^\d{8,12}$/.test(onlyDigits(value)), "Informe de 8 a 12 digitos"),
   contactName: z.string().max(160, "Use ate 160 caracteres"),
   phone: z
     .string()
@@ -82,6 +84,7 @@ export function ClientForm({ mode, client }: ClientFormProps) {
     }
   });
   const documentNumberRegistration = register("documentNumber");
+  const stateRegistrationRegistration = register("stateRegistration");
   const phoneRegistration = register("phone");
   const addressStateRegistration = register("addressState");
   const addressZipcodeRegistration = register("addressZipcode");
@@ -92,7 +95,7 @@ export function ClientForm({ mode, client }: ClientFormProps) {
         tradeName: values.tradeName.trim(),
         legalName: toOptionalString(values.legalName),
         documentNumber: toOptionalString(values.documentNumber),
-        stateRegistration: toOptionalString(values.stateRegistration),
+        stateRegistration: toOptionalString(onlyDigits(values.stateRegistration)),
         contactName: toOptionalString(values.contactName),
         phone: toOptionalString(values.phone),
         addressLine: toOptionalString(values.addressLine),
@@ -163,7 +166,16 @@ export function ClientForm({ mode, client }: ClientFormProps) {
           </Field>
 
           <Field label="Inscricao estadual" error={errors.stateRegistration?.message}>
-            <Input placeholder="123.456.789.000" maxLength={32} {...register("stateRegistration")} />
+            <Input
+              placeholder="123456789"
+              inputMode="numeric"
+              maxLength={12}
+              {...stateRegistrationRegistration}
+              onChange={(event) => {
+                event.target.value = onlyDigits(event.target.value).slice(0, 12);
+                void stateRegistrationRegistration.onChange(event);
+              }}
+            />
           </Field>
 
           <Field label="Ciclo de visita (dias)" error={errors.visitCycleDays?.message}>
@@ -182,7 +194,7 @@ export function ClientForm({ mode, client }: ClientFormProps) {
 
           <Field label="UF" error={errors.addressState?.message}>
             <Input
-              placeholder="SP"
+              placeholder="PR"
               maxLength={2}
               {...addressStateRegistration}
               onChange={(event) => {
