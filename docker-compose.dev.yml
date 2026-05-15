@@ -1,0 +1,74 @@
+name: ${COMPOSE_PROJECT_NAME:-jamval-dev}
+
+services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - jamval_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:20-bookworm-slim}
+    working_dir: /workspace
+    command: npm run dev --workspace backend
+    ports:
+      - "${BACKEND_PORT:-3333}:${BACKEND_PORT:-3333}"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      HOST: ${BACKEND_HOST:-0.0.0.0}
+      PORT: ${BACKEND_PORT:-3333}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      AUTH_SESSION_TTL_HOURS: ${AUTH_SESSION_TTL_HOURS:-168}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:-jamval_session}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      DB_SYNC: ${DB_SYNC:-true}
+      DB_NAME: ${DB_NAME:?DB_NAME is required}
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_LOGGING: ${DB_LOGGING:-false}
+      STORAGE_ROOT: ${STORAGE_ROOT:-}
+    volumes:
+      - ./:/workspace
+      - jamval_node_modules:/workspace/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:20-bookworm-slim}
+    working_dir: /workspace
+    command: npm run dev --workspace frontend -- --host ${FRONTEND_HOST:-0.0.0.0} --port ${FRONTEND_PORT:-5173}
+    ports:
+      - "${FRONTEND_PORT:-5173}:${FRONTEND_PORT:-5173}"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+      VITE_API_PROXY_TARGET: ${VITE_API_PROXY_TARGET:-http://backend:3333}
+    volumes:
+      - ./:/workspace
+      - jamval_node_modules:/workspace/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  jamval_db_data:
+  jamval_node_modules:

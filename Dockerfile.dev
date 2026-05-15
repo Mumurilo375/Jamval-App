@@ -1,0 +1,12 @@
+ARG NODE_IMAGE=node:20-bookworm-slim
+FROM ${NODE_IMAGE}
+
+WORKDIR /workspace
+
+COPY package.json package-lock.json ./
+COPY BACKEND/package.json BACKEND/package.json
+COPY FRONTEND/package.json FRONTEND/package.json
+
+RUN npm ci
+
+CMD ["bash"]
