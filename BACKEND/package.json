@@ -7,6 +7,7 @@
     "predev": "npm run prisma:sync-client",
     "preadmin:create": "npm run prisma:sync-client",
     "dev": "tsx watch src/server.ts",
+    "postinstall": "npm run prisma:generate",
     "prebuild": "npm run prisma:sync-client",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
