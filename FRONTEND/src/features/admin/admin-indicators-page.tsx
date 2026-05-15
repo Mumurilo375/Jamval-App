@@ -1,7 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, PageHeader, PageLoader, StatusBadge } from "../../components/ui";
+import {
+  Button,
+  PageHeader,
+  PageLoader,
+  StatusBadge,
+} from "../../components/ui";
 import { formatCurrency } from "../../lib/format";
 import { getAdminIndicators } from "./admin-api";
 import {
@@ -10,13 +15,13 @@ import {
   AdminListRow,
   AdminMetricCard,
   AdminQueryErrorState,
-  AdminSectionCard
+  AdminSectionCard,
 } from "./admin-ui";
 
 export function AdminIndicatorsPage() {
   const indicatorsQuery = useQuery({
     queryKey: ["admin", "indicators"],
-    queryFn: () => getAdminIndicators()
+    queryFn: () => getAdminIndicators(),
   });
 
   if (indicatorsQuery.isPending) {
@@ -33,9 +38,17 @@ export function AdminIndicatorsPage() {
     );
   }
 
-  const { counts, productsWithoutCost, productsWithoutCentralStock, topSellingProducts, topClientsByOutstanding } =
-    indicatorsQuery.data;
-  const maxSoldUnits = Math.max(...topSellingProducts.map((product) => product.soldUnits), 1);
+  const {
+    counts,
+    productsWithoutCost,
+    productsWithoutCentralStock,
+    topSellingProducts,
+    topClientsByOutstanding,
+  } = indicatorsQuery.data;
+  const maxSoldUnits = Math.max(
+    ...topSellingProducts.map((product) => product.soldUnits),
+    1,
+  );
 
   return (
     <div className="space-y-4">
@@ -52,7 +65,7 @@ export function AdminIndicatorsPage() {
           tone={counts.productsWithoutCentralStock > 0 ? "warning" : "success"}
         />
         <AdminMetricCard
-          label="Produtos sem custo de referencia"
+          label="Produtos sem custo de compra"
           value={String(counts.productsWithoutCost)}
           tone={counts.productsWithoutCost > 0 ? "warning" : "success"}
         />
@@ -98,7 +111,7 @@ export function AdminIndicatorsPage() {
         <AdminSectionCard
           eyebrow="Cobertura"
           title="Cobertura de custo"
-          description="Produtos que ainda precisam de custo de referencia para reduzir fallback no lucro."
+          description="Produtos que ainda precisam de custo de compra para reduzir fallback no lucro."
           action={
             <Link to="/products">
               <Button variant="secondary" className="w-full sm:w-auto">
@@ -109,8 +122,8 @@ export function AdminIndicatorsPage() {
         >
           {productsWithoutCost.length === 0 ? (
             <AdminEmptyBlock
-              title="Boa cobertura de referencia"
-              message="Os produtos listados nesta amostra ja possuem custo de referencia cadastrado."
+              title="Boa cobertura de compra"
+              message="Os produtos listados nesta amostra ja possuem custo de compra cadastrado."
             />
           ) : (
             <div className="space-y-2">

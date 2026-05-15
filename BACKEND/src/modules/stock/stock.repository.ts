@@ -377,10 +377,7 @@ export class StockRepository {
               ? [CentralStockMovementType.RESTOCK_TO_CLIENT, CentralStockMovementType.DIRECT_SALE_OUT]
               : [CentralStockMovementType.RESTOCK_TO_CLIENT]
           },
-          referenceType: "VISIT",
-          referenceId: {
-            not: null
-          }
+          referenceType: "VISIT"
         },
         select: {
           id: true,
@@ -406,10 +403,7 @@ export class StockRepository {
       return db.centralStockMovement.findMany({
         where: {
           movementType: "RESTOCK_TO_CLIENT",
-          referenceType: "VISIT",
-          referenceId: {
-            not: null
-          }
+          referenceType: "VISIT"
         },
         select: {
           id: true,

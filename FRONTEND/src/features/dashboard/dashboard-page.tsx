@@ -1,12 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, CompactLinkRow, EmptyState, PageHeader, PageLoader, SectionHeader } from "../../components/ui";
+import {
+  Button,
+  Card,
+  EmptyState,
+  PageHeader,
+  PageLoader,
+  SectionHeader,
+} from "../../components/ui";
 import {
   HistoryList,
   InProgressList,
   ReturnQueueList,
-  StartVisitErrorBanner
+  StartVisitErrorBanner,
 } from "../visits/operational-queue";
 import { useStartConsignmentVisit } from "../visits/use-start-consignment-visit";
 import { listOperationalVisitQueue } from "../visits/visits-api";
@@ -14,7 +21,7 @@ import { listOperationalVisitQueue } from "../visits/visits-api";
 export function DashboardPage() {
   const queueQuery = useQuery({
     queryKey: ["visits", "operational-queue"],
-    queryFn: () => listOperationalVisitQueue()
+    queryFn: () => listOperationalVisitQueue(),
   });
   const startVisit = useStartConsignmentVisit();
 
@@ -34,11 +41,15 @@ export function DashboardPage() {
   const queue = queueQuery.data;
   const mainAction = queue.mainAction;
   const hasOpenVisit = mainAction.mode === "continue" && mainAction.visitId;
-  const mainActionTitle = hasOpenVisit ? "Continuar atendimento em aberto" : "Nova visita";
+  const mainActionTitle = hasOpenVisit
+    ? "Continuar atendimento em aberto"
+    : "Nova visita";
   const mainActionSubtitle = hasOpenVisit
     ? `${mainAction.clientName ?? "Cliente"} • ${mainAction.visitCode ?? ""}`
     : "Abra uma nova visita quando nao houver atendimento em aberto.";
-  const mainActionHref = hasOpenVisit ? `/visits/${mainAction.visitId}` : "/visits/new";
+  const mainActionHref = hasOpenVisit
+    ? `/visits/${mainAction.visitId}`
+    : "/visits/new";
   const mainActionLabel = hasOpenVisit ? "Continuar" : "Nova visita";
 
   return (
@@ -50,11 +61,17 @@ export function DashboardPage() {
       />
 
       <Card className="space-y-3 border-[rgba(29,78,216,0.18)] bg-[rgba(29,78,216,0.05)]">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-accent)]">Acao principal</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-accent)]">
+          Acao principal
+        </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-base font-semibold text-[var(--jam-ink)]">{mainActionTitle}</p>
-            <p className="mt-1 text-sm text-[var(--jam-subtle)]">{mainActionSubtitle}</p>
+            <p className="text-base font-semibold text-[var(--jam-ink)]">
+              {mainActionTitle}
+            </p>
+            <p className="mt-1 text-sm text-[var(--jam-subtle)]">
+              {mainActionSubtitle}
+            </p>
           </div>
 
           <Link to={mainActionHref}>
@@ -133,24 +150,57 @@ export function DashboardPage() {
           subtitle="Acessos secundarios sem competir com a fila principal."
         />
 
-        <div className="space-y-2">
-          <ShortcutLink to="/financeiro" title="Financeiro" />
-          <ShortcutLink to="/clients" title="Clientes" />
-          <ShortcutLink to="/products" title="Produtos" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <ShortcutLink
+            to="/financeiro"
+            title="Financeiro"
+            iconSrc="/icones/financeiro.png"
+          />
+          <ShortcutLink
+            to="/clients"
+            title="Clientes"
+            iconSrc="/icones/customer.png"
+          />
+          <ShortcutLink
+            to="/products"
+            title="Produtos"
+            iconSrc="/icones/carregador.png"
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function ShortcutLink({ to, title }: { to: string; title: string }) {
+function ShortcutLink({
+  to,
+  title,
+  iconSrc,
+}: {
+  to: string;
+  title: string;
+  iconSrc: string;
+}) {
   return (
     <Link to={to}>
-      <CompactLinkRow
-        title={title}
-        right={<span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-accent)]">Abrir</span>}
-        className="transition hover:border-[rgba(29,78,216,0.18)]"
-      />
+      <div className="flex h-full min-h-[88px] flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] px-4 py-4 text-center shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition active:scale-[0.99] hover:border-[rgba(29,78,216,0.18)] hover:bg-[var(--jam-panel-strong)]">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[var(--jam-accent-soft)]">
+          <img
+            src={iconSrc}
+            alt=""
+            aria-hidden="true"
+            className="h-6 w-6 object-contain"
+          />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--jam-ink)] sm:text-base">
+            {title}
+          </p>
+          <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-accent)]">
+            Abrir
+          </p>
+        </div>
+      </div>
     </Link>
   );
 }

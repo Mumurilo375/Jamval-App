@@ -155,7 +155,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
             Voltar
           </Button>
           <Button type="submit" className="w-full sm:flex-1" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar visita" : "Salvar visita"}
+            {mutation.isPending ? "Salvando..." : mode === "create" ? "Iniciar visita" : "Salvar visita"}
           </Button>
         </div>
       </form>

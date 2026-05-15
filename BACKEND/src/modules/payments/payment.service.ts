@@ -17,7 +17,7 @@ export class PaymentService {
 
   async create(receivableId: string, input: CreatePaymentInput) {
     const result = await prisma.$transaction(async (tx) => {
-      const receivable = await this.receivableRepository.findById(receivableId, tx);
+      const receivable = await this.receivableRepository.lockByIdForUpdate(receivableId, tx);
 
       if (!receivable) {
         throw new NotFoundError("Receivable not found", { id: receivableId });

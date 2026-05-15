@@ -49,6 +49,17 @@ export class ReceivableRepository {
     return db.receivable.findUnique({ where: { id } });
   }
 
+  async lockByIdForUpdate(id: string, db: DbClient = prisma): Promise<Receivable | null> {
+    const rows = await db.$queryRaw<Receivable[]>`
+      SELECT *
+      FROM "Receivable"
+      WHERE "id" = ${id}::uuid
+      FOR UPDATE
+    `;
+
+    return rows[0] ?? null;
+  }
+
   async findByIdWithDetails(id: string, db: DbClient = prisma): Promise<ReceivableDetailItem | null> {
     return db.receivable.findUnique({
       where: { id },

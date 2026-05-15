@@ -48,7 +48,6 @@ export function ProductsListPage() {
       <PageHeader
         eyebrow="Cadastros"
         title="Produtos"
-        subtitle="SKUs, preco base e custo de referencia para apoiar a operacao."
         action={
           <Link to="/products/new">
             <Button>Novo</Button>
@@ -58,7 +57,7 @@ export function ProductsListPage() {
 
       <Card className="space-y-2">
         <p className="text-sm font-semibold text-[var(--jam-ink)]">
-          Custo de referencia do produto
+          Custo de compra do produto
         </p>
         <p className="text-sm text-[var(--jam-subtle)]">
           O custo real usado na operacao vem das entradas de estoque.
@@ -143,9 +142,9 @@ export function ProductsListPage() {
                     Preco base: {formatCurrency(Number(product.basePrice))}
                   </p>
                   <p className="text-sm text-[var(--jam-subtle)]">
-                    Custo de referencia:{" "}
+                    Custo de compra:{" "}
                     {product.costPrice === null
-                      ? "Sem referencia cadastrada"
+                      ? "Sem custo de compra cadastrado"
                       : formatCurrency(Number(product.costPrice))}
                   </p>
                 </div>

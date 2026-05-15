@@ -127,10 +127,7 @@ export class StockService {
     const visitIds = Array.from(
       new Set(
         movements
-          .filter(
-            (movement): movement is typeof movement & { referenceId: string } =>
-              movement.referenceType === StockReferenceType.VISIT && Boolean(movement.referenceId)
-          )
+          .filter((movement) => movement.referenceType === StockReferenceType.VISIT)
           .map((movement) => movement.referenceId)
       )
     );
@@ -140,7 +137,7 @@ export class StockService {
 
     return movements
       .map((movement) => {
-        const visit = movement.referenceId ? visitById.get(movement.referenceId) : undefined;
+        const visit = visitById.get(movement.referenceId);
         const referenceLabel = buildReferenceLabel(movement.referenceType, movement.movementType, visit);
 
         return {
@@ -197,11 +194,7 @@ export class StockService {
   > {
     const movements = await this.repository.listCentralVisitOutflowMovements();
     const visitIds = Array.from(
-      new Set(
-        movements
-          .filter((movement): movement is typeof movement & { referenceId: string } => Boolean(movement.referenceId))
-          .map((movement) => movement.referenceId)
-      )
+      new Set(movements.map((movement) => movement.referenceId))
     );
     const visits = await this.repository.findVisitsByIds(visitIds);
     const visitById = new Map(visits.map((visit) => [visit.id, visit]));
@@ -227,10 +220,6 @@ export class StockService {
     >();
 
     for (const movement of movements) {
-      if (!movement.referenceId) {
-        continue;
-      }
-
       const visit = visitById.get(movement.referenceId);
 
       if (!visit || !isWithinDateRange(visit.visitedAt, filters.dateFrom, filters.dateTo)) {
@@ -279,6 +268,8 @@ export class StockService {
     const productIds = items.map((item) => item.productId);
 
     await prisma.$transaction(async (tx) => {
+      await lockCentralInitialLoad(tx);
+
       const existingMovements = await this.repository.countCentralMovements(tx);
 
       if (existingMovements > 0) {
@@ -418,6 +409,12 @@ function normalizeBatchItems(
   }
 
   return normalized;
+}
+
+async function lockCentralInitialLoad(db: DbClient): Promise<void> {
+  await db.$queryRaw`
+    SELECT pg_advisory_xact_lock(hashtext('jamval:central_initial_load'))
+  `;
 }
 
 function buildReferenceLabel(
