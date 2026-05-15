@@ -91,7 +91,7 @@ type RowViewModel = {
 };
 
 export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlowProps) {
-  return <ConsignmentVisitFlowContent key={`${visit.id}:${visit.updatedAt}`} visit={visit} clientName={clientName} />;
+  return <ConsignmentVisitFlowContent key={visit.id} visit={visit} clientName={clientName} />;
 }
 
 function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlowProps) {
@@ -850,7 +850,7 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
               {saveBusy ? "Salvando..." : "Salvar visita"}
             </Button>
             <Button disabled={isBusy || !canConclude} onClick={() => void onConclude()}>
-              {completeMutation.isPending ? "Concluindo..." : "Concluir visita"}
+              {saveBusy ? "Salvando..." : completeMutation.isPending ? "Concluindo..." : "Concluir visita"}
             </Button>
           </div>
         ) : (

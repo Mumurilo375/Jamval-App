@@ -59,7 +59,7 @@ type RemovedItem = {
 };
 
 export function DirectSaleVisitFlow({ visit, clientName }: DirectSaleVisitFlowProps) {
-  return <DirectSaleVisitFlowContent key={`${visit.id}:${visit.updatedAt}`} visit={visit} clientName={clientName} />;
+  return <DirectSaleVisitFlowContent key={visit.id} visit={visit} clientName={clientName} />;
 }
 
 function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowProps) {
@@ -134,6 +134,7 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
       await queryClient.invalidateQueries({ queryKey: ["stock"] });
     }
   });
+  const saveBusy = saveItemsMutation.isPending || saveMetadataMutation.isPending || deleteItemMutation.isPending;
 
   const onConfirmPaymentAndConclude = async () => {
     if (!paymentMethods.some((method) => method === paymentMethod)) {
@@ -376,8 +377,12 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
 
         {isDraft ? (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button variant="secondary" onClick={() => void saveDraft()} disabled={saveItemsMutation.isPending || saveMetadataMutation.isPending || deleteItemMutation.isPending}>Salvar visita</Button>
-            <Button onClick={() => void onConclude()} disabled={completeMutation.isPending || rows.length === 0}>Concluir venda</Button>
+            <Button variant="secondary" onClick={() => void saveDraft()} disabled={saveBusy}>
+              {saveBusy ? "Salvando..." : "Salvar visita"}
+            </Button>
+            <Button onClick={() => void onConclude()} disabled={saveBusy || completeMutation.isPending || rows.length === 0}>
+              {saveBusy ? "Salvando..." : completeMutation.isPending ? "Concluindo..." : "Concluir venda"}
+            </Button>
           </div>
         ) : (
           <p className="text-sm text-[var(--jam-subtle)]">{visit.status === "COMPLETED" ? "A venda foi concluida e ficou apenas para leitura." : "A venda foi cancelada e ficou apenas para consulta."}</p>
