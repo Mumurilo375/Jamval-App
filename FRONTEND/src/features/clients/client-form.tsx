@@ -6,26 +6,42 @@ import { z } from "zod";
 
 import { Button, Card, Checkbox, ErrorBanner, Field, Input, Textarea } from "../../components/ui";
 import { ApiError } from "../../lib/api";
-import { toOptionalNumber, toOptionalString } from "../../lib/forms";
+import { isPositiveIntegerInput, toOptionalNumber, toOptionalString } from "../../lib/forms";
+import {
+  formatBrazilStateInput,
+  formatCnpjInput,
+  formatPhoneInput,
+  formatZipcodeInput,
+  onlyDigits
+} from "../../lib/format";
 import type { Client } from "../../types/domain";
 import { createClient, updateClient } from "./clients-api";
 
 const clientFormSchema = z.object({
-  tradeName: z.string().trim().min(1, "Informe o nome fantasia"),
-  legalName: z.string(),
-  documentNumber: z.string(),
-  stateRegistration: z.string(),
-  contactName: z.string(),
-  phone: z.string(),
-  addressLine: z.string(),
-  addressCity: z.string(),
-  addressState: z.string(),
-  addressZipcode: z.string(),
-  notes: z.string(),
+  tradeName: z.string().trim().min(1, "Informe o nome fantasia").max(200, "Use ate 200 caracteres"),
+  legalName: z.string().max(200, "Use ate 200 caracteres"),
+  documentNumber: z
+    .string()
+    .refine((value) => value.trim() === "" || onlyDigits(value).length === 14, "Informe o CNPJ no formato 00.000.000/0001-00"),
+  stateRegistration: z.string().max(32, "Use ate 32 caracteres"),
+  contactName: z.string().max(160, "Use ate 160 caracteres"),
+  phone: z
+    .string()
+    .refine((value) => value.trim() === "" || [10, 11].includes(onlyDigits(value).length), "Informe telefone com DDD"),
+  addressLine: z.string().max(200, "Use ate 200 caracteres"),
+  addressCity: z.string().max(120, "Use ate 120 caracteres"),
+  addressState: z
+    .string()
+    .refine((value) => value.trim() === "" || /^[A-Z]{2}$/.test(value.trim()), "Informe uma UF valida"),
+  addressZipcode: z
+    .string()
+    .refine((value) => value.trim() === "" || onlyDigits(value).length === 8, "Informe um CEP valido"),
+  notes: z.string().max(2000, "Use ate 2000 caracteres"),
   visitCycleDays: z
     .string()
     .trim()
-    .refine((value) => value === "" || (!Number.isNaN(Number(value)) && Number(value) > 0), "Informe um numero valido"),
+    .refine((value) => value === "" || isPositiveIntegerInput(value), "Informe um numero inteiro maior que zero")
+    .refine((value) => value === "" || Number(value) <= 3650, "Use ate 3650 dias"),
   requiresInvoice: z.boolean(),
   isActive: z.boolean()
 });
@@ -51,20 +67,24 @@ export function ClientForm({ mode, client }: ClientFormProps) {
     defaultValues: {
       tradeName: client?.tradeName ?? "",
       legalName: client?.legalName ?? "",
-      documentNumber: client?.documentNumber ?? "",
+      documentNumber: client?.documentNumber ? formatCnpjInput(client.documentNumber) : "",
       stateRegistration: client?.stateRegistration ?? "",
       contactName: client?.contactName ?? "",
-      phone: client?.phone ?? "",
+      phone: client?.phone ? formatPhoneInput(client.phone) : "",
       addressLine: client?.addressLine ?? "",
       addressCity: client?.addressCity ?? "",
-      addressState: client?.addressState ?? "",
-      addressZipcode: client?.addressZipcode ?? "",
+      addressState: client?.addressState ? formatBrazilStateInput(client.addressState) : "",
+      addressZipcode: client?.addressZipcode ? formatZipcodeInput(client.addressZipcode) : "",
       notes: client?.notes ?? "",
       visitCycleDays: client?.visitCycleDays ? String(client.visitCycleDays) : "",
       requiresInvoice: client?.requiresInvoice ?? false,
       isActive: client?.isActive ?? true
     }
   });
+  const documentNumberRegistration = register("documentNumber");
+  const phoneRegistration = register("phone");
+  const addressStateRegistration = register("addressState");
+  const addressZipcodeRegistration = register("addressZipcode");
 
   const mutation = useMutation({
     mutationFn: async (values: ClientFormValues) => {
@@ -104,28 +124,46 @@ export function ClientForm({ mode, client }: ClientFormProps) {
         {mutation.error instanceof ApiError ? <ErrorBanner message={mutation.error.message} /> : null}
 
         <Field label="Nome fantasia" error={errors.tradeName?.message}>
-          <Input placeholder="Loja Exemplo" {...register("tradeName")} />
+          <Input placeholder="Loja Exemplo" maxLength={200} {...register("tradeName")} />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Razao social">
-            <Input placeholder="Loja Exemplo LTDA" {...register("legalName")} />
+          <Field label="Razao social" error={errors.legalName?.message}>
+            <Input placeholder="Loja Exemplo LTDA" maxLength={200} {...register("legalName")} />
           </Field>
 
-          <Field label="Contato">
-            <Input placeholder="Joao" {...register("contactName")} />
+          <Field label="Contato" error={errors.contactName?.message}>
+            <Input placeholder="Joao" maxLength={160} {...register("contactName")} />
           </Field>
 
-          <Field label="Documento">
-            <Input placeholder="00.000.000/0001-00" {...register("documentNumber")} />
+          <Field label="Documento" error={errors.documentNumber?.message}>
+            <Input
+              placeholder="00.000.000/0001-00"
+              inputMode="numeric"
+              maxLength={18}
+              {...documentNumberRegistration}
+              onChange={(event) => {
+                event.target.value = formatCnpjInput(event.target.value);
+                void documentNumberRegistration.onChange(event);
+              }}
+            />
           </Field>
 
-          <Field label="Telefone">
-            <Input placeholder="(11) 99999-9999" {...register("phone")} />
+          <Field label="Telefone" error={errors.phone?.message}>
+            <Input
+              placeholder="(11) 99999-9999"
+              inputMode="tel"
+              maxLength={15}
+              {...phoneRegistration}
+              onChange={(event) => {
+                event.target.value = formatPhoneInput(event.target.value);
+                void phoneRegistration.onChange(event);
+              }}
+            />
           </Field>
 
-          <Field label="Inscricao estadual">
-            <Input placeholder="123.456.789.000" {...register("stateRegistration")} />
+          <Field label="Inscricao estadual" error={errors.stateRegistration?.message}>
+            <Input placeholder="123.456.789.000" maxLength={32} {...register("stateRegistration")} />
           </Field>
 
           <Field label="Ciclo de visita (dias)" error={errors.visitCycleDays?.message}>
@@ -133,26 +171,43 @@ export function ClientForm({ mode, client }: ClientFormProps) {
           </Field>
         </div>
 
-        <Field label="Endereco">
-          <Input placeholder="Rua, numero e bairro" {...register("addressLine")} />
+        <Field label="Endereco" error={errors.addressLine?.message}>
+          <Input placeholder="Rua, numero e bairro" maxLength={200} {...register("addressLine")} />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="Cidade">
-            <Input placeholder="Sao Paulo" {...register("addressCity")} />
+          <Field label="Cidade" error={errors.addressCity?.message}>
+            <Input placeholder="Sao Paulo" maxLength={120} {...register("addressCity")} />
           </Field>
 
-          <Field label="UF">
-            <Input placeholder="SP" maxLength={2} {...register("addressState")} />
+          <Field label="UF" error={errors.addressState?.message}>
+            <Input
+              placeholder="SP"
+              maxLength={2}
+              {...addressStateRegistration}
+              onChange={(event) => {
+                event.target.value = formatBrazilStateInput(event.target.value);
+                void addressStateRegistration.onChange(event);
+              }}
+            />
           </Field>
 
-          <Field label="CEP">
-            <Input placeholder="00000-000" {...register("addressZipcode")} />
+          <Field label="CEP" error={errors.addressZipcode?.message}>
+            <Input
+              placeholder="00000-000"
+              inputMode="numeric"
+              maxLength={9}
+              {...addressZipcodeRegistration}
+              onChange={(event) => {
+                event.target.value = formatZipcodeInput(event.target.value);
+                void addressZipcodeRegistration.onChange(event);
+              }}
+            />
           </Field>
         </div>
 
-        <Field label="Observacoes">
-          <Textarea placeholder="Notas importantes sobre o cliente" {...register("notes")} />
+        <Field label="Observacoes" error={errors.notes?.message}>
+          <Textarea placeholder="Notas importantes sobre o cliente" maxLength={2000} {...register("notes")} />
         </Field>
 
         <div className="grid gap-3">

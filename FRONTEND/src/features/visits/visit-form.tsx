@@ -15,7 +15,7 @@ const visitFormSchema = z.object({
   clientId: z.string().trim().min(1, "Selecione o cliente"),
   visitType: z.enum(["CONSIGNMENT", "SALE"]),
   visitedAt: z.string(),
-  notes: z.string()
+  notes: z.string().max(2000, "Use ate 2000 caracteres")
 });
 
 type VisitFormValues = z.infer<typeof visitFormSchema>;
@@ -142,8 +142,12 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
           />
         </Field>
 
-        <Field label="Observacoes" hint="O valor recebido fica para a etapa final, depois da conferencia dos itens.">
-          <Textarea placeholder="Resumo da visita, combinados ou pendencias" {...register("notes")} />
+        <Field
+          label="Observacoes"
+          hint="O valor recebido fica para a etapa final, depois da conferencia dos itens."
+          error={errors.notes?.message}
+        >
+          <Textarea placeholder="Resumo da visita, combinados ou pendencias" maxLength={2000} {...register("notes")} />
         </Field>
 
         <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">

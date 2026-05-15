@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Button, Card, Checkbox, ErrorBanner, Field, Input, PageLoader, Select } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { formatCurrency } from "../../lib/format";
-import { toNullableNumber } from "../../lib/forms";
+import { isNonNegativeIntegerInput, parseDecimalInput, toNullableNumber } from "../../lib/forms";
 import type { Client, ClientProduct } from "../../types/domain";
 import { listProducts } from "../products/products-api";
 import { createClientCatalogItem, updateClientCatalogItem } from "./catalog-api";
@@ -18,15 +18,15 @@ const catalogFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Informe o preco")
-    .refine((value) => !Number.isNaN(Number(value)) && Number(value) >= 0, "Informe um valor valido"),
+    .refine((value) => !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) >= 0, "Informe um valor valido"),
   idealQuantity: z
     .string()
     .trim()
-    .refine((value) => value === "" || (!Number.isNaN(Number(value)) && Number(value) >= 0), "Informe uma quantidade valida"),
+    .refine((value) => value === "" || isNonNegativeIntegerInput(value), "Informe uma quantidade inteira valida"),
   displayOrder: z
     .string()
     .trim()
-    .refine((value) => value === "" || (!Number.isNaN(Number(value)) && Number(value) >= 0), "Informe uma ordem valida"),
+    .refine((value) => value === "" || isNonNegativeIntegerInput(value), "Informe uma ordem inteira valida"),
   isActive: z.boolean()
 });
 
@@ -65,15 +65,14 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
   const mutation = useMutation({
     mutationFn: async (values: CatalogFormValues) => {
       const payload = {
-        productId: values.productId,
-        currentUnitPrice: Number(values.currentUnitPrice),
+        currentUnitPrice: parseDecimalInput(values.currentUnitPrice),
         idealQuantity: toNullableNumber(values.idealQuantity),
         displayOrder: toNullableNumber(values.displayOrder),
         isActive: values.isActive
       };
 
       return mode === "create"
-        ? createClientCatalogItem(client.id, payload)
+        ? createClientCatalogItem(client.id, { ...payload, productId: values.productId })
         : updateClientCatalogItem(client.id, item!.id, payload);
     },
     onSuccess: async () => {

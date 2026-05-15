@@ -136,7 +136,7 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
   });
 
   const onConfirmPaymentAndConclude = async () => {
-    if (!paymentMethod) {
+    if (!paymentMethods.some((method) => method === paymentMethod)) {
       return;
     }
 
@@ -390,7 +390,13 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
         <StepHeader step="Observacoes" title="Observacoes da venda" />
         {isDraft ? (
           <Field label="Anotacoes gerais">
-            <Textarea value={visitNotesInput} rows={4} onChange={(event) => setVisitNotesInput(event.target.value)} placeholder="Observacoes opcionais da venda" />
+            <Textarea
+              value={visitNotesInput}
+              rows={4}
+              maxLength={2000}
+              onChange={(event) => setVisitNotesInput(event.target.value)}
+              placeholder="Observacoes opcionais da venda"
+            />
           </Field>
         ) : (
           <p className="text-sm text-[var(--jam-subtle)]">{visit.notes || "Sem observacoes registradas."}</p>
@@ -420,10 +426,21 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
             </Select>
           </Field>
           <Field label="Referencia">
-            <Input value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} placeholder="PIX, dinheiro, maquina, banco" />
+            <Input
+              value={paymentReference}
+              maxLength={160}
+              onChange={(event) => setPaymentReference(event.target.value)}
+              placeholder="PIX, dinheiro, maquina, banco"
+            />
           </Field>
           <Field label="Observacoes">
-            <Textarea value={paymentNotes} rows={4} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Observacoes do pagamento inicial" />
+            <Textarea
+              value={paymentNotes}
+              rows={4}
+              maxLength={2000}
+              onChange={(event) => setPaymentNotes(event.target.value)}
+              placeholder="Observacoes do pagamento inicial"
+            />
           </Field>
         </div>
       </DrawerPanel>

@@ -15,25 +15,30 @@ import {
   PageLoader,
   SuccessBanner
 } from "../../components/ui";
-import { formatDateTime } from "../../lib/format";
+import { formatCnpjInput, formatDateTime, formatPhoneInput, onlyDigits } from "../../lib/format";
 import { toOptionalString } from "../../lib/forms";
 import { useLogout, useSessionUser } from "../auth/auth";
 import { getAdminCompanyProfile, updateAdminCompanyProfile } from "./admin-api";
 import { AdminInfoPanel, AdminQueryErrorState, AdminSectionCard } from "./admin-ui";
 
 const adminCompanyProfileSchema = z.object({
-  companyName: z.string().trim().min(1, "Informe o nome da empresa"),
-  document: z.string(),
-  phone: z.string(),
-  address: z.string(),
+  companyName: z.string().trim().min(1, "Informe o nome da empresa").max(200, "Use ate 200 caracteres"),
+  document: z
+    .string()
+    .refine((value) => value.trim() === "" || onlyDigits(value).length === 14, "Informe o CNPJ no formato 00.000.000/0001-00"),
+  phone: z
+    .string()
+    .refine((value) => value.trim() === "" || [10, 11].includes(onlyDigits(value).length), "Informe telefone com DDD"),
+  address: z.string().max(200, "Use ate 200 caracteres"),
   email: z
     .string()
     .trim()
+    .max(160, "Use ate 160 caracteres")
     .refine(
       (value) => value.length === 0 || z.string().email().safeParse(value).success,
       "Informe um email valido"
     ),
-  contactName: z.string()
+  contactName: z.string().max(160, "Use ate 160 caracteres")
 });
 
 type AdminCompanyProfileValues = z.infer<typeof adminCompanyProfileSchema>;
@@ -72,8 +77,8 @@ export function AdminSettingsPage() {
 
     reset({
       companyName: companyProfileQuery.data.companyName,
-      document: companyProfileQuery.data.document ?? "",
-      phone: companyProfileQuery.data.phone ?? "",
+      document: companyProfileQuery.data.document ? formatCnpjInput(companyProfileQuery.data.document) : "",
+      phone: companyProfileQuery.data.phone ? formatPhoneInput(companyProfileQuery.data.phone) : "",
       address: companyProfileQuery.data.address ?? "",
       email: companyProfileQuery.data.email ?? "",
       contactName: companyProfileQuery.data.contactName ?? ""
@@ -94,8 +99,8 @@ export function AdminSettingsPage() {
       setSuccessMessage("Dados da empresa atualizados.");
       reset({
         companyName: savedProfile.companyName,
-        document: savedProfile.document ?? "",
-        phone: savedProfile.phone ?? "",
+        document: savedProfile.document ? formatCnpjInput(savedProfile.document) : "",
+        phone: savedProfile.phone ? formatPhoneInput(savedProfile.phone) : "",
         address: savedProfile.address ?? "",
         email: savedProfile.email ?? "",
         contactName: savedProfile.contactName ?? ""
@@ -109,6 +114,8 @@ export function AdminSettingsPage() {
     setSuccessMessage(null);
     await mutation.mutateAsync(values);
   });
+  const documentRegistration = register("document");
+  const phoneRegistration = register("phone");
 
   if (companyProfileQuery.isPending) {
     return <PageLoader label="Carregando configuracoes..." />;
@@ -218,8 +225,8 @@ export function AdminSettingsPage() {
           setSuccessMessage(null);
           reset({
             companyName: companyProfileQuery.data.companyName,
-            document: companyProfileQuery.data.document ?? "",
-            phone: companyProfileQuery.data.phone ?? "",
+            document: companyProfileQuery.data.document ? formatCnpjInput(companyProfileQuery.data.document) : "",
+            phone: companyProfileQuery.data.phone ? formatPhoneInput(companyProfileQuery.data.phone) : "",
             address: companyProfileQuery.data.address ?? "",
             email: companyProfileQuery.data.email ?? "",
             contactName: companyProfileQuery.data.contactName ?? ""
@@ -232,30 +239,48 @@ export function AdminSettingsPage() {
           {mutation.error instanceof Error ? <ErrorBanner message={mutation.error.message} /> : null}
 
           <Field label="Nome da empresa" error={errors.companyName?.message}>
-            <Input placeholder="Jamval Eletronicos" {...register("companyName")} />
+            <Input placeholder="Jamval Eletronicos" maxLength={200} {...register("companyName")} />
           </Field>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Documento/CNPJ" error={errors.document?.message}>
-              <Input placeholder="44.405.062/0001-03" {...register("document")} />
+              <Input
+                placeholder="44.405.062/0001-03"
+                inputMode="numeric"
+                maxLength={18}
+                {...documentRegistration}
+                onChange={(event) => {
+                  event.target.value = formatCnpjInput(event.target.value);
+                  void documentRegistration.onChange(event);
+                }}
+              />
             </Field>
 
             <Field label="Telefone" error={errors.phone?.message}>
-              <Input placeholder="44 99837-2556" {...register("phone")} />
+              <Input
+                placeholder="(44) 99837-2556"
+                inputMode="tel"
+                maxLength={15}
+                {...phoneRegistration}
+                onChange={(event) => {
+                  event.target.value = formatPhoneInput(event.target.value);
+                  void phoneRegistration.onChange(event);
+                }}
+              />
             </Field>
           </div>
 
           <Field label="Endereco" error={errors.address?.message}>
-            <Input placeholder="Campo Mourao - PR" {...register("address")} />
+            <Input placeholder="Campo Mourao - PR" maxLength={200} {...register("address")} />
           </Field>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Email" error={errors.email?.message}>
-              <Input type="email" placeholder="contato@empresa.com" {...register("email")} />
+              <Input type="email" placeholder="contato@empresa.com" maxLength={160} {...register("email")} />
             </Field>
 
             <Field label="Responsavel" error={errors.contactName?.message}>
-              <Input placeholder="Nome do contato responsavel" {...register("contactName")} />
+              <Input placeholder="Nome do contato responsavel" maxLength={160} {...register("contactName")} />
             </Field>
           </div>
 
@@ -267,8 +292,8 @@ export function AdminSettingsPage() {
               onClick={() =>
                 reset({
                   companyName: companyProfileQuery.data.companyName,
-                  document: companyProfileQuery.data.document ?? "",
-                  phone: companyProfileQuery.data.phone ?? "",
+                  document: companyProfileQuery.data.document ? formatCnpjInput(companyProfileQuery.data.document) : "",
+                  phone: companyProfileQuery.data.phone ? formatPhoneInput(companyProfileQuery.data.phone) : "",
                   address: companyProfileQuery.data.address ?? "",
                   email: companyProfileQuery.data.email ?? "",
                   contactName: companyProfileQuery.data.contactName ?? ""

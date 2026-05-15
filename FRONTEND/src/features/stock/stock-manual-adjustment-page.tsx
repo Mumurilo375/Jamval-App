@@ -30,7 +30,7 @@ const adjustmentFormSchema = z.object({
     .trim()
     .min(1, "Informe a quantidade")
     .refine((value) => /^\d+$/.test(value) && Number(value) > 0, "Informe uma quantidade inteira maior que zero"),
-  reason: z.string().trim().min(1, "Informe o motivo do ajuste")
+  reason: z.string().trim().min(1, "Informe o motivo do ajuste").max(500, "Use ate 500 caracteres")
 });
 
 type AdjustmentFormValues = z.infer<typeof adjustmentFormSchema>;
@@ -180,7 +180,11 @@ export function StockManualAdjustmentPage() {
           )}
 
           <Field label="Motivo do ajuste" error={errors.reason?.message}>
-            <Textarea placeholder="Ex.: contagem refeita, avaria interna, caixa encontrada no deposito" {...register("reason")} />
+            <Textarea
+              placeholder="Ex.: contagem refeita, avaria interna, caixa encontrada no deposito"
+              maxLength={500}
+              {...register("reason")}
+            />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">

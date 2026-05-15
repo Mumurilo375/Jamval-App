@@ -7,20 +7,35 @@ import { z } from "zod";
 
 import { Button, Card, ErrorBanner, Field, Input, Select, WarningBanner } from "../../components/ui";
 import { ApiError } from "../../lib/api";
+import { isNonNegativeIntegerInput } from "../../lib/forms";
 import { formatCurrency } from "../../lib/format";
 import type { VisitDetail, VisitItem } from "../../types/domain";
 import { bulkUpsertVisitItems, listCentralBalances, patchVisitItem } from "./visits-api";
 import { computeVisitItemPreview, parseDecimalInput } from "./visit-utils";
 
-const visitItemFormSchema = z.object({
-  selectedProductId: z.string().trim().min(1, "Selecione um produto"),
-  quantityPrevious: numericField("Informe a quantidade anterior"),
-  quantityGoodRemaining: numericField("Informe o restante na loja"),
-  quantityDefectiveReturn: numericField("Informe a quantidade de trocas"),
-  unitPrice: moneyField("Informe o preco unitario"),
-  restockedQuantity: numericField("Informe a quantidade reposta"),
-  notes: z.string()
-});
+const visitItemFormSchema = z
+  .object({
+    selectedProductId: z.string().trim().min(1, "Selecione um produto"),
+    quantityPrevious: numericField("Informe a quantidade anterior"),
+    quantityGoodRemaining: numericField("Informe o restante na loja"),
+    quantityDefectiveReturn: numericField("Informe a quantidade de trocas"),
+    unitPrice: moneyField("Informe o preco unitario"),
+    restockedQuantity: numericField("Informe a quantidade reposta"),
+    notes: z.string().max(1000, "Use ate 1000 caracteres")
+  })
+  .superRefine((values, context) => {
+    const quantityPrevious = Number(values.quantityPrevious || 0);
+    const quantityGoodRemaining = Number(values.quantityGoodRemaining || 0);
+    const quantityDefectiveReturn = Number(values.quantityDefectiveReturn || 0);
+
+    if (quantityGoodRemaining + quantityDefectiveReturn > quantityPrevious) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Restante e trocas nao podem passar da quantidade anterior",
+        path: ["quantityGoodRemaining"]
+      });
+    }
+  });
 
 type VisitItemFormValues = z.infer<typeof visitItemFormSchema>;
 
@@ -315,7 +330,7 @@ export function VisitItemForm({
           </div>
 
           <Field label="Observacoes">
-            <Input placeholder="Notas rapidas sobre o item" {...register("notes")} />
+            <Input placeholder="Notas rapidas sobre o item" maxLength={1000} {...register("notes")} />
           </Field>
 
           <div className="flex gap-3">
@@ -357,7 +372,7 @@ function numericField(message: string) {
     .string()
     .trim()
     .min(1, message)
-    .refine((value) => !Number.isNaN(Number(value)) && Number(value) >= 0, message);
+    .refine((value) => isNonNegativeIntegerInput(value), message);
 }
 
 function moneyField(message: string) {

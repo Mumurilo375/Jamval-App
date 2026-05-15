@@ -6,28 +6,31 @@ import { z } from "zod";
 
 import { Button, Card, Checkbox, ErrorBanner, Field, Input } from "../../components/ui";
 import { ApiError } from "../../lib/api";
-import { toOptionalString } from "../../lib/forms";
+import { parseDecimalInput, toOptionalString } from "../../lib/forms";
 import type { Product } from "../../types/domain";
 import { createProduct, updateProduct } from "./products-api";
 
 const productFormSchema = z.object({
-  sku: z.string().trim().min(1, "Informe o SKU"),
-  name: z.string().trim().min(1, "Informe o nome"),
-  category: z.string(),
-  brand: z.string(),
-  model: z.string(),
-  color: z.string(),
-  voltage: z.string(),
-  connectorType: z.string(),
+  sku: z.string().trim().min(1, "Informe o SKU").max(120, "Use ate 120 caracteres"),
+  name: z.string().trim().min(1, "Informe o nome").max(200, "Use ate 200 caracteres"),
+  category: z.string().max(120, "Use ate 120 caracteres"),
+  brand: z.string().max(120, "Use ate 120 caracteres"),
+  model: z.string().max(120, "Use ate 120 caracteres"),
+  color: z.string().max(80, "Use ate 80 caracteres"),
+  voltage: z.string().max(80, "Use ate 80 caracteres"),
+  connectorType: z.string().max(80, "Use ate 80 caracteres"),
   basePrice: z
     .string()
     .trim()
     .min(1, "Informe o preco base")
-    .refine((value) => !Number.isNaN(Number(value)) && Number(value) >= 0, "Informe um valor valido"),
+    .refine((value) => !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) >= 0, "Informe um valor valido"),
   costPrice: z
     .string()
     .trim()
-    .refine((value) => value.length === 0 || (!Number.isNaN(Number(value)) && Number(value) >= 0), "Informe um valor valido"),
+    .refine(
+      (value) => value.length === 0 || (!Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) >= 0),
+      "Informe um valor valido"
+    ),
   isActive: z.boolean()
 });
 
@@ -75,8 +78,8 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         color: toOptionalString(values.color),
         voltage: toOptionalString(values.voltage),
         connectorType: toOptionalString(values.connectorType),
-        basePrice: Number(values.basePrice),
-        costPrice: values.costPrice.trim().length > 0 ? Number(values.costPrice) : null,
+        basePrice: parseDecimalInput(values.basePrice),
+        costPrice: values.costPrice.trim().length > 0 ? parseDecimalInput(values.costPrice) : null,
         isActive: values.isActive
       };
 
@@ -100,7 +103,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="SKU" error={errors.sku?.message}>
-            <Input placeholder="CABO-TYPEC-1M" {...register("sku")} />
+            <Input placeholder="CABO-TYPEC-1M" maxLength={120} {...register("sku")} />
           </Field>
 
           <Field label="Preco base" error={errors.basePrice?.message}>
@@ -117,32 +120,32 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         </Field>
 
         <Field label="Nome" error={errors.name?.message}>
-          <Input placeholder="Cabo Type-C 1m" {...register("name")} />
+          <Input placeholder="Cabo Type-C 1m" maxLength={200} {...register("name")} />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Categoria">
-            <Input placeholder="Cabos" {...register("category")} />
+          <Field label="Categoria" error={errors.category?.message}>
+            <Input placeholder="Cabos" maxLength={120} {...register("category")} />
           </Field>
 
-          <Field label="Marca">
-            <Input placeholder="Baseus" {...register("brand")} />
+          <Field label="Marca" error={errors.brand?.message}>
+            <Input placeholder="Baseus" maxLength={120} {...register("brand")} />
           </Field>
 
-          <Field label="Modelo">
-            <Input placeholder="Fast Charge" {...register("model")} />
+          <Field label="Modelo" error={errors.model?.message}>
+            <Input placeholder="Fast Charge" maxLength={120} {...register("model")} />
           </Field>
 
-          <Field label="Cor">
-            <Input placeholder="Preto" {...register("color")} />
+          <Field label="Cor" error={errors.color?.message}>
+            <Input placeholder="Preto" maxLength={80} {...register("color")} />
           </Field>
 
-          <Field label="Voltagem">
-            <Input placeholder="5V" {...register("voltage")} />
+          <Field label="Voltagem" error={errors.voltage?.message}>
+            <Input placeholder="5V" maxLength={80} {...register("voltage")} />
           </Field>
 
-          <Field label="Conector">
-            <Input placeholder="USB-C" {...register("connectorType")} />
+          <Field label="Conector" error={errors.connectorType?.message}>
+            <Input placeholder="USB-C" maxLength={80} {...register("connectorType")} />
           </Field>
         </div>
 

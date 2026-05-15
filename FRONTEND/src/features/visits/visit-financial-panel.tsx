@@ -38,6 +38,7 @@ export function VisitFinancialPanel({ visit }: VisitFinancialPanelProps) {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors }
   } = useForm<FinancialFormValues>({
     resolver: zodResolver(financialFormSchema),
@@ -68,6 +69,15 @@ export function VisitFinancialPanel({ visit }: VisitFinancialPanelProps) {
   });
 
   const onSubmit = handleSubmit(async (values) => {
+    const parsedAmount = values.receivedAmountOnVisit === "" ? 0 : parseDecimalInput(values.receivedAmountOnVisit);
+
+    if (parsedAmount > totalAmount) {
+      setError("receivedAmountOnVisit", {
+        message: "O valor recebido nao pode ser maior que o total a cobrar."
+      });
+      return;
+    }
+
     await mutation.mutateAsync(values);
   });
 

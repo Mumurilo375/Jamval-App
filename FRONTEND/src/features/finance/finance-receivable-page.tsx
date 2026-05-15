@@ -38,8 +38,8 @@ const paymentFormSchema = z.object({
     .trim()
     .min(1, "Selecione a forma de pagamento")
     .refine((value) => paymentMethodOptions.some((option) => option.value === value), "Selecione a forma de pagamento"),
-  reference: z.string(),
-  notes: z.string()
+  reference: z.string().max(160, "Use ate 160 caracteres"),
+  notes: z.string().max(2000, "Use ate 2000 caracteres")
 });
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
@@ -169,6 +169,7 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors }
   } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
@@ -215,6 +216,15 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
   });
 
   const onSubmit = handleSubmit(async (values) => {
+    const amount = parseDecimalInput(values.amount);
+
+    if (amount > Number(receivable.amountOutstanding)) {
+      setError("amount", {
+        message: "O valor recebido nao pode ser maior que o saldo atual."
+      });
+      return;
+    }
+
     await mutation.mutateAsync(values);
   });
 
@@ -262,12 +272,12 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
           </Select>
         </Field>
 
-        <Field label="Referencia" hint="Opcional">
-          <Input placeholder="PIX, comprovante ou observacao curta" {...register("reference")} />
+        <Field label="Referencia" hint="Opcional" error={errors.reference?.message}>
+          <Input placeholder="PIX, comprovante ou observacao curta" maxLength={160} {...register("reference")} />
         </Field>
 
-        <Field label="Observacoes" hint="Opcional">
-          <Textarea rows={3} placeholder="Detalhes do recebimento" {...register("notes")} />
+        <Field label="Observacoes" hint="Opcional" error={errors.notes?.message}>
+          <Textarea rows={3} placeholder="Detalhes do recebimento" maxLength={2000} {...register("notes")} />
         </Field>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">

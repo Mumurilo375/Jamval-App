@@ -409,7 +409,7 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
   };
 
   const onConfirmPaymentAndConclude = async () => {
-    if (!paymentMethod) {
+    if (!paymentMethods.some((method) => method === paymentMethod)) {
       return;
     }
 
@@ -687,6 +687,7 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
                           rows={3}
                           disabled={isReadOnly}
                           value={row.draft.notes}
+                          maxLength={1000}
                           onChange={(event) => {
                             const value = event.target.value;
                             setItemDrafts((current) => ({
@@ -870,6 +871,7 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
             <Textarea
               value={visitNotesInput}
               rows={4}
+              maxLength={2000}
               onChange={(event) => setVisitNotesInput(event.target.value)}
               placeholder="Anotacoes gerais desta visita"
             />
@@ -1091,11 +1093,22 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
           </Field>
 
           <Field label="Referencia">
-            <Input value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} placeholder="PIX, dinheiro, maquina, banco" />
+            <Input
+              value={paymentReference}
+              maxLength={160}
+              onChange={(event) => setPaymentReference(event.target.value)}
+              placeholder="PIX, dinheiro, maquina, banco"
+            />
           </Field>
 
           <Field label="Observacoes">
-            <Textarea value={paymentNotes} rows={4} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Observacoes do pagamento inicial" />
+            <Textarea
+              value={paymentNotes}
+              rows={4}
+              maxLength={2000}
+              onChange={(event) => setPaymentNotes(event.target.value)}
+              placeholder="Observacoes do pagamento inicial"
+            />
           </Field>
         </div>
       </DrawerPanel>
@@ -1196,11 +1209,17 @@ function buildRowViewModel({
 }
 
 function parseCountInput(value: string): number {
-  if (value.trim() === "") {
+  const trimmed = value.trim();
+
+  if (trimmed === "") {
     return 0;
   }
 
-  return parseDecimalInput(value);
+  if (!/^\d+$/.test(trimmed)) {
+    return Number.NaN;
+  }
+
+  return Number(trimmed);
 }
 
 function parseMoneyInput(value: string): number {

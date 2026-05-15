@@ -16,6 +16,7 @@ import {
   WarningBanner
 } from "../../components/ui";
 import { ApiError } from "../../lib/api";
+import { normalizeDecimalInput } from "../../lib/forms";
 import { listProducts } from "../products/products-api";
 import { getCentralOverview, type StockBatchPayload } from "./stock-api";
 
@@ -289,6 +290,7 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
           <Textarea
             placeholder={pageCopy.notePlaceholder}
             value={note}
+            maxLength={500}
             onChange={(event) => setNote(event.target.value)}
           />
         </Field>
@@ -364,8 +366,4 @@ function createEmptyRow(): StockBatchRow {
     quantity: "",
     unitCost: ""
   };
-}
-
-function normalizeDecimalInput(value: string) {
-  return value.trim().replace(",", ".");
 }

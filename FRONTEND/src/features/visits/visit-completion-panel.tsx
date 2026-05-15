@@ -14,9 +14,13 @@ import { computeVisitPendingAmount, visitNumber, visitStatusLabel, visitStatusTo
 const paymentMethods = ["CASH", "PIX", "CARD", "BANK_TRANSFER", "OTHER"] as const;
 
 const completionFormSchema = z.object({
-  paymentMethod: z.string().trim().min(1, "Selecione a forma de pagamento"),
-  reference: z.string(),
-  notes: z.string()
+  paymentMethod: z
+    .string()
+    .trim()
+    .min(1, "Selecione a forma de pagamento")
+    .refine((value) => paymentMethods.some((method) => method === value), "Selecione a forma de pagamento"),
+  reference: z.string().max(160, "Use ate 160 caracteres"),
+  notes: z.string().max(2000, "Use ate 2000 caracteres")
 });
 
 type CompletionFormValues = z.infer<typeof completionFormSchema>;
@@ -143,12 +147,12 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
             </Select>
           </Field>
 
-          <Field label="Referencia">
-            <Input {...register("reference")} placeholder="pix nubank, maquina verde, dinheiro trocado" />
+          <Field label="Referencia" error={errors.reference?.message}>
+            <Input {...register("reference")} placeholder="pix nubank, maquina verde, dinheiro trocado" maxLength={160} />
           </Field>
 
-          <Field label="Observacoes">
-            <Textarea {...register("notes")} placeholder="Observacoes sobre o pagamento inicial" />
+          <Field label="Observacoes" error={errors.notes?.message}>
+            <Textarea {...register("notes")} placeholder="Observacoes sobre o pagamento inicial" maxLength={2000} />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
