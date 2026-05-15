@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 
 import { useLogout, useSessionUser } from "../features/auth/auth";
 import { cx } from "../lib/cx";
+import { applyTheme, getInitialTheme, persistTheme, type ThemeMode } from "../lib/theme";
 import { Button } from "./ui";
 
 type NavigationItem = {
@@ -90,7 +91,9 @@ export function AppShell() {
   const user = useSessionUser();
   const logoutMutation = useLogout();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => getInitialTheme());
   const firstName = user?.name.split(" ")[0] ?? "Admin";
+  const isDarkTheme = theme === "dark";
   const activeNavigationItem = useMemo(
     () =>
       navigationSections
@@ -98,6 +101,11 @@ export function AppShell() {
         .find((item) => item.isActive(location.pathname)),
     [location.pathname]
   );
+
+  useEffect(() => {
+    applyTheme(theme);
+    persistTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     if (!isDrawerOpen) {
@@ -129,12 +137,12 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-[var(--jam-bg)] text-[var(--jam-ink)]">
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-[var(--jam-border)] bg-[rgba(243,246,249,0.94)] backdrop-blur">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-[var(--jam-border)] bg-[var(--jam-header-bg)] backdrop-blur">
         <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center justify-between gap-2.5 px-2.5 sm:h-14 sm:px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-white text-[var(--jam-ink)] sm:h-9 sm:w-9 md:hidden"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-ink)] transition hover:bg-[var(--jam-panel-strong)] sm:h-9 sm:w-9 md:hidden"
               onClick={() => setIsDrawerOpen(true)}
               aria-label="Abrir menu"
             >
@@ -149,8 +157,20 @@ export function AppShell() {
             </div>
           </div>
 
-          <div className="rounded-full border border-[var(--jam-border)] bg-white px-2.5 py-1 text-right sm:px-3 sm:py-1.5">
-            <p className="text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">{firstName}</p>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-ink)] transition hover:bg-[var(--jam-panel-strong)] sm:h-9 sm:w-9"
+              onClick={() => setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"))}
+              aria-label={isDarkTheme ? "Ativar tema claro" : "Ativar tema escuro"}
+              title={isDarkTheme ? "Ativar tema claro" : "Ativar tema escuro"}
+            >
+              {isDarkTheme ? <SunIcon /> : <MoonIcon />}
+            </button>
+
+            <div className="rounded-full border border-[var(--jam-border)] bg-[var(--jam-panel)] px-2.5 py-1 text-right sm:px-3 sm:py-1.5">
+              <p className="text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">{firstName}</p>
+            </div>
           </div>
         </div>
       </header>
@@ -249,7 +269,7 @@ function NavigationPanel({
               className={cx(
                 "space-y-1",
                 section.variant === "secondary"
-                  ? "rounded-2xl border border-[var(--jam-border)] bg-white/80 p-1.5"
+                  ? "rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-1.5"
                   : null
               )}
             >
@@ -270,7 +290,7 @@ function NavigationPanel({
                           ? "border-[rgba(29,78,216,0.16)] bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
                           : "bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
                         : section.variant === "primary"
-                          ? "border-transparent text-[var(--jam-subtle)] hover:border-[var(--jam-border)] hover:bg-white hover:text-[var(--jam-ink)]"
+                          ? "border-transparent text-[var(--jam-subtle)] hover:border-[var(--jam-border)] hover:bg-[var(--jam-panel)] hover:text-[var(--jam-ink)]"
                           : "text-[var(--jam-subtle)] hover:bg-[var(--jam-panel-strong)] hover:text-[var(--jam-ink)]"
                     )}
                   >
@@ -280,7 +300,7 @@ function NavigationPanel({
                           ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
                           : "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                         active
-                          ? "bg-white text-[var(--jam-accent)]"
+                          ? "bg-[var(--jam-panel)] text-[var(--jam-accent)]"
                           : section.variant === "primary"
                             ? "bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)]"
                             : "bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)]"
@@ -300,7 +320,7 @@ function NavigationPanel({
       <div className="border-t border-[var(--jam-border)] px-3.5 py-3.5">
         <Button
           variant="ghost"
-          className="w-full border border-[var(--jam-border)] bg-white"
+          className="w-full border border-[var(--jam-border)] bg-[var(--jam-panel)]"
           onClick={onLogout}
           disabled={isLoggingOut}
         >
@@ -317,6 +337,30 @@ function MenuIcon() {
       <path d="M4 7h16" />
       <path d="M4 12h16" />
       <path d="M4 17h16" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2" />
+      <path d="M12 19.5v2" />
+      <path d="m4.57 4.57 1.41 1.41" />
+      <path d="m18.02 18.02 1.41 1.41" />
+      <path d="M2.5 12h2" />
+      <path d="M19.5 12h2" />
+      <path d="m4.57 19.43 1.41-1.41" />
+      <path d="m18.02 5.98 1.41-1.41" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.2 14.4A7.6 7.6 0 0 1 9.6 3.8 8.2 8.2 0 1 0 20.2 14.4Z" />
     </svg>
   );
 }

@@ -5,6 +5,7 @@
   font-family: "IBM Plex Sans", sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  color-scheme: light;
   color: #111827;
   background: #f3f6f9;
   font-synthesis: none;
@@ -22,6 +23,25 @@
   --jam-success: #0f766e;
   --jam-danger: #b42318;
   --jam-warning: #b45309;
+  --jam-header-bg: rgba(243, 246, 249, 0.94);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  color: #e5eefb;
+  background: #0f172a;
+  --jam-bg: #0f172a;
+  --jam-panel: #172033;
+  --jam-panel-strong: #202b3d;
+  --jam-border: #334155;
+  --jam-ink: #e5eefb;
+  --jam-subtle: #a7b2c2;
+  --jam-accent: #60a5fa;
+  --jam-accent-soft: rgba(96, 165, 250, 0.16);
+  --jam-success: #5eead4;
+  --jam-danger: #f87171;
+  --jam-warning: #fbbf24;
+  --jam-header-bg: rgba(15, 23, 42, 0.94);
 }
 
 * {
@@ -38,6 +58,19 @@ body {
   background: var(--jam-bg);
   color: var(--jam-ink);
   overflow-x: hidden;
+}
+
+:root[data-theme="dark"] .bg-white,
+:root[data-theme="dark"] .hover\:bg-white:hover {
+  background-color: var(--jam-panel);
+}
+
+:root[data-theme="dark"] .bg-white\/80 {
+  background-color: color-mix(in srgb, var(--jam-panel) 80%, transparent);
+}
+
+:root[data-theme="dark"] .placeholder\:text-slate-400::placeholder {
+  color: #94a3b8;
 }
 
 #root {
