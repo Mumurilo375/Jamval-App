@@ -9,6 +9,7 @@ import {
   PageLoader,
   SectionHeader,
 } from "../../components/ui";
+import { formatCount } from "../../lib/format";
 import {
   HistoryList,
   InProgressList,
@@ -41,12 +42,15 @@ export function DashboardPage() {
   const queue = queueQuery.data;
   const mainAction = queue.mainAction;
   const hasOpenVisit = mainAction.mode === "continue" && mainAction.visitId;
+  const returnCount = queue.returnQueue.length;
+  const inProgressCount = queue.inProgress.length;
+  const historyCount = queue.recentHistory.length;
   const mainActionTitle = hasOpenVisit
     ? "Continuar atendimento em aberto"
     : "Nova visita";
   const mainActionSubtitle = hasOpenVisit
     ? `${mainAction.clientName ?? "Cliente"} • ${mainAction.visitCode ?? ""}`
-    : "Abra uma nova visita quando nao houver atendimento em aberto.";
+    : "Sem atendimento em aberto.";
   const mainActionHref = hasOpenVisit
     ? `/visits/${mainAction.visitId}`
     : "/visits/new";
@@ -57,12 +61,12 @@ export function DashboardPage() {
       <PageHeader
         eyebrow="Operacao"
         title="Fila do dia"
-        subtitle="Veja quem volta primeiro, o que ja esta em andamento e o que ja rodou."
+        subtitle={`${formatCount(returnCount, "retorno")} • ${formatCount(inProgressCount, "em andamento", "em andamento")} • ${formatCount(historyCount, "recente", "recentes")}`}
       />
 
       <Card className="space-y-3 border-[rgba(29,78,216,0.18)] bg-[rgba(29,78,216,0.05)]">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-accent)]">
-          Acao principal
+          Agora
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -85,7 +89,7 @@ export function DashboardPage() {
       <div className="space-y-3">
         <SectionHeader
           title="Fila de retorno"
-          subtitle="Clientes de consignacao aguardando a proxima conferencia."
+          subtitle={`${formatCount(returnCount, "cliente")} aguardando acerto`}
           action={
             <Link to="/visits">
               <Button variant="ghost" className="px-0">
@@ -107,7 +111,7 @@ export function DashboardPage() {
       <div className="space-y-3">
         <SectionHeader
           title="Em andamento"
-          subtitle="Atendimentos abertos para continuar sem duplicar trabalho."
+          subtitle={`${formatCount(inProgressCount, "visita")} ${inProgressCount === 1 ? "aberta" : "abertas"} para continuar`}
           action={
             <Link to="/visits">
               <Button variant="ghost" className="px-0">
@@ -127,7 +131,7 @@ export function DashboardPage() {
       <div className="space-y-3">
         <SectionHeader
           title="Historico recente"
-          subtitle="O que ja foi concluido e saiu da fila viva."
+          subtitle={`${formatCount(historyCount, "visita")} ${historyCount === 1 ? "concluida" : "concluidas"} para consulta`}
           action={
             <Link to="/visits">
               <Button variant="ghost" className="px-0">
@@ -146,24 +150,26 @@ export function DashboardPage() {
 
       <div className="space-y-3">
         <SectionHeader
-          title="Atalhos uteis"
-          subtitle="Acessos secundarios sem competir com a fila principal."
+          title="Atalhos"
         />
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <ShortcutLink
             to="/financeiro"
             title="Financeiro"
+            detail="Recebimentos"
             iconSrc="/icones/financeiro.png"
           />
           <ShortcutLink
             to="/clients"
             title="Clientes"
+            detail="Contato e mix"
             iconSrc="/icones/customer.png"
           />
           <ShortcutLink
             to="/products"
             title="Produtos"
+            detail="Preco e cadastro"
             iconSrc="/icones/carregador.png"
           />
         </div>
@@ -175,10 +181,12 @@ export function DashboardPage() {
 function ShortcutLink({
   to,
   title,
+  detail,
   iconSrc,
 }: {
   to: string;
   title: string;
+  detail: string;
   iconSrc: string;
 }) {
   return (
@@ -197,7 +205,7 @@ function ShortcutLink({
             {title}
           </p>
           <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-accent)]">
-            Abrir
+            {detail}
           </p>
         </div>
       </div>

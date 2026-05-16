@@ -249,13 +249,11 @@ function NavigationPanel({
     <>
       <div className="border-b border-[var(--jam-border)] px-3.5 py-3.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
-        <p className="mt-2 font-display text-xl font-semibold text-[var(--jam-ink)]">Operacao do dia</p>
-        <p className="mt-1 text-[13px] text-[var(--jam-subtle)]">
-          Quatro areas principais para tocar visitas, recebimentos e estoque sem excesso.
-        </p>
-        <div className="mt-3 rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3 py-2.5">
-          <p className="text-[13px] font-medium text-[var(--jam-ink)]">{firstName}</p>
-          <p className="text-[13px] text-[var(--jam-subtle)]">Administrador</p>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="font-display text-xl font-semibold text-[var(--jam-ink)]">Operacao</p>
+          <p className="max-w-[112px] truncate rounded-full border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-2.5 py-1 text-[12px] font-medium text-[var(--jam-ink)]">
+            {firstName}
+          </p>
         </div>
       </div>
 
@@ -324,7 +322,7 @@ function NavigationPanel({
           onClick={onLogout}
           disabled={isLoggingOut}
         >
-          {isLoggingOut ? "Saindo..." : "Sair da sessao"}
+          {isLoggingOut ? "Saindo..." : "Sair"}
         </Button>
       </div>
     </>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, PropsWithChildren, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { Link } from "react-router-dom";
 
 import { cx } from "../lib/cx";
 
@@ -7,22 +8,46 @@ export function PageHeader({
   eyebrow,
   title,
   subtitle,
-  action
+  action,
+  backTo,
+  backLabel = "Voltar"
 }: {
   eyebrow?: string;
   title: string;
   subtitle?: string;
   action?: ReactNode;
+  backTo?: string;
+  backLabel?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
-        {eyebrow ? <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">{eyebrow}</p> : null}
-        <h1 className="font-display text-[1.18rem] font-semibold leading-tight text-[var(--jam-ink)] sm:text-[1.55rem]">{title}</h1>
-        {subtitle ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{subtitle}</p> : null}
+    <div className="space-y-2.5">
+      {backTo ? (
+        <Link
+          to={backTo}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[var(--jam-border)] bg-[var(--jam-panel)] px-2.5 text-[12px] font-semibold text-[var(--jam-subtle)] transition active:scale-[0.98] hover:bg-[var(--jam-panel-strong)] hover:text-[var(--jam-ink)] sm:min-h-9 sm:px-3"
+        >
+          <BackArrowIcon />
+          <span>{backLabel}</span>
+        </Link>
+      ) : null}
+
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          {eyebrow ? <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">{eyebrow}</p> : null}
+          <h1 className="font-display text-[1.18rem] font-semibold leading-tight text-[var(--jam-ink)] sm:text-[1.55rem]">{title}</h1>
+          {subtitle ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{subtitle}</p> : null}
+        </div>
+        {action ? <div className="w-full sm:w-auto sm:shrink-0">{action}</div> : null}
       </div>
-      {action ? <div className="w-full sm:w-auto sm:shrink-0">{action}</div> : null}
     </div>
+  );
+}
+
+function BackArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
   );
 }
 

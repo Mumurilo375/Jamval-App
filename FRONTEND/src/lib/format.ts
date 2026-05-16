@@ -37,6 +37,10 @@ export function formatDateTime(value: string | null | undefined): string {
   return shortDateTime.format(new Date(value));
 }
 
+export function formatCount(value: number, singular: string, plural = `${singular}s`): string {
+  return `${value} ${value === 1 ? singular : plural}`;
+}
+
 export function onlyDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
