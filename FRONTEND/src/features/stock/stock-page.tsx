@@ -17,7 +17,7 @@ import {
   ToneBadge
 } from "../../components/ui";
 import { cx } from "../../lib/cx";
-import { formatCurrency, formatDateTime } from "../../lib/format";
+import { formatCount, formatCurrency, formatDateTime } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import {
   getCentralOverview,
@@ -211,7 +211,7 @@ export function StockPage() {
       <PageHeader
         eyebrow="Estoque"
         title="Estoque"
-        subtitle="Consulte o saldo e movimente o estoque."
+        subtitle={`${formatCount(filteredBalanceItems.length, "produto")} • ${filteredUnitsTotal} un. no recorte`}
       />
 
       <Card className="overflow-hidden p-0">
@@ -365,9 +365,6 @@ export function StockPage() {
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
                       Precisando de reposicao
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-                      Sem saldo primeiro. Depois, os menores saldos da lista atual.
                     </p>
                   </div>
                   <p className="text-sm font-medium text-[var(--jam-ink)]">

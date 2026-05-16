@@ -134,6 +134,8 @@ export function AdminSettingsPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo="/admin/dashboard"
+        backLabel="Admin"
         eyebrow="Administracao"
         title="Configuracoes"
         subtitle="Dados da empresa, comprovantes, parametros futuros e leitura da sessao atual."

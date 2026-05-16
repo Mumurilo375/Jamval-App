@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SetStateAction } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -10,17 +10,37 @@ import { AdminEmptyBlock, AdminListRow, AdminMetricCard, AdminQueryErrorState, A
 
 const LOW_STOCK_THRESHOLD_LABEL = "5";
 
+type DashboardFilters = {
+  dateFrom: string;
+  dateTo: string;
+};
+
 export function AdminDashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [defaultPeriod] = useState(() => createDefaultPeriod());
   const dateFrom = searchParams.get("dateFrom") ?? defaultPeriod.dateFrom;
   const dateTo = searchParams.get("dateTo") ?? defaultPeriod.dateTo;
+  const periodKey = `${dateFrom}|${dateTo}`;
   const isMobile = useIsMobileDashboard();
-  const [draftFilters, setDraftFilters] = useState({ dateFrom, dateTo });
+  const [draftFilterState, setDraftFilterState] = useState(() => ({
+    periodKey,
+    filters: { dateFrom, dateTo }
+  }));
+  const draftFilters =
+    draftFilterState.periodKey === periodKey ? draftFilterState.filters : { dateFrom, dateTo };
+  const setDraftFilters = (nextValue: SetStateAction<DashboardFilters>) => {
+    setDraftFilterState((current) => {
+      const currentFilters =
+        current.periodKey === periodKey ? current.filters : { dateFrom, dateTo };
+      const nextFilters =
+        typeof nextValue === "function" ? nextValue(currentFilters) : nextValue;
 
-  useEffect(() => {
-    setDraftFilters({ dateFrom, dateTo });
-  }, [dateFrom, dateTo]);
+      return {
+        periodKey,
+        filters: nextFilters
+      };
+    });
+  };
 
   const invalidPeriod =
     draftFilters.dateFrom.length > 0 &&
@@ -459,13 +479,14 @@ function SplitRow({ label, count, progress, colorClassName }: { label: string; c
 }
 
 function useIsMobileDashboard() {
-  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 640 : false));
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 639px)").matches : false
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia("(max-width: 639px)");
     const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
-    setIsMobile(media.matches);
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
   }, []);

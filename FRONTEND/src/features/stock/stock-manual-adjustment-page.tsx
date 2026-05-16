@@ -101,6 +101,8 @@ export function StockManualAdjustmentPage() {
     return (
       <div className="space-y-4">
         <PageHeader
+          backTo="/stock?tab=saldo"
+          backLabel="Estoque"
           eyebrow="Estoque central"
           title="Ajuste manual"
           subtitle="Fluxo corretivo para acertar diferencas do estoque central."
@@ -123,6 +125,8 @@ export function StockManualAdjustmentPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo="/stock?tab=saldo"
+        backLabel="Estoque"
         eyebrow="Estoque central"
         title="Ajuste manual"
         subtitle="Use apenas para correcao operacional. Para mercadoria nova, o fluxo certo e Entrada manual."

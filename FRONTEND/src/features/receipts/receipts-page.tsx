@@ -101,7 +101,7 @@ export function ReceiptsPage() {
               </div>
             </div>
 
-            <Link to={`/visits/${visit.id}`}>
+            <Link to={`/visits/${visit.id}`} state={{ backTo: "/receipts", backLabel: "Comprovantes" }}>
               <Button className="w-full justify-between">
                 <span>Abrir visita concluida</span>
                 <span>→</span>

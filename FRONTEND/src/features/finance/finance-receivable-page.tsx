@@ -92,16 +92,11 @@ export function FinanceReceivablePage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo={`/financeiro?status=${returnStatus}`}
+        backLabel="Receber"
         eyebrow="Financeiro"
         title={receivable.client.tradeName}
         subtitle={`${receivableOriginLabel(receivable.visit.visitType)} • ${formatDate(receivable.visit.visitedAt)}`}
-        action={
-          <Link to={`/financeiro?status=${returnStatus}`}>
-            <Button variant="secondary" className="w-full sm:w-auto">
-              Voltar para a fila
-            </Button>
-          </Link>
-        }
       />
 
       <Card className="space-y-3">

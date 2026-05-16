@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { EmptyState, PageHeader, PageLoader, PaginationControls, ToneBadge } from "../../components/ui";
-import { formatCurrency, formatDate } from "../../lib/format";
+import { formatCount, formatCurrency, formatDate } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import { listReceivables } from "./finance-api";
 import {
@@ -32,6 +32,10 @@ export function FinancePage() {
     () => sortReceivablesForQueue(receivablesQuery.data ?? []),
     [receivablesQuery.data]
   );
+  const outstandingTotal = useMemo(
+    () => receivables.reduce((total, receivable) => total + receivable.amountOutstanding, 0),
+    [receivables]
+  );
   const paginatedReceivables = paginateItems(receivables, page, RECEIVABLES_PAGE_SIZE);
 
   if (receivablesQuery.isPending) {
@@ -52,7 +56,7 @@ export function FinancePage() {
       <PageHeader
         eyebrow="Financeiro"
         title="Receber"
-        subtitle="Abra o titulo certo, registre o valor recebido e siga para o proximo cliente."
+        subtitle={`${formatCount(receivables.length, "titulo")} • ${formatCurrency(outstandingTotal)} em saldo`}
       />
 
       <div className="grid grid-cols-3 gap-2">

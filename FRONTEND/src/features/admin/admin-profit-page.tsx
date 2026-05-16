@@ -59,6 +59,8 @@ export function AdminProfitPage() {
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden pb-2">
       <PageHeader
+        backTo="/admin/dashboard"
+        backLabel="Admin"
         eyebrow="Administracao"
         title="Lucro das vendas"
         subtitle="Leitura simples do que ja esta apurado, do que ainda esta em revisao e do que segue sem custo."
