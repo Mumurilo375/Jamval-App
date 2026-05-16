@@ -29,6 +29,8 @@ const paymentMethods = ["CASH", "PIX", "CARD", "BANK_TRANSFER", "OTHER"] as cons
 type DirectSaleVisitFlowProps = {
   visit: VisitDetail;
   clientName: string;
+  backTo: string;
+  backLabel: string;
 };
 
 type SalePendingAction = "CONCLUDE" | "CANCEL" | null;
@@ -58,11 +60,11 @@ type RemovedItem = {
   productId: string;
 };
 
-export function DirectSaleVisitFlow({ visit, clientName }: DirectSaleVisitFlowProps) {
-  return <DirectSaleVisitFlowContent key={visit.id} visit={visit} clientName={clientName} />;
+export function DirectSaleVisitFlow({ visit, clientName, backTo, backLabel }: DirectSaleVisitFlowProps) {
+  return <DirectSaleVisitFlowContent key={visit.id} visit={visit} clientName={clientName} backTo={backTo} backLabel={backLabel} />;
 }
 
-function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowProps) {
+function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: DirectSaleVisitFlowProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isDraft = visit.status === "DRAFT";
@@ -243,6 +245,8 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
   return (
     <div className="space-y-5">
       <PageHeader
+        backTo={backTo}
+        backLabel={backLabel}
         eyebrow="Venda direta"
         title={clientName}
         subtitle={`${visit.visitCode} · ${formatDate(visit.visitedAt)}`}
@@ -263,7 +267,9 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
 
         {isDraft ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-[var(--jam-subtle)]">Fluxo enxuto: montar a venda primeiro e fechar o pagamento no final.</p>
+            <p className="text-sm text-[var(--jam-subtle)]">
+              Saldo atual: <span className="font-semibold text-[var(--jam-ink)]">{formatCurrency(pendingAmount)}</span>
+            </p>
             <Link to={`/visits/${visit.id}/edit`}>
               <Button variant="secondary" className="w-full sm:w-auto">Editar dados da visita</Button>
             </Link>
@@ -272,7 +278,7 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
       </Card>
 
       <Card className="space-y-4">
-        <StepHeader step="Etapa 1" title="Montar venda" subtitle="Produto, quantidade, preco e subtotal. Sem base anterior e sem reposicao." />
+        <StepHeader step="Etapa 1" title="Montar venda" subtitle="Produto, quantidade, preco e subtotal." />
 
         {isDraft ? (
           <div className="space-y-2">
@@ -347,7 +353,6 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
         <StepHeader
           step="Etapa 2"
           title="Pagamento e fechamento"
-          subtitle="Informe apenas quanto recebeu agora. O restante o sistema calcula sozinho."
         />
 
         {isDraft ? (
@@ -355,7 +360,6 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
             <Field label="Valor recebido agora" error={paymentError ?? undefined}>
               <Input value={receivedAmountInput} inputMode="decimal" disabled={isReadOnly} onChange={(event) => setReceivedAmountInput(event.target.value)} placeholder="Deixe em branco se nada foi recebido" />
             </Field>
-            <p className="mt-2 text-sm text-[var(--jam-subtle)]">Se nada foi recebido agora, deixe o campo em branco.</p>
           </div>
         ) : null}
 
@@ -366,7 +370,7 @@ function DirectSaleVisitFlowContent({ visit, clientName }: DirectSaleVisitFlowPr
         </div>
 
         <p className="text-sm font-medium text-[var(--jam-subtle)]">
-          Situacao calculada: {describePaymentStatus(safeReceivedAmount, totalAmount)}
+          Situacao: {describePaymentStatus(safeReceivedAmount, totalAmount)}
         </p>
 
         {validationError ? <ErrorBanner message={validationError} /> : null}

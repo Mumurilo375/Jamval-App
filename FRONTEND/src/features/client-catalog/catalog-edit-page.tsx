@@ -29,7 +29,12 @@ export function CatalogEditPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Editar mix e preco" subtitle={`${clientQuery.data.tradeName} · ${item.product.name}`} />
+      <PageHeader
+        backTo={`/clients/${clientId}/catalog`}
+        backLabel="Mix"
+        title="Editar mix e preco"
+        subtitle={`${clientQuery.data.tradeName} · ${item.product.name}`}
+      />
       <CatalogForm client={clientQuery.data} item={item} mode="edit" />
     </div>
   );

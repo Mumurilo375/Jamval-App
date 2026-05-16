@@ -40,6 +40,8 @@ function CatalogListPageContent({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo={`/clients/${clientId}/edit`}
+        backLabel="Cliente"
         eyebrow="Clientes"
         title="Mix e preco"
         subtitle={clientQuery.data.tradeName}

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { Button, EmptyState, PageHeader, PageLoader, PaginationControls } from "../../components/ui";
+import { formatCount } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import {
   HistoryList,
@@ -65,7 +66,7 @@ export function VisitsListPage() {
       <PageHeader
         eyebrow="Operacao"
         title="Organizador de visitas"
-        subtitle="Fila de retorno, atendimentos em andamento e historico recente no mesmo fluxo."
+        subtitle={`${formatCount(queue.returnQueue.length, "retorno")} • ${formatCount(queue.inProgress.length, "em andamento", "em andamento")} • ${formatCount(queue.recentHistory.length, "recente", "recentes")}`}
         action={
           <Link to="/visits/new">
             <Button>Nova visita</Button>

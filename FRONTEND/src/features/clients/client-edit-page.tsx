@@ -23,6 +23,8 @@ export function ClientEditPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo="/clients"
+        backLabel="Clientes"
         title="Abrir cliente"
         subtitle={clientQuery.data.tradeName}
         action={

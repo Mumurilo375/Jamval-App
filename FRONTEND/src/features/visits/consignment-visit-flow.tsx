@@ -47,6 +47,8 @@ const paymentMethods = ["CASH", "PIX", "CARD", "BANK_TRANSFER", "OTHER"] as cons
 type ConsignmentVisitFlowProps = {
   visit: VisitDetail;
   clientName: string;
+  backTo: string;
+  backLabel: string;
 };
 
 type ItemDraftState = {
@@ -90,11 +92,11 @@ type RowViewModel = {
   exceedsCentralStock: boolean;
 };
 
-export function ConsignmentVisitFlow({ visit, clientName }: ConsignmentVisitFlowProps) {
-  return <ConsignmentVisitFlowContent key={visit.id} visit={visit} clientName={clientName} />;
+export function ConsignmentVisitFlow({ visit, clientName, backTo, backLabel }: ConsignmentVisitFlowProps) {
+  return <ConsignmentVisitFlowContent key={visit.id} visit={visit} clientName={clientName} backTo={backTo} backLabel={backLabel} />;
 }
 
-function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlowProps) {
+function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: ConsignmentVisitFlowProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const autoPopulateAttemptedRef = useRef<string | null>(null);
@@ -473,6 +475,8 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
   return (
     <div className="space-y-5">
       <PageHeader
+        backTo={backTo}
+        backLabel={backLabel}
         eyebrow="Visita de consignacao"
         title={clientName}
         subtitle={`${visit.visitCode} · ${formatDate(visit.visitedAt)}`}
@@ -493,7 +497,9 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
 
         {isDraft ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-[var(--jam-subtle)]">A visita segue a ordem real do papel: vender, receber e depois repor.</p>
+            <p className="text-sm text-[var(--jam-subtle)]">
+              Saldo atual: <span className="font-semibold text-[var(--jam-ink)]">{formatCurrency(pendingAmount)}</span>
+            </p>
             <Link to={`/visits/${visit.id}/edit`}>
               <Button variant="secondary" className="w-full sm:w-auto">
                 Editar dados da visita
@@ -507,7 +513,7 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
         <StepHeader
           step="Etapa 1"
           title="Conferir venda do periodo"
-          subtitle="Vendida e o campo principal. Trocas e perdas ficam em ajustes."
+          subtitle="Preencha vendida; trocas e perdas ficam em ajustes."
           action={
             isDraft ? (
               <Button className="w-full sm:w-auto" onClick={() => setIsAddProductOpen(true)}>
@@ -733,7 +739,6 @@ function ConsignmentVisitFlowContent({ visit, clientName }: ConsignmentVisitFlow
         <StepHeader
           step="Etapa 2"
           title="Receber"
-          subtitle="Aqui entram apenas total do acerto, valor recebido e saldo."
         />
 
         <div className="grid gap-3 sm:grid-cols-3">

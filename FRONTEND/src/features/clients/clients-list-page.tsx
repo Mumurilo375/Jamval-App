@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, PaginationControls, Select, StatusBadge } from "../../components/ui";
+import { formatCount } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import { listClients } from "./clients-api";
 
@@ -26,13 +27,16 @@ export function ClientsListPage() {
     queryFn: () => listClients(filters)
   });
   const paginatedClients = paginateItems(clientsQuery.data ?? [], page, CLIENTS_PAGE_SIZE);
+  const headerSubtitle = clientsQuery.data
+    ? `${formatCount(clientsQuery.data.length, "cliente")} no recorte atual`
+    : "Clientes, contatos e mix por ponto de venda.";
 
   return (
     <div className="space-y-4">
       <PageHeader
         eyebrow="Cadastros"
         title="Clientes"
-        subtitle="Pontos de venda, contato e acesso ao mix e preco de cada cliente."
+        subtitle={headerSubtitle}
         action={
           <Link to="/clients/new">
             <Button>Novo</Button>
@@ -40,31 +44,33 @@ export function ClientsListPage() {
         }
       />
 
-      <Card className="space-y-3">
-        <Field label="Busca">
-          <Input
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-            placeholder="Buscar por nome, documento ou contato"
-          />
-        </Field>
+      <Card>
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+          <Field label="Busca">
+            <Input
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
+              placeholder="Nome, documento ou contato"
+            />
+          </Field>
 
-        <Field label="Status">
-          <Select
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as typeof status);
-              setPage(1);
-            }}
-          >
-            <option value="all">Todos</option>
-            <option value="active">Ativos</option>
-            <option value="inactive">Inativos</option>
-          </Select>
-        </Field>
+          <Field label="Status">
+            <Select
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value as typeof status);
+                setPage(1);
+              }}
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </Select>
+          </Field>
+        </div>
       </Card>
 
       {clientsQuery.isPending ? <PageLoader label="Carregando clientes..." /> : null}

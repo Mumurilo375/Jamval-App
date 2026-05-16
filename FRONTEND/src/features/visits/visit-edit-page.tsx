@@ -28,7 +28,12 @@ export function VisitEditPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Editar dados da visita" subtitle={`${visitQuery.data.visitCode} · conferencia e financeiro ficam no detalhe`} />
+      <PageHeader
+        backTo={`/visits/${visitId}`}
+        backLabel="Visita"
+        title="Editar dados da visita"
+        subtitle={`${visitQuery.data.visitCode} · conferencia e financeiro ficam no detalhe`}
+      />
       <VisitForm mode="edit" visit={visitQuery.data} client={clientQuery.data ?? null} />
     </div>
   );

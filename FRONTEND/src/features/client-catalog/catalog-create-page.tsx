@@ -22,7 +22,12 @@ export function CatalogCreatePage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Adicionar ao mix e preco" subtitle={clientQuery.data.tradeName} />
+      <PageHeader
+        backTo={`/clients/${clientId}/catalog`}
+        backLabel="Mix"
+        title="Adicionar ao mix e preco"
+        subtitle={clientQuery.data.tradeName}
+      />
       <CatalogForm client={clientQuery.data} mode="create" />
     </div>
   );

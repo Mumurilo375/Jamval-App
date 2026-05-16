@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 import { EmptyState, PageLoader } from "../../components/ui";
 import { getClient } from "../clients/clients-api";
@@ -9,6 +9,7 @@ import { getVisit } from "./visits-api";
 
 export function VisitDetailPage() {
   const { visitId = "" } = useParams();
+  const location = useLocation();
   const visitQuery = useQuery({
     queryKey: ["visit", visitId],
     queryFn: () => getVisit(visitId)
@@ -29,10 +30,13 @@ export function VisitDetailPage() {
 
   const visit = visitQuery.data;
   const clientName = clientQuery.data?.tradeName ?? "Cliente";
+  const backState = location.state as { backTo?: unknown; backLabel?: unknown } | null;
+  const backTo = typeof backState?.backTo === "string" ? backState.backTo : "/visits";
+  const backLabel = typeof backState?.backLabel === "string" ? backState.backLabel : "Visitas";
 
   if (visit.visitType === "SALE") {
-    return <DirectSaleVisitFlow visit={visit} clientName={clientName} />;
+    return <DirectSaleVisitFlow visit={visit} clientName={clientName} backTo={backTo} backLabel={backLabel} />;
   }
 
-  return <ConsignmentVisitFlow visit={visit} clientName={clientName} />;
+  return <ConsignmentVisitFlow visit={visit} clientName={clientName} backTo={backTo} backLabel={backLabel} />;
 }
