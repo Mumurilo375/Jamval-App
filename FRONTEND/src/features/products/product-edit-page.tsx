@@ -28,6 +28,8 @@ export function ProductEditPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo="/products"
+        backLabel="Produtos"
         title="Editar produto"
         subtitle={`${productQuery.data.sku} · preco base e custo de compra`}
       />

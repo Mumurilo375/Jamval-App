@@ -5,6 +5,8 @@ export function ProductCreatePage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo="/products"
+        backLabel="Produtos"
         title="Novo produto"
         subtitle="Cadastre SKU, preco base e custo de compra do produto."
       />

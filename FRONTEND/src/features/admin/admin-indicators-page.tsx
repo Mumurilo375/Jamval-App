@@ -53,6 +53,8 @@ export function AdminIndicatorsPage() {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo="/admin/dashboard"
+        backLabel="Admin"
         eyebrow="Administracao"
         title="Indicadores"
         subtitle="Leituras diretas para reposicao, cobertura de custo, carteira e giro."

@@ -128,6 +128,8 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
     return (
       <div className="space-y-4">
         <PageHeader
+          backTo="/stock?tab=saldo"
+          backLabel="Estoque"
           eyebrow={pageCopy.eyebrow}
           title={pageCopy.title}
           subtitle={pageCopy.subtitle}
@@ -149,6 +151,8 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
     return (
       <div className="space-y-4">
         <PageHeader
+          backTo="/stock?tab=saldo"
+          backLabel="Estoque"
           eyebrow={pageCopy.eyebrow}
           title={pageCopy.title}
           subtitle="A carga inicial ja foi encerrada para esta operacao."
@@ -180,6 +184,8 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
   return (
     <div className="space-y-4">
       <PageHeader
+        backTo="/stock?tab=saldo"
+        backLabel="Estoque"
         eyebrow={pageCopy.eyebrow}
         title={pageCopy.title}
         subtitle={pageCopy.subtitle}

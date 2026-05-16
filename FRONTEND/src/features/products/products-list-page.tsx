@@ -14,7 +14,7 @@ import {
   Select,
   StatusBadge,
 } from "../../components/ui";
-import { formatCurrency } from "../../lib/format";
+import { formatCount, formatCurrency } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import { listProducts } from "./products-api";
 
@@ -42,12 +42,16 @@ export function ProductsListPage() {
     page,
     PRODUCTS_PAGE_SIZE,
   );
+  const headerSubtitle = productsQuery.data
+    ? `${formatCount(productsQuery.data.length, "produto")} no recorte atual`
+    : undefined;
 
   return (
     <div className="space-y-4">
       <PageHeader
         eyebrow="Cadastros"
         title="Produtos"
+        subtitle={headerSubtitle}
         action={
           <Link to="/products/new">
             <Button>Novo</Button>
@@ -55,40 +59,33 @@ export function ProductsListPage() {
         }
       />
 
-      <Card className="space-y-2">
-        <p className="text-sm font-semibold text-[var(--jam-ink)]">
-          Custo de compra do produto
-        </p>
-        <p className="text-sm text-[var(--jam-subtle)]">
-          O custo real usado na operacao vem das entradas de estoque.
-        </p>
-      </Card>
+      <Card>
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+          <Field label="Busca">
+            <Input
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
+              placeholder="SKU, nome ou marca"
+            />
+          </Field>
 
-      <Card className="space-y-3">
-        <Field label="Busca">
-          <Input
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-            placeholder="Buscar por SKU, nome ou marca"
-          />
-        </Field>
-
-        <Field label="Status">
-          <Select
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as typeof status);
-              setPage(1);
-            }}
-          >
-            <option value="all">Todos</option>
-            <option value="active">Ativos</option>
-            <option value="inactive">Inativos</option>
-          </Select>
-        </Field>
+          <Field label="Status">
+            <Select
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value as typeof status);
+                setPage(1);
+              }}
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </Select>
+          </Field>
+        </div>
       </Card>
 
       {productsQuery.isPending ? (
