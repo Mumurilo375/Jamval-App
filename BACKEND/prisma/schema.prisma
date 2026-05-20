@@ -327,14 +327,15 @@ model Payment {
 }
 
 model ReceiptDocument {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  visitId     String   @unique @db.Uuid
-  storageKey  String   @db.VarChar(255)
-  fileName    String   @db.VarChar(200)
-  mimeType    String   @default("application/pdf") @db.VarChar(120)
-  checksum    String?  @db.VarChar(128)
-  generatedAt DateTime @default(now())
-  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitId      String   @unique @db.Uuid
+  storageKey   String   @db.VarChar(255)
+  fileName     String   @db.VarChar(200)
+  mimeType     String   @default("application/pdf") @db.VarChar(120)
+  checksum     String?  @db.VarChar(128)
+  contentBytes Bytes?
+  generatedAt  DateTime @default(now())
+  visit        Visit    @relation(fields: [visitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

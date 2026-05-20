@@ -6,12 +6,7 @@ import { VisitStatus } from "@prisma/client";
 import { AdminRepository } from "../admin/admin.repository";
 import { AppError } from "../../shared/errors/app-error";
 import { NotFoundError } from "../../shared/errors/not-found-error";
-import {
-  fileExists,
-  readStorageFile,
-  removeStorageFile,
-  writeStorageFile
-} from "../../shared/utils/local-storage";
+import { fileExists, readStorageFile } from "../../shared/utils/local-storage";
 import { resolveReceiptCompanyProfile } from "./receipt-company-profile";
 import { renderReceiptPdf } from "./receipt-pdf";
 import { ReceiptRepository } from "./receipt.repository";
@@ -47,27 +42,15 @@ export class ReceiptService {
     const storageKey = path.posix.join("receipts", "visits", visit.id, fileName);
     const checksum = crypto.createHash("sha256").update(pdfBuffer).digest("hex");
 
-    await writeStorageFile(storageKey, pdfBuffer);
-
-    const previousStorageKey = visit.receiptDocument?.storageKey;
-
-    try {
-      await this.repository.upsertByVisit(visit.id, {
-        visitId: visit.id,
-        storageKey,
-        fileName,
-        mimeType: "application/pdf",
-        checksum,
-        generatedAt
-      });
-    } catch (error) {
-      await removeStorageFile(storageKey);
-      throw error;
-    }
-
-    if (previousStorageKey && previousStorageKey !== storageKey) {
-      await removeStorageFile(previousStorageKey);
-    }
+    await this.repository.upsertByVisit(visit.id, {
+      visitId: visit.id,
+      storageKey,
+      fileName,
+      mimeType: "application/pdf",
+      checksum,
+      contentBytes: toDatabaseBytes(pdfBuffer),
+      generatedAt
+    });
 
     return this.getByVisitId(visitId);
   }
@@ -95,6 +78,13 @@ export class ReceiptService {
 
     if (!receiptDocument) {
       throw new NotFoundError("Receipt document not found", { id });
+    }
+
+    if (receiptDocument.contentBytes) {
+      return {
+        receiptDocument,
+        content: Buffer.from(receiptDocument.contentBytes)
+      };
     }
 
     const exists = await fileExists(receiptDocument.storageKey);
@@ -144,6 +134,10 @@ function ensureVisitCanGenerateReceipt(visitId: string, status: VisitStatus): vo
       status
     });
   }
+}
+
+function toDatabaseBytes(buffer: Buffer): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(buffer);
 }
 
 function mapReceiptSummary(

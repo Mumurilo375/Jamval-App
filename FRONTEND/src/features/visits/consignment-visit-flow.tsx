@@ -137,7 +137,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
   const centralBalancesQuery = useQuery({
     queryKey: ["stock", "central-balances", visit.items.map((item) => item.productId)],
     queryFn: () => listCentralBalances(visit.items.map((item) => item.productId)),
-    enabled: visit.items.length > 0
+    enabled: isDraft && visit.items.length > 0
   });
 
   const autoPopulateMutation = useMutation({
@@ -195,10 +195,11 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         buildRowViewModel({
           item,
           draft: itemDrafts[item.id] ?? createItemDraft(item),
-          availableCentralQuantity: availableCentralByProductId[item.productId] ?? 0
+          availableCentralQuantity: availableCentralByProductId[item.productId] ?? 0,
+          validateCentralStock: isDraft
         })
       ),
-    [availableCentralByProductId, itemDrafts, visit.items]
+    [availableCentralByProductId, isDraft, itemDrafts, visit.items]
   );
   const totals = useMemo(
     () =>
@@ -235,7 +236,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
   const itemsHaveChanges = rowViewModels.some((row) => row.hasChanges);
   const rowValidationErrors = rowViewModels.flatMap((row) => row.errors);
   const receivedAmountError = buildReceivedAmountError(receivedAmountValue, totals.totalAmount);
-  const stockWarnings = rowViewModels.filter((row) => row.exceedsCentralStock);
+  const stockWarnings = isDraft ? rowViewModels.filter((row) => row.exceedsCentralStock) : [];
   const suggestedPreviousByProductId = useMemo(
     () => buildSuggestedPreviousByProductId(completedHistoryQuery.data ?? []),
     [completedHistoryQuery.data]
@@ -787,7 +788,9 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                   <DataCell label="Produto">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{row.item.productSnapshotName}</p>
-                      <p className="mt-0.5 text-xs text-[var(--jam-subtle)]">Central disponivel: {row.availableCentralQuantity}</p>
+                      {isDraft ? (
+                        <p className="mt-0.5 text-xs text-[var(--jam-subtle)]">Central disponivel: {row.availableCentralQuantity}</p>
+                      ) : null}
                     </div>
                   </DataCell>
 
@@ -820,7 +823,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                   </DataCell>
                 </div>
 
-                {row.exceedsCentralStock ? (
+                {isDraft && row.exceedsCentralStock ? (
                   <p className="mt-2 text-sm font-medium text-[var(--jam-danger)]">
                     Reposicao acima do estoque central. Disponivel: {row.availableCentralQuantity}. Informado: {row.restockedQuantity}.
                   </p>
@@ -1143,11 +1146,13 @@ function formatCountDraftValue(value: number) {
 function buildRowViewModel({
   item,
   draft,
-  availableCentralQuantity
+  availableCentralQuantity,
+  validateCentralStock
 }: {
   item: VisitItem;
   draft: ItemDraftState;
   availableCentralQuantity: number;
+  validateCentralStock: boolean;
 }): RowViewModel {
   const quantitySoldInput = parseCountInput(draft.quantitySold);
   const quantityDefectiveReturnInput = parseCountInput(draft.quantityDefectiveReturn);
@@ -1209,7 +1214,7 @@ function buildRowViewModel({
       draft.notes !== (item.notes ?? ""),
     errors,
     availableCentralQuantity,
-    exceedsCentralStock: restockedQuantity > availableCentralQuantity
+    exceedsCentralStock: validateCentralStock && restockedQuantity > availableCentralQuantity
   };
 }
 

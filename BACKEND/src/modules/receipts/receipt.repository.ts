@@ -28,8 +28,7 @@ const visitReceiptInclude = {
         orderBy: [{ paidAt: "asc" }, { createdAt: "asc" }]
       }
     }
-  },
-  receiptDocument: true
+  }
 } satisfies Prisma.VisitInclude;
 
 const receiptDocumentWithVisitSummaryInclude = {
@@ -59,6 +58,7 @@ type UpsertReceiptDocumentInput = {
   fileName: string;
   mimeType: string;
   checksum: string;
+  contentBytes: Uint8Array<ArrayBuffer>;
   generatedAt: Date;
 };
 
@@ -104,6 +104,7 @@ export class ReceiptRepository {
           fileName: data.fileName,
           mimeType: data.mimeType,
           checksum: data.checksum,
+          contentBytes: data.contentBytes,
           generatedAt: data.generatedAt
         }
       });
@@ -116,6 +117,7 @@ export class ReceiptRepository {
         fileName: data.fileName,
         mimeType: data.mimeType,
         checksum: data.checksum,
+        contentBytes: data.contentBytes,
         generatedAt: data.generatedAt
       }
     });

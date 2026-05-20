@@ -41,7 +41,6 @@ export type VisitReceiptSource = Prisma.VisitGetPayload<{
         };
       };
     };
-    receiptDocument: true;
   };
 }>;
 
