@@ -113,7 +113,7 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 - Indicadores de produtos sem custo, sem estoque e clientes com maior pendência.
 - Configuração dos dados da empresa usados nos comprovantes.
 
-> Substitua por uma print da página `/admin/dashboard` mostrando gráficos e cards financeiros.
+<img width="1609" height="1021" alt="image" src="https://github.com/user-attachments/assets/226ff721-bf22-4aaf-8cc9-39d3192f055f" />
 
 ## Rotas Principais
 
