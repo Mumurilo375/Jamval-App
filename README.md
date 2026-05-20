@@ -100,7 +100,9 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 - Dados da empresa, cliente, visita, produtos, valores, pagamento e assinatura manual.
 - Página para localizar visitas concluídas e abrir o comprovante.
 
-> Substitua por uma print da página `/receipts` ou do detalhe de uma visita concluída mostrando o card de geração/download do comprovante.
+<img width="1219" height="285" alt="image" src="https://github.com/user-attachments/assets/ad357883-3741-442b-a8eb-3abb22984f40" />
+<img width="788" height="958" alt="image" src="https://github.com/user-attachments/assets/97d0cdd7-c543-4ca7-a46c-1fe53714aef9" />
+
 
 ### Administração
 
