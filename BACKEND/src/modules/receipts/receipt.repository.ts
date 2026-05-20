@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { Prisma, ReceiptDocument } from "@prisma/client";
 
 import type { DbClient } from "../../db/db-client";
@@ -127,6 +129,7 @@ export class ReceiptRepository {
 
     return db.receiptDocument.create({
       data: {
+        id: randomUUID(),
         visitId,
         storageKey: data.storageKey,
         fileName: data.fileName,

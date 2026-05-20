@@ -4,7 +4,7 @@ type FetchRequestInit = RequestInit & {
   duplex?: "half";
 };
 
-const DEFAULT_BACKEND_URL = "https://jamval-backend.vercel.app";
+const DEFAULT_BACKEND_URL = "https://jamval-app-backend.vercel.app";
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
   "content-length",
