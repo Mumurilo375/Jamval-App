@@ -28,7 +28,7 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 
 ## Demonstração Do Fluxo
 
-> Substitua por uma print da página `/` mostrando a **Fila do dia**, com clientes para retorno, visitas em andamento e histórico recente.
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/35c5cc5d-a82c-4bbb-8619-6c918111627b" />
 
 1. O usuário cadastra produtos, clientes e o catálogo de produtos por cliente.
 2. O estoque central recebe entradas manuais com quantidade e custo de compra.
@@ -40,7 +40,9 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 8. Se o cliente não pagou tudo, o valor restante aparece na área **Receber**.
 9. A fila de retorno ajuda a lembrar quais clientes precisam ser visitados novamente.
 
-> Substitua por uma print da página `/visits/:id` mostrando as etapas **Conferir venda do período**, **Receber** e **Repor e gerar nova base**.
+<img width="1370" height="802" alt="image" src="https://github.com/user-attachments/assets/611e8c64-8fc2-4248-82a0-0d8685cb7588" />
+
+<img width="1370" height="973" alt="image" src="https://github.com/user-attachments/assets/937efdc5-0a45-423d-9c67-5d949614b5e9" />
 
 ## Funcionalidades
 
