@@ -72,7 +72,9 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 - Registro de novos pagamentos com forma de pagamento, referência e observações.
 - Proteção para impedir pagamento maior que o saldo atual.
 
-> Substitua por uma print da página `/financeiro` mostrando clientes com saldo pendente e o resumo de total, recebido e saldo.
+<img width="1212" height="359" alt="image" src="https://github.com/user-attachments/assets/490e3240-79a8-4af8-88fb-3e8f7fd1ca4c" />
+<img width="1223" height="347" alt="image" src="https://github.com/user-attachments/assets/c337e5db-57a2-46bd-a355-6169ad3eb4e3" />
+
 
 ### Estoque
 
@@ -84,7 +86,11 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 - Saídas automáticas por reposição de consignação e por venda direta.
 - Alertas de produtos sem saldo ou com baixa quantidade.
 
-> Substitua por uma print da página `/stock` mostrando saldo atual, produtos com baixa quantidade e atalhos de movimentação.
+<img width="1223" height="844" alt="image" src="https://github.com/user-attachments/assets/e9363f46-c9d4-4b38-a2a9-f7728b12d884" />
+<img width="1223" height="836" alt="image" src="https://github.com/user-attachments/assets/dea67c6d-a2d2-470c-9315-72e90f832ede" />
+
+
+
 
 ### Comprovantes
 
