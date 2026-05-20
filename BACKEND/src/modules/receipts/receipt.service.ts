@@ -6,7 +6,6 @@ import { VisitStatus } from "@prisma/client";
 import { AdminRepository } from "../admin/admin.repository";
 import { AppError } from "../../shared/errors/app-error";
 import { NotFoundError } from "../../shared/errors/not-found-error";
-import { fileExists, readStorageFile } from "../../shared/utils/local-storage";
 import { resolveReceiptCompanyProfile } from "./receipt-company-profile";
 import { renderReceiptPdf } from "./receipt-pdf";
 import { ReceiptRepository } from "./receipt.repository";
@@ -48,7 +47,6 @@ export class ReceiptService {
       fileName,
       mimeType: "application/pdf",
       checksum,
-      contentBytes: toDatabaseBytes(pdfBuffer),
       generatedAt
     });
 
@@ -80,25 +78,20 @@ export class ReceiptService {
       throw new NotFoundError("Receipt document not found", { id });
     }
 
-    if (receiptDocument.contentBytes) {
-      return {
-        receiptDocument,
-        content: Buffer.from(receiptDocument.contentBytes)
-      };
-    }
+    const visit = await this.repository.findVisitByIdForReceipt(receiptDocument.visitId);
 
-    const exists = await fileExists(receiptDocument.storageKey);
-
-    if (!exists) {
-      throw new AppError(404, "RECEIPT_FILE_NOT_FOUND", "Receipt PDF file was not found in local storage", {
-        receiptDocumentId: id,
-        storageKey: receiptDocument.storageKey
-      });
+    if (!visit) {
+      throw new NotFoundError("Visit not found", { id: receiptDocument.visitId });
     }
 
     return {
       receiptDocument,
-      content: await readStorageFile(receiptDocument.storageKey)
+      content: await renderReceiptPdf({
+        visit,
+        companyProfile: await this.getCompanyProfile(),
+        issuedAt: receiptDocument.generatedAt,
+        initialPayment: getInitialPaymentSummary(visit)
+      })
     };
   }
 
@@ -134,10 +127,6 @@ function ensureVisitCanGenerateReceipt(visitId: string, status: VisitStatus): vo
       status
     });
   }
-}
-
-function toDatabaseBytes(buffer: Buffer): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(buffer);
 }
 
 function mapReceiptSummary(

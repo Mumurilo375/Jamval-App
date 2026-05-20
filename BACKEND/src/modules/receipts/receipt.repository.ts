@@ -58,9 +58,24 @@ type UpsertReceiptDocumentInput = {
   fileName: string;
   mimeType: string;
   checksum: string;
-  contentBytes: Uint8Array<ArrayBuffer>;
   generatedAt: Date;
 };
+
+const receiptDocumentDownloadSelect = {
+  id: true,
+  visitId: true,
+  storageKey: true,
+  fileName: true,
+  mimeType: true,
+  checksum: true,
+  generatedAt: true,
+  createdAt: true,
+  updatedAt: true
+} satisfies Prisma.ReceiptDocumentSelect;
+
+export type ReceiptDocumentForDownload = Prisma.ReceiptDocumentGetPayload<{
+  select: typeof receiptDocumentDownloadSelect;
+}>;
 
 export class ReceiptRepository {
   async findVisitByIdForReceipt(visitId: string, db: DbClient = prisma): Promise<VisitReceiptSource | null> {
@@ -80,9 +95,10 @@ export class ReceiptRepository {
     });
   }
 
-  async findReceiptById(id: string, db: DbClient = prisma): Promise<ReceiptDocument | null> {
+  async findReceiptById(id: string, db: DbClient = prisma): Promise<ReceiptDocumentForDownload | null> {
     return db.receiptDocument.findUnique({
-      where: { id }
+      where: { id },
+      select: receiptDocumentDownloadSelect
     });
   }
 
@@ -104,7 +120,6 @@ export class ReceiptRepository {
           fileName: data.fileName,
           mimeType: data.mimeType,
           checksum: data.checksum,
-          contentBytes: data.contentBytes,
           generatedAt: data.generatedAt
         }
       });
@@ -117,7 +132,6 @@ export class ReceiptRepository {
         fileName: data.fileName,
         mimeType: data.mimeType,
         checksum: data.checksum,
-        contentBytes: data.contentBytes,
         generatedAt: data.generatedAt
       }
     });
