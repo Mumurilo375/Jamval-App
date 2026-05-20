@@ -1,3 +1,7 @@
+# Demo: https://jamval-frontend.vercel.app/
+
+> Nota: este sistema foi desenvolvido para um único usuário (foi feito para meu pai) e não possui cadastro público. Para testar o site use o login: `teste@gmail.com` / senha: `#Borabill67`.
+
 # Jamval App
 
 Sistema web para controle de vendas em consignação, visitas, recebimentos, comprovantes e estoque de uma pequena operação familiar de acessórios eletrônicos.
