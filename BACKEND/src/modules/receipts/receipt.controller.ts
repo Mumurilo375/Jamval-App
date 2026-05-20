@@ -29,4 +29,13 @@ export class ReceiptController {
     reply.type(result.receiptDocument.mimeType);
     reply.send(result.content);
   };
+
+  downloadByVisit = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const params = parseWithZod(receiptVisitParamsSchema, request.params);
+    const result = await this.service.getDownloadByVisit(params.id);
+
+    reply.header("Content-Disposition", `attachment; filename=\"${result.fileName}\"`);
+    reply.type(result.mimeType);
+    reply.send(result.content);
+  };
 }

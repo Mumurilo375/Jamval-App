@@ -25,32 +25,29 @@ export class ReceiptService {
 
     ensureVisitCanGenerateReceipt(visit.id, visit.status);
     const generatedAt = new Date();
-    const companyProfile = await this.getCompanyProfile();
+    const { fileName, storageKey, mimeType, checksum } = await this.buildReceiptArtifacts(visit, generatedAt);
 
-    const pdfBuffer = await renderReceiptPdf({
-      visit,
-      companyProfile,
-      issuedAt: generatedAt,
-      initialPayment: getInitialPaymentSummary(visit)
-    });
+    try {
+      await this.repository.upsertByVisit(visit.id, {
+        visitId: visit.id,
+        storageKey,
+        fileName,
+        mimeType,
+        checksum,
+        generatedAt
+      });
 
-    const fileName =
-      visit.visitType === "SALE"
-        ? `comprovante-venda-direta-${visit.visitCode}.pdf`
-        : `comprovante-acerto-e-reposicao-${visit.visitCode}.pdf`;
-    const storageKey = path.posix.join("receipts", "visits", visit.id, fileName);
-    const checksum = crypto.createHash("sha256").update(pdfBuffer).digest("hex");
-
-    await this.repository.upsertByVisit(visit.id, {
-      visitId: visit.id,
-      storageKey,
-      fileName,
-      mimeType: "application/pdf",
-      checksum,
-      generatedAt
-    });
-
-    return this.getByVisitId(visitId);
+      return this.getByVisitId(visitId);
+    } catch {
+      return mapVirtualReceiptSummary({
+        visit,
+        generatedAt,
+        fileName,
+        mimeType,
+        checksum,
+        storageKey
+      });
+    }
   }
 
   async getByVisitId(visitId: string) {
@@ -60,7 +57,7 @@ export class ReceiptService {
       throw new NotFoundError("Visit not found", { id: visitId });
     }
 
-    const receiptDocument = await this.repository.findReceiptByVisitId(visitId);
+    const receiptDocument = await this.findReceiptByVisitIdBestEffort(visitId);
 
     if (!receiptDocument) {
       throw new AppError(404, "RECEIPT_DOCUMENT_NOT_FOUND", "Receipt document was not generated yet", {
@@ -95,8 +92,26 @@ export class ReceiptService {
     };
   }
 
+  async getDownloadByVisit(visitId: string) {
+    const visit = await this.repository.findVisitByIdForReceipt(visitId);
+
+    if (!visit) {
+      throw new NotFoundError("Visit not found", { id: visitId });
+    }
+
+    ensureVisitCanGenerateReceipt(visit.id, visit.status);
+    const generatedAt = new Date();
+    const { fileName, mimeType, pdfBuffer } = await this.buildReceiptArtifacts(visit, generatedAt);
+
+    return {
+      fileName,
+      mimeType,
+      content: pdfBuffer
+    };
+  }
+
   private async getCompanyProfile() {
-    const settings = await this.adminRepository.findCompanyProfileSettings();
+    const settings = await this.findCompanyProfileSettingsBestEffort();
 
     return resolveReceiptCompanyProfile(
       settings
@@ -110,6 +125,44 @@ export class ReceiptService {
           }
         : null
     );
+  }
+
+  private async findCompanyProfileSettingsBestEffort() {
+    try {
+      return await this.adminRepository.findCompanyProfileSettings();
+    } catch {
+      return null;
+    }
+  }
+
+  private async findReceiptByVisitIdBestEffort(visitId: string) {
+    try {
+      return await this.repository.findReceiptByVisitId(visitId);
+    } catch {
+      return null;
+    }
+  }
+
+  private async buildReceiptArtifacts(
+    visit: NonNullable<Awaited<ReturnType<ReceiptRepository["findVisitByIdForReceipt"]>>>,
+    generatedAt: Date
+  ) {
+    const pdfBuffer = await renderReceiptPdf({
+      visit,
+      companyProfile: await this.getCompanyProfile(),
+      issuedAt: generatedAt,
+      initialPayment: getInitialPaymentSummary(visit)
+    });
+    const fileName = buildReceiptFileName(visit.visitType, visit.visitCode);
+    const storageKey = path.posix.join("receipts", "visits", visit.id, fileName);
+
+    return {
+      fileName,
+      storageKey,
+      mimeType: "application/pdf",
+      checksum: crypto.createHash("sha256").update(pdfBuffer).digest("hex"),
+      pdfBuffer
+    };
   }
 }
 
@@ -161,6 +214,46 @@ function mapReceiptSummary(
     initialPayment,
     downloadUrl: `/receipt-documents/${receiptDocument.id}/download`
   };
+}
+
+function mapVirtualReceiptSummary(input: {
+  visit: NonNullable<Awaited<ReturnType<ReceiptRepository["findVisitByIdForReceipt"]>>>;
+  generatedAt: Date;
+  fileName: string;
+  mimeType: string;
+  checksum: string;
+  storageKey: string;
+}) {
+  const initialPayment = getInitialPaymentSummary(input.visit);
+
+  return {
+    id: input.visit.id,
+    visitId: input.visit.id,
+    storageKey: input.storageKey,
+    fileName: input.fileName,
+    mimeType: input.mimeType,
+    checksum: input.checksum,
+    generatedAt: input.generatedAt,
+    createdAt: input.generatedAt,
+    updatedAt: input.generatedAt,
+    visit: {
+      id: input.visit.id,
+      visitCode: input.visit.visitCode,
+      status: input.visit.status,
+      visitedAt: input.visit.visitedAt,
+      totalAmount: input.visit.totalAmount,
+      receivedAmountOnVisit: input.visit.receivedAmountOnVisit,
+      client: input.visit.client
+    },
+    initialPayment,
+    downloadUrl: `/visits/${input.visit.id}/receipt/download`
+  };
+}
+
+function buildReceiptFileName(visitType: "CONSIGNMENT" | "SALE", visitCode: string): string {
+  return visitType === "SALE"
+    ? `comprovante-venda-direta-${visitCode}.pdf`
+    : `comprovante-acerto-e-reposicao-${visitCode}.pdf`;
 }
 
 function getInitialPaymentSummary(
