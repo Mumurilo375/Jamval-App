@@ -193,8 +193,9 @@ export function AdminDashboardPage() {
                       tick={{ fontSize: isMobile ? 10 : 11, fill: "#64748b" }}
                       tickLine={false}
                       axisLine={false}
-                      interval={isMobile ? "preserveStartEnd" : 0}
-                      minTickGap={isMobile ? 30 : 16}
+                      interval="preserveStartEnd"
+                      minTickGap={isMobile ? 30 : 36}
+                      tickMargin={8}
                       tickFormatter={(value: string) => formatShortAxisDate(value, isMobile)}
                     />
                     {!isMobile ? <YAxis tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} width={72} tickFormatter={formatCompactCurrency} /> : null}
@@ -249,7 +250,7 @@ export function AdminDashboardPage() {
               <ResponsiveContainer width="100%" height={isMobile ? 220 : 290}>
                 <BarChart data={visitsSeries} margin={isMobile ? { top: 6, right: 4, left: 0, bottom: 0 } : { top: 8, right: 8, left: -8, bottom: 0 }}>
                   <CartesianGrid stroke="rgba(148,163,184,0.18)" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 11, fill: "#64748b" }} tickLine={false} axisLine={false} interval={isMobile ? "preserveStartEnd" : 0} minTickGap={isMobile ? 30 : 16} tickFormatter={(value: string) => formatShortAxisDate(value, isMobile)} />
+                  <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 11, fill: "#64748b" }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={isMobile ? 30 : 36} tickMargin={8} tickFormatter={(value: string) => formatShortAxisDate(value, isMobile)} />
                   {!isMobile ? <YAxis tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} allowDecimals={false} /> : null}
                   <Tooltip formatter={(value: unknown, name: unknown) => [`${Number(value ?? 0)} visita(s)`, name === "consignmentVisits" ? "Consignacao" : "Venda"]} labelFormatter={(label: unknown) => formatDate(typeof label === "string" ? label : null)} />
                   <Bar dataKey="consignmentVisits" stackId="visits" fill="#b45309" radius={[4, 4, 0, 0]} />
