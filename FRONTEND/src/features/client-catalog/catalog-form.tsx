@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, Checkbox, ErrorBanner, Field, Input, PageLoader, Select } from "../../components/ui";
+import { Button, Card, Checkbox, ErrorBanner, Field, Input, MoneyInput, PageLoader, Select, StickyActionBar } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { formatCurrency } from "../../lib/format";
 import { isNonNegativeIntegerInput, parseDecimalInput, toNullableNumber } from "../../lib/forms";
@@ -17,16 +17,16 @@ const catalogFormSchema = z.object({
   currentUnitPrice: z
     .string()
     .trim()
-    .min(1, "Informe o preco")
-    .refine((value) => !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) >= 0, "Informe um valor valido"),
+    .min(1, "Informe o preço")
+    .refine((value) => !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) >= 0, "Informe um valor válido"),
   idealQuantity: z
     .string()
     .trim()
-    .refine((value) => value === "" || isNonNegativeIntegerInput(value), "Informe uma quantidade inteira valida"),
+    .refine((value) => value === "" || isNonNegativeIntegerInput(value), "Informe uma quantidade inteira válida"),
   displayOrder: z
     .string()
     .trim()
-    .refine((value) => value === "" || isNonNegativeIntegerInput(value), "Informe uma ordem inteira valida"),
+    .refine((value) => value === "" || isNonNegativeIntegerInput(value), "Informe uma ordem inteira válida"),
   isActive: z.boolean()
 });
 
@@ -48,9 +48,9 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setValue,
-    watch
   } = useForm<CatalogFormValues>({
     resolver: zodResolver(catalogFormSchema),
     defaultValues: {
@@ -61,6 +61,7 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
       isActive: item?.isActive ?? true
     }
   });
+  const isActive = useWatch({ control, name: "isActive" });
 
   const mutation = useMutation({
     mutationFn: async (values: CatalogFormValues) => {
@@ -90,7 +91,7 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
   }
 
   if (productsQuery.isError) {
-    return <ErrorBanner message="Nao foi possivel carregar os produtos ativos para o catalogo." />;
+    return <ErrorBanner message="Não foi possível carregar os produtos ativos para o catálogo." />;
   }
 
   return (
@@ -109,8 +110,8 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
           </Select>
         </Field>
 
-        <Field label="Preco" error={errors.currentUnitPrice?.message}>
-          <Input inputMode="decimal" placeholder="39.90" {...register("currentUnitPrice")} />
+        <Field label="Preço" error={errors.currentUnitPrice?.message}>
+          <MoneyInput {...register("currentUnitPrice")} />
         </Field>
 
         <details className="rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3 py-3">
@@ -131,22 +132,22 @@ export function CatalogForm({ client, mode, item }: CatalogFormProps) {
           <div className="mt-4">
             <Checkbox
               {...register("isActive")}
-              label="Ativo nas proximas visitas"
+              label="Ativo nas próximas visitas"
               hint={`Mix configurado de ${client.tradeName}`}
-              checked={watch("isActive")}
+              checked={Boolean(isActive)}
               onChange={(event) => setValue("isActive", event.target.checked, { shouldDirty: true })}
             />
           </div>
         </details>
 
-        <div className="flex gap-3">
-          <Button type="button" variant="ghost" className="flex-1" onClick={() => navigate(-1)}>
+        <StickyActionBar>
+          <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => navigate(-1)}>
             Voltar
           </Button>
-          <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : mode === "create" ? "Adicionar ao mix" : "Salvar mix e preco"}
+          <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : mode === "create" ? "Adicionar ao mix" : "Salvar mix e preço"}
           </Button>
-        </div>
+        </StickyActionBar>
       </form>
     </Card>
   );
