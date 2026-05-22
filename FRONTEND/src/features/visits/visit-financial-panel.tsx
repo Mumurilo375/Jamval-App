@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button, Card, ErrorBanner, Field, Input } from "../../components/ui";
+import { Button, Card, ErrorBanner, Field, MoneyInput } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { formatCurrency } from "../../lib/format";
 import type { VisitDetail } from "../../types/domain";
@@ -17,7 +17,7 @@ const financialFormSchema = z.object({
     .trim()
     .refine(
       (value) => value === "" || (!Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) >= 0),
-      "Informe um valor valido"
+      "Informe um valor válido"
     )
 });
 
@@ -73,7 +73,7 @@ export function VisitFinancialPanel({ visit }: VisitFinancialPanelProps) {
 
     if (parsedAmount > totalAmount) {
       setError("receivedAmountOnVisit", {
-        message: "O valor recebido nao pode ser maior que o total a cobrar."
+        message: "O valor recebido não pode ser maior que o total a cobrar."
       });
       return;
     }
@@ -85,7 +85,7 @@ export function VisitFinancialPanel({ visit }: VisitFinancialPanelProps) {
     <Card className="space-y-4">
       <div>
         <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Financeiro da visita</p>
-        <p className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">Recebimento depois da conferencia</p>
+        <p className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">Recebimento depois da conferência</p>
         <p className="mt-1 text-sm text-[var(--jam-subtle)]">
           Primeiro confira os produtos e o total a cobrar. Depois informe quanto entrou nesta visita.
         </p>
@@ -103,10 +103,10 @@ export function VisitFinancialPanel({ visit }: VisitFinancialPanelProps) {
         <form className="space-y-4" onSubmit={onSubmit}>
           <Field
             label="Valor recebido na visita"
-            hint="Esse valor entra somente depois da conferencia e do total a cobrar."
+            hint="Esse valor entra somente depois da conferência e do total a cobrar."
             error={errors.receivedAmountOnVisit?.message}
           >
-            <Input inputMode="decimal" placeholder="0,00" {...register("receivedAmountOnVisit")} />
+            <MoneyInput {...register("receivedAmountOnVisit")} />
           </Field>
 
           <Button type="submit" className="w-full" disabled={mutation.isPending}>
@@ -115,7 +115,7 @@ export function VisitFinancialPanel({ visit }: VisitFinancialPanelProps) {
         </form>
       ) : (
         <p className="text-sm text-[var(--jam-subtle)]">
-          O valor recebido ficou registrado junto com a visita concluida.
+          O valor recebido ficou registrado junto com a visita concluída.
         </p>
       )}
     </Card>

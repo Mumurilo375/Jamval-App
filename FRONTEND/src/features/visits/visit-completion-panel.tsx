@@ -19,8 +19,8 @@ const completionFormSchema = z.object({
     .trim()
     .min(1, "Selecione a forma de pagamento")
     .refine((value) => paymentMethods.some((method) => method === value), "Selecione a forma de pagamento"),
-  reference: z.string().max(160, "Use ate 160 caracteres"),
-  notes: z.string().max(2000, "Use ate 2000 caracteres")
+  reference: z.string().max(160, "Use até 160 caracteres"),
+  notes: z.string().max(2000, "Use até 2000 caracteres")
 });
 
 type CompletionFormValues = z.infer<typeof completionFormSchema>;
@@ -78,13 +78,13 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
       <Card className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Conclusao</p>
-            <p className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">Visita concluida</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Conclusão</p>
+            <p className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">Visita concluída</p>
           </div>
           <ToneBadge label={visitStatusLabel(visit.status)} tone={visitStatusTone(visit.status)} />
         </div>
         <p className="text-sm text-[var(--jam-subtle)]">
-          Concluida em {formatDate(visit.completedAt)}. A visita agora fica somente para leitura.
+          Concluída em {formatDate(visit.completedAt)}. A visita agora fica somente para leitura.
         </p>
       </Card>
     );
@@ -105,9 +105,9 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
     <Card className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Conclusao</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Conclusão</p>
           <p className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">Etapa final</p>
-          <p className="mt-1 text-sm text-[var(--jam-subtle)]">Conclua a visita somente depois de revisar conferencia e financeiro.</p>
+          <p className="mt-1 text-sm text-[var(--jam-subtle)]">Conclua a visita somente depois de revisar conferência e financeiro.</p>
         </div>
         <ToneBadge label={visitStatusLabel(visit.status)} tone={visitStatusTone(visit.status)} />
       </div>
@@ -124,11 +124,11 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
         </p>
       ) : requiresInitialPayment ? (
         <p className="text-sm text-[var(--jam-subtle)]">
-          Como houve valor recebido na visita, confirme a forma do pagamento inicial antes da conclusao.
+          Como houve valor recebido na visita, confirme a forma do pagamento inicial antes da conclusão.
         </p>
       ) : (
         <p className="text-sm text-[var(--jam-subtle)]">
-          O valor recebido esta zerado. Se a conferencia estiver correta, a visita pode ser concluida sem pagamento inicial.
+          O valor recebido está zerado. Se a conferência estiver correta, a visita pode ser concluída sem pagamento inicial.
         </p>
       )}
 
@@ -147,12 +147,12 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
             </Select>
           </Field>
 
-          <Field label="Referencia" error={errors.reference?.message}>
-            <Input {...register("reference")} placeholder="pix nubank, maquina verde, dinheiro trocado" maxLength={160} />
+          <Field label="Referência" error={errors.reference?.message}>
+            <Input {...register("reference")} placeholder="PIX, máquina, dinheiro trocado" maxLength={160} />
           </Field>
 
-          <Field label="Observacoes" error={errors.notes?.message}>
-            <Textarea {...register("notes")} placeholder="Observacoes sobre o pagamento inicial" maxLength={2000} />
+          <Field label="Observações" error={errors.notes?.message}>
+            <Textarea {...register("notes")} placeholder="Observações sobre o pagamento inicial" maxLength={2000} />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
@@ -160,7 +160,7 @@ export function VisitCompletionPanel({ visit }: VisitCompletionPanelProps) {
               Voltar
             </Button>
             <Button type="submit" disabled={completionMutation.isPending || !canComplete}>
-              {completionMutation.isPending ? "Concluindo..." : "Confirmar conclusao"}
+              {completionMutation.isPending ? "Concluindo..." : "Confirmar conclusão"}
             </Button>
           </div>
         </form>
@@ -206,7 +206,7 @@ function formatCompletionError(error: ApiError, visit: VisitDetail): string {
   const formattedItems = rawItems
     .map((entry) => {
       const label = visit.items.find((item) => item.productId === entry.productId)?.productSnapshotName ?? "Produto";
-      return `${label}: precisa ${entry.requiredQuantity}, disponivel ${entry.availableQuantity}`;
+      return `${label}: precisa ${entry.requiredQuantity}, disponível ${entry.availableQuantity}`;
     })
     .join(" | ");
 
@@ -215,7 +215,7 @@ function formatCompletionError(error: ApiError, visit: VisitDetail): string {
 
 function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
   if (method === "BANK_TRANSFER") {
-    return "Transferencia";
+    return "Transferência";
   }
 
   if (method === "CASH") {
@@ -223,7 +223,7 @@ function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
   }
 
   if (method === "CARD") {
-    return "Cartao";
+    return "Cartão";
   }
 
   if (method === "PIX") {
