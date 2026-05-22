@@ -52,13 +52,13 @@ export function AdminDashboardPage() {
   });
 
   if (dashboardQuery.isPending) {
-    return <PageLoader label="Carregando visao geral..." />;
+    return <PageLoader label="Carregando visão geral..." />;
   }
 
   if (dashboardQuery.isError || !dashboardQuery.data) {
     return (
       <AdminQueryErrorState
-        title="Nao foi possivel carregar a visao geral"
+        title="Não foi possível carregar a visão geral"
         error={dashboardQuery.error}
         onRetry={() => void dashboardQuery.refetch()}
       />
@@ -79,16 +79,16 @@ export function AdminDashboardPage() {
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden pb-2">
       <PageHeader
-        eyebrow="Administracao"
-        title="Visao geral"
+        eyebrow="Administração"
+        title="Visão geral"
         subtitle="Leitura curta do financeiro, do ritmo comercial e dos alertas de estoque."
       />
 
       <section className="overflow-hidden rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Periodo</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Período</p>
         <h2 className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">Escolha o recorte manual</h2>
         <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">
-          Lendo de {formatDate(dateFrom)} ate {formatDate(dateTo)}.
+          Lendo de {formatDate(dateFrom)} até {formatDate(dateTo)}.
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -106,7 +106,7 @@ export function AdminDashboardPage() {
           </Field>
         </div>
 
-        {invalidPeriod ? <div className="mt-3"><ErrorBanner message="A data inicial nao pode ser maior que a data final." /></div> : null}
+        {invalidPeriod ? <div className="mt-3"><ErrorBanner message="A data inicial não pode ser maior que a data final." /></div> : null}
 
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Button
@@ -115,7 +115,7 @@ export function AdminDashboardPage() {
             disabled={invalidPeriod}
             onClick={() => setSearchParams(toSearchParams(draftFilters))}
           >
-            Aplicar periodo
+            Aplicar período
           </Button>
           <Button
             type="button"
@@ -135,32 +135,32 @@ export function AdminDashboardPage() {
         <AdminMetricCard
           label="Entrou no caixa"
           value={formatCurrency(headline.receivedAmount)}
-          hint={headline.receivedAmount > 0 ? "Recebimentos lancados neste recorte." : "Sem entrada registrada neste recorte."}
+          hint={headline.receivedAmount > 0 ? "Recebimentos lançados neste recorte." : "Sem entrada registrada neste recorte."}
           tone={headline.receivedAmount > 0 ? "success" : "neutral"}
         />
         <AdminMetricCard
           label="Em aberto na carteira"
           value={formatCurrency(headline.outstandingAmount)}
-          hint={`${receivablesStatus.pending.count + receivablesStatus.partial.count} titulo(s) para acompanhar.`}
+          hint={`${receivablesStatus.pending.count + receivablesStatus.partial.count} título(s) para acompanhar.`}
           tone={headline.outstandingAmount > 0 ? "warning" : "success"}
         />
         <AdminMetricCard
-          label="Lucro ja apurado"
+          label="Lucro já apurado"
           value={headline.confirmedGrossProfitAmount === null ? "-" : formatCurrency(headline.confirmedGrossProfitAmount)}
-          hint={headline.confirmedGrossProfitAmount === null ? "Ainda falta apurar parte do custo." : "Lucro ja fechado neste recorte."}
+          hint={headline.confirmedGrossProfitAmount === null ? "Ainda falta apurar parte do custo." : "Lucro já fechado neste recorte."}
           tone={headline.confirmedGrossProfitAmount === null ? "warning" : "neutral"}
         />
         <AdminMetricCard
-          label="Vendido no periodo"
+          label="Vendido no período"
           value={formatCurrency(headline.soldAmount)}
-          hint={`${headline.completedVisits} visita(s) concluidas.`}
+          hint={`${headline.completedVisits} visita(s) concluídas.`}
         />
       </div>
 
       <AdminSectionCard
         eyebrow="Financeiro"
         title="Vendido x recebido"
-        description="Comparacao diaria do que foi vendido e do que entrou no caixa."
+        description="Comparação diária do que foi vendido e do que entrou no caixa."
         action={<Link to="/financeiro"><Button variant="secondary" className="w-full sm:w-auto">Abrir receber</Button></Link>}
       >
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.95fr)]">
@@ -209,14 +209,14 @@ export function AdminDashboardPage() {
                 </ResponsiveContainer>
               </>
             ) : (
-              <AdminEmptyBlock title="Sem movimentacao financeira no periodo" message="Ainda nao ha vendas ou recebimentos suficientes para desenhar este comparativo." />
+              <AdminEmptyBlock title="Sem movimentação financeira no período" message="Ainda não há vendas ou recebimentos suficientes para desenhar este comparativo." />
             )}
           </div>
 
           <div className="min-w-0 overflow-hidden rounded-2xl border border-[var(--jam-border)] bg-white p-3 sm:p-4">
             <div className="mb-3">
               <p className="text-[13px] font-semibold text-[var(--jam-ink)]">Carteira atual</p>
-              <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">Quanto esta em aberto, parcial e quitado hoje.</p>
+              <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">Quanto está em aberto, parcial e quitado hoje.</p>
             </div>
             <div className="mb-4 h-3 overflow-hidden rounded-full bg-[var(--jam-panel-strong)]">
               <div className="flex h-full w-full">
@@ -237,13 +237,13 @@ export function AdminDashboardPage() {
       <AdminSectionCard
         eyebrow="Comercial"
         title="Ritmo de visitas"
-        description="Volume diario de visitas concluidas e o mix entre consignacao e venda."
+        description="Volume diário de visitas concluídas e o mix entre consignação e venda."
         action={<Link to="/admin/indicadores"><Button variant="secondary" className="w-full sm:w-auto">Abrir indicadores</Button></Link>}
       >
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.95fr)]">
           <div className="min-w-0 overflow-hidden rounded-2xl border border-[var(--jam-border)] bg-white p-3 sm:p-4">
             <div className="mb-3 flex flex-wrap gap-2">
-              <LegendDot label="Consignacao" color="#b45309" />
+              <LegendDot label="Consignação" color="#b45309" />
               <LegendDot label="Venda" color="#b42318" />
             </div>
             {visitsHasData ? (
@@ -252,24 +252,24 @@ export function AdminDashboardPage() {
                   <CartesianGrid stroke="rgba(148,163,184,0.18)" vertical={false} />
                   <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 11, fill: "#64748b" }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={isMobile ? 30 : 36} tickMargin={8} tickFormatter={(value: string) => formatShortAxisDate(value, isMobile)} />
                   {!isMobile ? <YAxis tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} allowDecimals={false} /> : null}
-                  <Tooltip formatter={(value: unknown, name: unknown) => [`${Number(value ?? 0)} visita(s)`, name === "consignmentVisits" ? "Consignacao" : "Venda"]} labelFormatter={(label: unknown) => formatDate(typeof label === "string" ? label : null)} />
+                  <Tooltip formatter={(value: unknown, name: unknown) => [`${Number(value ?? 0)} visita(s)`, name === "consignmentVisits" ? "Consignação" : "Venda"]} labelFormatter={(label: unknown) => formatDate(typeof label === "string" ? label : null)} />
                   <Bar dataKey="consignmentVisits" stackId="visits" fill="#b45309" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="saleVisits" stackId="visits" fill="#b42318" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <AdminEmptyBlock title="Sem visitas concluidas no periodo" message="Ainda nao ha volume suficiente para montar o grafico comercial deste recorte." />
+              <AdminEmptyBlock title="Sem visitas concluídas no período" message="Ainda não há volume suficiente para montar o gráfico comercial deste recorte." />
             )}
           </div>
 
           <div className="min-w-0 overflow-hidden rounded-2xl border border-[var(--jam-border)] bg-white p-3 sm:p-4">
             <div className="mb-3">
               <p className="text-[13px] font-semibold text-[var(--jam-ink)]">Mix de tipos</p>
-              <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">Como as visitas do periodo se dividiram.</p>
+              <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">Como as visitas do período se dividiram.</p>
             </div>
             {totalVisitsByType > 0 ? (
               <div className="space-y-3">
-                <SplitRow label="Consignacao" count={consignmentVisits} progress={toBarPercent(consignmentVisits, totalVisitsByType)} colorClassName="bg-[rgba(180,83,9,0.82)]" />
+                <SplitRow label="Consignação" count={consignmentVisits} progress={toBarPercent(consignmentVisits, totalVisitsByType)} colorClassName="bg-[rgba(180,83,9,0.82)]" />
                 <SplitRow label="Venda" count={saleVisits} progress={toBarPercent(saleVisits, totalVisitsByType)} colorClassName="bg-[rgba(180,35,24,0.78)]" />
                 <div className="rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-3 py-3">
                   <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-subtle)]">Total de visitas</p>
@@ -277,7 +277,7 @@ export function AdminDashboardPage() {
                 </div>
               </div>
             ) : (
-              <AdminEmptyBlock title="Sem mix para comparar" message="Quando houver visitas concluidas neste recorte, a divisao entre consignacao e venda aparece aqui." />
+              <AdminEmptyBlock title="Sem mix para comparar" message="Quando houver visitas concluídas neste recorte, a divisão entre consignação e venda aparece aqui." />
             )}
           </div>
         </div>
@@ -286,8 +286,8 @@ export function AdminDashboardPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         <AdminSectionCard
           eyebrow="Resultado"
-          title="Situacao das vendas"
-          description="O que ja esta apurado, o que ainda esta em revisao e o que segue sem custo."
+          title="Situação das vendas"
+          description="O que já está apurado, o que ainda está em revisão e o que segue sem custo."
           action={<Link to="/admin/lucro"><Button variant="secondary" className="w-full sm:w-auto">Abrir lucro</Button></Link>}
         >
           {resultTotal > 0 ? (
@@ -295,9 +295,9 @@ export function AdminDashboardPage() {
               <div className="rounded-xl border border-[var(--jam-border)] bg-white p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-[var(--jam-ink)]">Lucro ja apurado</p>
+                    <p className="text-[13px] font-semibold text-[var(--jam-ink)]">Lucro já apurado</p>
                     <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">
-                      {headline.confirmedGrossProfitAmount === null ? "Ainda falta apurar parte do custo." : "Parte do periodo que ja tem custo real encontrado."}
+                      {headline.confirmedGrossProfitAmount === null ? "Ainda falta apurar parte do custo." : "Parte do período que já tem custo real encontrado."}
                     </p>
                   </div>
                   <p className="text-[13px] font-semibold text-[var(--jam-ink)]">{headline.confirmedGrossProfitAmount === null ? "-" : formatCurrency(headline.confirmedGrossProfitAmount)}</p>
@@ -311,42 +311,42 @@ export function AdminDashboardPage() {
                 </div>
               </div>
               <div className="grid gap-2.5 sm:grid-cols-3">
-                <ResultTile title="Ja apurado" note="Custo real ja encontrado" value={formatCurrency(profitCoverage.confirmed.revenueAmount)} itemCount={profitCoverage.confirmed.visitItemsCount} tone="success" />
-                <ResultTile title="Em revisao" note="Ainda usando referencia" value={formatCurrency(profitCoverage.reference.revenueAmount)} itemCount={profitCoverage.reference.visitItemsCount} tone="warning" />
+                <ResultTile title="Já apurado" note="Custo real já encontrado" value={formatCurrency(profitCoverage.confirmed.revenueAmount)} itemCount={profitCoverage.confirmed.visitItemsCount} tone="success" />
+                <ResultTile title="Em revisão" note="Ainda usando referência" value={formatCurrency(profitCoverage.reference.revenueAmount)} itemCount={profitCoverage.reference.visitItemsCount} tone="warning" />
                 <ResultTile title="Sem custo" note="Ainda sem base de custo" value={formatCurrency(profitCoverage.missing.revenueAmount)} itemCount={profitCoverage.missing.visitItemsCount} tone="danger" />
               </div>
             </div>
           ) : (
-            <AdminEmptyBlock title="Sem leitura de resultado no periodo" message="Ainda nao ha vendas suficientes neste recorte para montar esta visao." />
+            <AdminEmptyBlock title="Sem leitura de resultado no período" message="Ainda não há vendas suficientes neste recorte para montar esta visão." />
           )}
         </AdminSectionCard>
 
         <AdminSectionCard
           eyebrow="Estoque"
-          title="Alertas rapidos"
-          description="Estoque fica em segundo plano, so como alerta operacional."
+          title="Alertas rápidos"
+          description="Estoque fica em segundo plano, só como alerta operacional."
           action={<Link to="/stock"><Button variant="secondary" className="w-full sm:w-auto">Abrir estoque</Button></Link>}
         >
           <div className="grid gap-2.5 sm:grid-cols-2">
             <AdminMetricCard label="Produtos sem saldo" value={String(stockAlerts.zeroStockProducts)} tone={stockAlerts.zeroStockProducts > 0 ? "warning" : "success"} />
-            <AdminMetricCard label="Baixo saldo" value={String(stockAlerts.lowStockProducts)} hint={`Ate ${LOW_STOCK_THRESHOLD_LABEL} un.`} tone={stockAlerts.lowStockProducts > 0 ? "warning" : "neutral"} />
+            <AdminMetricCard label="Baixo saldo" value={String(stockAlerts.lowStockProducts)} hint={`Até ${LOW_STOCK_THRESHOLD_LABEL} un.`} tone={stockAlerts.lowStockProducts > 0 ? "warning" : "neutral"} />
           </div>
           <div className="rounded-xl border border-[var(--jam-border)] bg-white px-3 py-3">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-subtle)]">Ultimo lancamento</p>
-            <p className="mt-2 text-sm font-semibold text-[var(--jam-ink)]">{stockAlerts.lastMovement ? stockAlerts.lastMovement.label : "Sem historico ainda"}</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--jam-subtle)]">Último lançamento</p>
+            <p className="mt-2 text-sm font-semibold text-[var(--jam-ink)]">{stockAlerts.lastMovement ? stockAlerts.lastMovement.label : "Sem histórico ainda"}</p>
             <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">
-              {stockAlerts.lastMovement ? `${formatBalanceEffect(stockAlerts.lastMovement.balanceEffect)} · ${formatDateTime(stockAlerts.lastMovement.createdAt)}` : "Quando houver movimentacao no estoque central, ela aparece aqui."}
+              {stockAlerts.lastMovement ? `${formatBalanceEffect(stockAlerts.lastMovement.balanceEffect)} · ${formatDateTime(stockAlerts.lastMovement.createdAt)}` : "Quando houver movimentação no estoque central, ela aparece aqui."}
             </p>
           </div>
           {stockAlerts.topLowStock.length === 0 ? (
-            <AdminEmptyBlock title="Sem alerta imediato" message="Nao ha produtos ativos com baixo saldo neste momento." />
+            <AdminEmptyBlock title="Sem alerta imediato" message="Não há produtos ativos com baixo saldo neste momento." />
           ) : (
             <div className="space-y-2">
               {stockAlerts.topLowStock.map((product) => (
                 <AdminListRow
                   key={product.productId}
                   title={product.name}
-                  subtitle={product.lastMovement ? `${product.sku} · ultimo movimento: ${product.lastMovement.label}` : `${product.sku} · sem historico recente`}
+                  subtitle={product.lastMovement ? `${product.sku} · último movimento: ${product.lastMovement.label}` : `${product.sku} · sem histórico recente`}
                   value={`${product.currentQuantity} un.`}
                 />
               ))}
@@ -405,7 +405,7 @@ function toBarPercent(value: number, total: number) {
 
 function formatBalanceEffect(effect: "IN" | "OUT" | "NEUTRAL") {
   if (effect === "IN") return "Entrada";
-  if (effect === "OUT") return "Saida";
+  if (effect === "OUT") return "Saída";
   return "Neutro";
 }
 
@@ -440,7 +440,7 @@ function ResultTile({ title, note, value, itemCount, tone }: { title: string; no
         </div>
         <p className="shrink-0 text-[13px] font-semibold text-[var(--jam-ink)]">{value}</p>
       </div>
-      <p className="mt-3 text-[12px] text-[var(--jam-subtle)]">{itemCount} item(ns) no periodo.</p>
+      <p className="mt-3 text-[12px] text-[var(--jam-subtle)]">{itemCount} item(ns) no período.</p>
     </div>
   );
 }
@@ -452,7 +452,7 @@ function StatusRow({ label, badgeTone, count, amount, progress }: { label: strin
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[13px] font-semibold text-[var(--jam-ink)]">{label}</p>
-            <ToneBadge label={badgeTone === "warning" ? "Atencao" : badgeTone === "success" ? "Ok" : "Acompanhar"} tone={badgeTone} />
+            <ToneBadge label={badgeTone === "warning" ? "Atenção" : badgeTone === "success" ? "Ok" : "Acompanhar"} tone={badgeTone} />
           </div>
           <p className="mt-1 text-[12px] text-[var(--jam-subtle)]">{count} titulo(s)</p>
         </div>
