@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, EmptyState, ErrorBanner, Field, Input, PageHeader, PageLoader, Select, Textarea, ToneBadge } from "../../components/ui";
+import { Button, Card, EmptyState, ErrorBanner, Field, Input, MoneyInput, PageHeader, PageLoader, Select, StickyActionBar, Textarea, ToneBadge } from "../../components/ui";
 import { toOptionalString } from "../../lib/forms";
 import { formatCurrency, formatDate, formatDateTime } from "../../lib/format";
 import type { PaymentMethod, ReceivableDetail } from "../../types/domain";
@@ -22,8 +22,8 @@ import {
 const paymentMethodOptions: Array<{ value: PaymentMethod; label: string }> = [
   { value: "PIX", label: "PIX" },
   { value: "CASH", label: "Dinheiro" },
-  { value: "CARD", label: "Cartao" },
-  { value: "BANK_TRANSFER", label: "Transferencia" },
+  { value: "CARD", label: "Cartão" },
+  { value: "BANK_TRANSFER", label: "Transferência" },
   { value: "OTHER", label: "Outro" }
 ];
 
@@ -32,14 +32,14 @@ const paymentFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Informe o valor recebido")
-    .refine((value) => !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) > 0, "Informe um valor valido"),
+    .refine((value) => !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) > 0, "Informe um valor válido"),
   paymentMethod: z
     .string()
     .trim()
     .min(1, "Selecione a forma de pagamento")
     .refine((value) => paymentMethodOptions.some((option) => option.value === value), "Selecione a forma de pagamento"),
-  reference: z.string().max(160, "Use ate 160 caracteres"),
-  notes: z.string().max(2000, "Use ate 2000 caracteres")
+  reference: z.string().max(160, "Use até 160 caracteres"),
+  notes: z.string().max(2000, "Use até 2000 caracteres")
 });
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
@@ -58,8 +58,8 @@ export function FinanceReceivablePage() {
   if (!receivableId) {
     return (
       <EmptyState
-        title="Titulo nao encontrado"
-        message="Abra o financeiro novamente e selecione um titulo valido."
+        title="Título não encontrado"
+        message="Abra o financeiro novamente e selecione um título válido."
         action={
           <Link to={`/financeiro?status=${returnStatus}`}>
             <Button variant="secondary">Voltar para a fila</Button>
@@ -76,7 +76,7 @@ export function FinanceReceivablePage() {
   if (receivableQuery.isError || !receivableQuery.data) {
     return (
       <EmptyState
-        title="Nao foi possivel carregar este titulo"
+        title="Não foi possível carregar este título"
         message="Volte para a fila e tente abrir o recebimento novamente."
         action={
           <Link to={`/financeiro?status=${returnStatus}`}>
@@ -124,11 +124,11 @@ export function FinanceReceivablePage() {
 
       <details className="rounded-xl border border-[var(--jam-border)] bg-white px-4 py-3">
         <summary className="cursor-pointer list-none text-sm font-semibold text-[var(--jam-ink)]">
-          Historico de pagamentos
+          Histórico de pagamentos
         </summary>
         <div className="mt-3 space-y-2">
           {receivable.payments.length === 0 ? (
-            <p className="text-sm text-[var(--jam-subtle)]">Nenhum recebimento registrado ate agora.</p>
+            <p className="text-sm text-[var(--jam-subtle)]">Nenhum recebimento registrado até agora.</p>
           ) : (
             receivable.payments.map((payment) => (
               <div
@@ -146,7 +146,7 @@ export function FinanceReceivablePage() {
                 </div>
 
                 {payment.reference ? (
-                  <p className="mt-2 text-sm text-[var(--jam-subtle)]">Referencia: {payment.reference}</p>
+                  <p className="mt-2 text-sm text-[var(--jam-subtle)]">Referência: {payment.reference}</p>
                 ) : null}
                 {payment.notes ? <p className="mt-1 text-sm text-[var(--jam-subtle)]">{payment.notes}</p> : null}
               </div>
@@ -215,7 +215,7 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
 
     if (amount > Number(receivable.amountOutstanding)) {
       setError("amount", {
-        message: "O valor recebido nao pode ser maior que o saldo atual."
+        message: "O valor recebido não pode ser maior que o saldo atual."
       });
       return;
     }
@@ -226,9 +226,9 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
   if (receivable.status === "PAID") {
     return (
       <Card className="space-y-2">
-        <p className="text-sm font-semibold text-[var(--jam-ink)]">Titulo quitado</p>
+        <p className="text-sm font-semibold text-[var(--jam-ink)]">Título quitado</p>
         <p className="text-sm text-[var(--jam-subtle)]">
-          Este titulo ja foi encerrado e nao precisa de novo recebimento.
+          Este título já foi encerrado e não precisa de novo recebimento.
         </p>
       </Card>
     );
@@ -252,7 +252,7 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
           </Field>
 
           <Field label="Valor recebido" error={errors.amount?.message}>
-            <Input inputMode="decimal" placeholder="0,00" {...register("amount")} />
+            <MoneyInput {...register("amount")} />
           </Field>
         </div>
 
@@ -267,19 +267,19 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
           </Select>
         </Field>
 
-        <Field label="Referencia" hint="Opcional" error={errors.reference?.message}>
-          <Input placeholder="PIX, comprovante ou observacao curta" maxLength={160} {...register("reference")} />
+        <Field label="Referência" hint="Opcional" error={errors.reference?.message}>
+          <Input placeholder="PIX, comprovante ou observação curta" maxLength={160} {...register("reference")} />
         </Field>
 
-        <Field label="Observacoes" hint="Opcional" error={errors.notes?.message}>
+        <Field label="Observações" hint="Opcional" error={errors.notes?.message}>
           <Textarea rows={3} placeholder="Detalhes do recebimento" maxLength={2000} {...register("notes")} />
         </Field>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <StickyActionBar>
           <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Registrar recebimento"}
           </Button>
-        </div>
+        </StickyActionBar>
       </form>
     </Card>
   );
