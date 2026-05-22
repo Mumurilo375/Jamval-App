@@ -49,7 +49,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       credentials: "include"
     });
   } catch {
-    throw new ApiError(0, "NETWORK_ERROR", "Nao foi possivel conectar ao backend.", null);
+    throw new ApiError(0, "NETWORK_ERROR", "Não foi possível conectar ao backend.", null);
   }
 
   const text = await response.text();
@@ -65,7 +65,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (!payload || !("data" in payload)) {
-    throw new ApiError(response.status, "INVALID_RESPONSE", "Resposta invalida do backend.", text || null);
+    throw new ApiError(response.status, "INVALID_RESPONSE", "Resposta inválida do backend.", text || null);
   }
 
   return payload.data;
@@ -79,7 +79,7 @@ export async function downloadApiFile(path: string, fallbackFileName: string): P
       credentials: "include"
     });
   } catch {
-    throw new ApiError(0, "NETWORK_ERROR", "Nao foi possivel conectar ao backend.", null);
+    throw new ApiError(0, "NETWORK_ERROR", "Não foi possível conectar ao backend.", null);
   }
 
   if (!response.ok) {
