@@ -42,7 +42,7 @@ export function useLogin() {
       const user = await getMe();
 
       if (!user) {
-        throw new ApiError(401, "SESSION_NOT_CONFIRMED", "Nao foi possivel confirmar a sessao apos o login.", null);
+        throw new ApiError(401, "SESSION_NOT_CONFIRMED", "Não foi possível confirmar a sessão após o login.", null);
       }
 
       return user;

@@ -9,11 +9,11 @@ export function ProtectedApp() {
   const sessionQuery = useAuthSession();
 
   if (sessionQuery.isPending) {
-    return <PageLoader label="Validando sessao..." />;
+    return <PageLoader label="Validando sessão..." />;
   }
 
   if (sessionQuery.error) {
-    return <PageLoader label="Nao foi possivel validar a sessao." />;
+    return <PageLoader label="Não foi possível validar a sessão." />;
   }
 
   if (!sessionQuery.data) {

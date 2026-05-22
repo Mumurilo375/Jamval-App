@@ -7,7 +7,7 @@ import { Button, Card, ErrorBanner, Field, Input } from "../../components/ui";
 import { useLogin } from "./auth";
 
 const loginSchema = z.object({
-  email: z.string().trim().email("Digite um e-mail valido"),
+  email: z.string().trim().email("Digite um e-mail válido"),
   password: z.string().min(6, "Digite sua senha")
 });
 
@@ -36,9 +36,9 @@ export function LoginPage() {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[420px] flex-col justify-center">
         <div className="mb-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
-          <h1 className="font-display mt-2 text-4xl font-semibold text-[var(--jam-ink)]">Acesse a operacao</h1>
+          <h1 className="font-display mt-2 text-4xl font-semibold text-[var(--jam-ink)]">Acesse a operação</h1>
           <p className="mt-2 text-sm text-[var(--jam-subtle)]">
-          Entre com o usuario administrador para abrir visitas, revisar visitas nao finalizadas e manter os cadastros.
+          Entre com o usuário administrador para abrir visitas, revisar visitas não finalizadas e manter os cadastros.
           </p>
         </div>
 
