@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, DateTimeInput, ErrorBanner, Field, PageLoader, Select, Textarea } from "../../components/ui";
+import { Button, Card, DateTimeInput, ErrorBanner, Field, PageLoader, Select, StickyActionBar, Textarea } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import type { Client, VisitDetail } from "../../types/domain";
 import { listClients } from "../clients/clients-api";
@@ -15,7 +15,7 @@ const visitFormSchema = z.object({
   clientId: z.string().trim().min(1, "Selecione o cliente"),
   visitType: z.enum(["CONSIGNMENT", "SALE"]),
   visitedAt: z.string(),
-  notes: z.string().max(2000, "Use ate 2000 caracteres")
+    notes: z.string().max(2000, "Use até 2000 caracteres")
 });
 
 type VisitFormValues = z.infer<typeof visitFormSchema>;
@@ -93,7 +93,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
   }
 
   if (mode === "create" && clientsQuery.isError) {
-    return <ErrorBanner message="Nao foi possivel carregar os clientes para abrir a visita." />;
+    return <ErrorBanner message="Não foi possível carregar os clientes para abrir a visita." />;
   }
 
   return (
@@ -105,14 +105,14 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
           <Field
             label="Cliente"
             error={errors.clientId?.message}
-            hint="Clientes com visita nao finalizada ficam indisponiveis para uma nova abertura."
+            hint="Clientes com visita não finalizada ficam indisponíveis para uma nova abertura."
           >
             <Select {...register("clientId")}>
               <option value="">Selecione um cliente</option>
               {clientsQuery.data?.map((entry) => (
                 <option key={entry.id} value={entry.id} disabled={clientIdsWithOpenVisit.has(entry.id)}>
                   {entry.tradeName}
-                  {clientIdsWithOpenVisit.has(entry.id) ? " - ja tem visita nao finalizada" : ""}
+                  {clientIdsWithOpenVisit.has(entry.id) ? " - já tem visita não finalizada" : ""}
                 </option>
               ))}
             </Select>
@@ -127,7 +127,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
 
         <Field label="Tipo da visita">
           <Select {...register("visitType")}>
-            <option value="CONSIGNMENT">Consignacao</option>
+            <option value="CONSIGNMENT">Consignação</option>
             <option value="SALE">Venda</option>
           </Select>
         </Field>
@@ -143,21 +143,21 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
         </Field>
 
         <Field
-          label="Observacoes"
-          hint="O valor recebido fica para a etapa final, depois da conferencia dos itens."
+          label="Observações"
+          hint="O valor recebido fica para a etapa final, depois da conferência dos itens."
           error={errors.notes?.message}
         >
-          <Textarea placeholder="Resumo da visita, combinados ou pendencias" maxLength={2000} {...register("notes")} />
+          <Textarea placeholder="Resumo da visita, combinados ou pendências" maxLength={2000} {...register("notes")} />
         </Field>
 
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
-          <Button type="button" variant="ghost" className="w-full sm:flex-1" onClick={() => navigate(-1)}>
+        <StickyActionBar>
+          <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => navigate(-1)}>
             Voltar
           </Button>
-          <Button type="submit" className="w-full sm:flex-1" disabled={mutation.isPending}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : mode === "create" ? "Iniciar visita" : "Salvar visita"}
           </Button>
-        </div>
+        </StickyActionBar>
       </form>
     </Card>
   );
