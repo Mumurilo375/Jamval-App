@@ -31,7 +31,7 @@ export function AdminIndicatorsPage() {
   if (indicatorsQuery.isError || !indicatorsQuery.data) {
     return (
       <AdminQueryErrorState
-        title="Nao foi possivel carregar os indicadores"
+        title="Não foi possível carregar os indicadores"
         error={indicatorsQuery.error}
         onRetry={() => void indicatorsQuery.refetch()}
       />
@@ -55,9 +55,9 @@ export function AdminIndicatorsPage() {
       <PageHeader
         backTo="/admin/dashboard"
         backLabel="Admin"
-        eyebrow="Administracao"
+        eyebrow="Administração"
         title="Indicadores"
-        subtitle="Leituras diretas para reposicao, cobertura de custo, carteira e giro."
+        subtitle="Leituras diretas para reposição, cobertura de custo, carteira e giro."
       />
 
       <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
@@ -72,7 +72,7 @@ export function AdminIndicatorsPage() {
           tone={counts.productsWithoutCost > 0 ? "warning" : "success"}
         />
         <AdminMetricCard
-          label="Clientes com maior pendencia"
+          label="Clientes com maior pendência"
           value={String(counts.clientsWithOutstanding)}
           tone={counts.clientsWithOutstanding > 0 ? "warning" : "success"}
         />
@@ -80,8 +80,8 @@ export function AdminIndicatorsPage() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <AdminSectionCard
-          eyebrow="Reposicao"
-          title="Reposicao imediata"
+          eyebrow="Reposição"
+          title="Reposição imediata"
           description="Itens ativos sem saldo no estoque principal."
           action={
             <Link to="/stock">
@@ -93,8 +93,8 @@ export function AdminIndicatorsPage() {
         >
           {productsWithoutCentralStock.length === 0 ? (
             <AdminEmptyBlock
-              title="Sem alerta de reposicao"
-              message="Todos os produtos ativos listados tem saldo no estoque principal."
+              title="Sem alerta de reposição"
+              message="Todos os produtos ativos listados têm saldo no estoque principal."
             />
           ) : (
             <div className="space-y-2">
@@ -102,7 +102,7 @@ export function AdminIndicatorsPage() {
                 <AdminListRow
                   key={product.productId}
                   title={product.name}
-                  subtitle={`${product.sku} · item ativo sem saldo disponivel`}
+                  subtitle={`${product.sku} · item ativo sem saldo disponível`}
                   value={`${product.currentQuantity} un.`}
                 />
               ))}
@@ -125,7 +125,7 @@ export function AdminIndicatorsPage() {
           {productsWithoutCost.length === 0 ? (
             <AdminEmptyBlock
               title="Boa cobertura de compra"
-              message="Os produtos listados nesta amostra ja possuem custo de compra cadastrado."
+              message="Os produtos listados nesta amostra já possuem custo de compra cadastrado."
             />
           ) : (
             <div className="space-y-2">
@@ -133,7 +133,7 @@ export function AdminIndicatorsPage() {
                 <AdminListRow
                   key={product.productId}
                   title={product.name}
-                  subtitle={`${product.sku} · Preco base ${formatCurrency(product.basePrice)}`}
+                  subtitle={`${product.sku} · Preço base ${formatCurrency(product.basePrice)}`}
                   value={product.isActive ? "Ativo" : "Inativo"}
                   badge={<StatusBadge active={product.isActive} />}
                 />
@@ -144,7 +144,7 @@ export function AdminIndicatorsPage() {
 
         <AdminSectionCard
           eyebrow="Carteira"
-          title="Clientes com maior pendencia"
+          title="Clientes com maior pendência"
           description="Leitura curta de quem concentra o maior valor em aberto."
           action={
             <Link to="/financeiro">
@@ -156,8 +156,8 @@ export function AdminIndicatorsPage() {
         >
           {topClientsByOutstanding.length === 0 ? (
             <AdminEmptyBlock
-              title="Carteira sem pendencias"
-              message="Nao ha clientes com valor em aberto nesta leitura da base."
+              title="Carteira sem pendências"
+              message="Não há clientes com valor em aberto nesta leitura da base."
             />
           ) : (
             <div className="space-y-2">
@@ -165,7 +165,7 @@ export function AdminIndicatorsPage() {
                 <AdminListRow
                   key={client.clientId}
                   title={client.tradeName}
-                  subtitle={`${client.receivableCount} titulo(s) em aberto`}
+                  subtitle={`${client.receivableCount} título(s) em aberto`}
                   value={formatCurrency(client.outstandingAmount)}
                 />
               ))}
@@ -176,12 +176,12 @@ export function AdminIndicatorsPage() {
         <AdminSectionCard
           eyebrow="Giro"
           title="Produtos com maior giro"
-          description="Volume vendido nas visitas concluidas, com leitura visual simples."
+          description="Volume vendido nas visitas concluídas, com leitura visual simples."
         >
           {topSellingProducts.length === 0 ? (
             <AdminEmptyBlock
               title="Ainda sem volume suficiente"
-              message="Nao ha itens vendidos em visitas concluidas para montar este ranking."
+              message="Não há itens vendidos em visitas concluídas para montar este ranking."
             />
           ) : (
             <div className="space-y-2">
