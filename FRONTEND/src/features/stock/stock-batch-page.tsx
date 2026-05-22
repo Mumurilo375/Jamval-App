@@ -9,9 +9,11 @@ import {
   ErrorBanner,
   Field,
   Input,
+  MoneyInput,
   PageHeader,
   PageLoader,
   Select,
+  StickyActionBar,
   Textarea,
   WarningBanner,
 } from "../../components/ui";
@@ -90,9 +92,9 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
         subtitle:
           "Monte o estoque pela primeira vez com o custo real desta entrada inicial.",
         bannerMessage:
-          "Use carga inicial apenas no comeco. Informe aqui o custo real desta entrada; o cadastro do produto serve apenas como referencia.",
-        noteLabel: "Observacao da carga inicial",
-        notePlaceholder: "Ex.: saldo contado no inicio da operacao",
+          "Use carga inicial apenas no começo. Informe aqui o custo real desta entrada; o cadastro do produto serve apenas como referência.",
+        noteLabel: "Observação da carga inicial",
+        notePlaceholder: "Ex.: saldo contado no início da operação",
         submitLabel: "Salvar carga inicial",
       }
     : {
@@ -101,8 +103,8 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
         subtitle:
           "Use quando novas mercadorias entrarem no estoque central, sempre com o custo real desta entrada.",
         bannerMessage:
-          "Informe o custo real desta entrada. O custo do produto no cadastro serve apenas como referencia inicial.",
-        noteLabel: "Observacao da entrada",
+          "Informe o custo real desta entrada. O custo do produto no cadastro serve apenas como referência inicial.",
+        noteLabel: "Observação da entrada",
         notePlaceholder: "Ex.: mercadoria recebida do fornecedor",
         submitLabel: "Salvar entrada manual",
       };
@@ -114,8 +116,8 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
   if (productsQuery.isError || (isInitialLoad && overviewQuery.isError)) {
     return (
       <EmptyState
-        title="Nao foi possivel abrir o lancamento"
-        message="Confira a conexao com o backend e tente novamente."
+        title="Não foi possível abrir o lançamento"
+        message="Confira a conexão com o backend e tente novamente."
       />
     );
   }
@@ -136,7 +138,7 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
         />
         <EmptyState
           title="Cadastre produtos primeiro"
-          message="O estoque central depende da base de produtos. Depois do cadastro, volte aqui para lancar as quantidades."
+          message="O estoque central depende da base de produtos. Depois do cadastro, volte aqui para lançar as quantidades."
           action={
             <Link to="/products">
               <Button>Ir para produtos</Button>
@@ -155,10 +157,10 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
           backLabel="Estoque"
           eyebrow={pageCopy.eyebrow}
           title={pageCopy.title}
-          subtitle="A carga inicial ja foi encerrada para esta operacao."
+          subtitle="A carga inicial já foi encerrada para esta operação."
         />
         <Card className="space-y-4">
-          <WarningBanner message="A carga inicial so pode ser usada no comeco da operacao. A partir de agora, use Entrada manual para novas mercadorias." />
+          <WarningBanner message="A carga inicial só pode ser usada no começo da operação. A partir de agora, use Entrada manual para novas mercadorias." />
           <div className="grid gap-3">
             <Link to="/stock/manual-entry">
               <Button className="w-full">Ir para entrada manual</Button>
@@ -285,12 +287,10 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                   </Field>
 
                   <Field
-                    label="Custo unitario desta entrada"
-                    hint="Se houver custo de compra no produto, ele aparece como sugestao inicial. Confirme aqui o custo real desta entrada."
+                    label="Custo unitário desta entrada"
+                    hint="Se houver custo de compra no produto, ele aparece como sugestão inicial. Confirme aqui o custo real desta entrada."
                   >
-                    <Input
-                      inputMode="decimal"
-                      placeholder="0,00"
+                    <MoneyInput
                       value={row.unitCost}
                       onChange={(event) => {
                         setFormError(null);
@@ -337,12 +337,13 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
+        <StickyActionBar>
+          <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => navigate(-1)}>
             Voltar
           </Button>
           <Button
             type="button"
+            className="w-full sm:w-auto"
             disabled={mutation.isPending}
             onClick={() => {
               setFormError(null);
@@ -355,7 +356,7 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
           >
             {mutation.isPending ? "Salvando..." : pageCopy.submitLabel}
           </Button>
-        </div>
+        </StickyActionBar>
       </Card>
     </div>
   );
@@ -390,7 +391,7 @@ function buildBatchItems(rows: StockBatchRow[]) {
       Number(item.unitCost) < 0
     ) {
       throw new Error(
-        "Informe um custo unitario valido para cada produto preenchido.",
+        "Informe um custo unitário válido para cada produto preenchido.",
       );
     }
   }
@@ -399,7 +400,7 @@ function buildBatchItems(rows: StockBatchRow[]) {
 
   for (const item of items) {
     if (uniqueProductIds.has(item.productId)) {
-      throw new Error("Nao repita o mesmo produto no mesmo lancamento.");
+      throw new Error("Não repita o mesmo produto no mesmo lançamento.");
     }
 
     uniqueProductIds.add(item.productId);
