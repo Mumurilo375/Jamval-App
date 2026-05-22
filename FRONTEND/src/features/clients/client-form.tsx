@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, Checkbox, ErrorBanner, Field, Input, Textarea } from "../../components/ui";
+import { Button, Card, Checkbox, ErrorBanner, Field, Input, StickyActionBar, Textarea } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { isPositiveIntegerInput, toOptionalNumber, toOptionalString } from "../../lib/forms";
 import {
@@ -18,32 +18,32 @@ import type { Client } from "../../types/domain";
 import { createClient, updateClient } from "./clients-api";
 
 const clientFormSchema = z.object({
-  tradeName: z.string().trim().min(1, "Informe o nome fantasia").max(200, "Use ate 200 caracteres"),
-  legalName: z.string().max(200, "Use ate 200 caracteres"),
+  tradeName: z.string().trim().min(1, "Informe o nome fantasia").max(200, "Use até 200 caracteres"),
+  legalName: z.string().max(200, "Use até 200 caracteres"),
   documentNumber: z
     .string()
     .refine((value) => value.trim() === "" || onlyDigits(value).length === 14, "Informe o CNPJ no formato 00.000.000/0001-00"),
   stateRegistration: z
     .string()
-    .refine((value) => value.trim() === "" || /^\d{8,12}$/.test(onlyDigits(value)), "Informe de 8 a 12 digitos"),
-  contactName: z.string().max(160, "Use ate 160 caracteres"),
+    .refine((value) => value.trim() === "" || /^\d{8,12}$/.test(onlyDigits(value)), "Informe de 8 a 12 dígitos"),
+  contactName: z.string().max(160, "Use até 160 caracteres"),
   phone: z
     .string()
     .refine((value) => value.trim() === "" || [10, 11].includes(onlyDigits(value).length), "Informe telefone com DDD"),
-  addressLine: z.string().max(200, "Use ate 200 caracteres"),
-  addressCity: z.string().max(120, "Use ate 120 caracteres"),
+  addressLine: z.string().max(200, "Use até 200 caracteres"),
+  addressCity: z.string().max(120, "Use até 120 caracteres"),
   addressState: z
     .string()
-    .refine((value) => value.trim() === "" || /^[A-Z]{2}$/.test(value.trim()), "Informe uma UF valida"),
+    .refine((value) => value.trim() === "" || /^[A-Z]{2}$/.test(value.trim()), "Informe uma UF válida"),
   addressZipcode: z
     .string()
-    .refine((value) => value.trim() === "" || onlyDigits(value).length === 8, "Informe um CEP valido"),
-  notes: z.string().max(2000, "Use ate 2000 caracteres"),
+    .refine((value) => value.trim() === "" || onlyDigits(value).length === 8, "Informe um CEP válido"),
+  notes: z.string().max(2000, "Use até 2000 caracteres"),
   visitCycleDays: z
     .string()
     .trim()
-    .refine((value) => value === "" || isPositiveIntegerInput(value), "Informe um numero inteiro maior que zero")
-    .refine((value) => value === "" || Number(value) <= 3650, "Use ate 3650 dias"),
+    .refine((value) => value === "" || isPositiveIntegerInput(value), "Informe um número inteiro maior que zero")
+    .refine((value) => value === "" || Number(value) <= 3650, "Use até 3650 dias"),
   requiresInvoice: z.boolean(),
   isActive: z.boolean()
 });
@@ -61,9 +61,9 @@ export function ClientForm({ mode, client }: ClientFormProps) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setValue,
-    watch
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -83,6 +83,8 @@ export function ClientForm({ mode, client }: ClientFormProps) {
       isActive: client?.isActive ?? true
     }
   });
+  const isActive = useWatch({ control, name: "isActive" });
+  const requiresInvoice = useWatch({ control, name: "requiresInvoice" });
   const documentNumberRegistration = register("documentNumber");
   const stateRegistrationRegistration = register("stateRegistration");
   const phoneRegistration = register("phone");
@@ -131,7 +133,7 @@ export function ClientForm({ mode, client }: ClientFormProps) {
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Razao social" error={errors.legalName?.message}>
+          <Field label="Razão social" error={errors.legalName?.message}>
             <Input placeholder="Loja Exemplo LTDA" maxLength={200} {...register("legalName")} />
           </Field>
 
@@ -165,7 +167,7 @@ export function ClientForm({ mode, client }: ClientFormProps) {
             />
           </Field>
 
-          <Field label="Inscricao estadual" error={errors.stateRegistration?.message}>
+          <Field label="Inscrição estadual" error={errors.stateRegistration?.message}>
             <Input
               placeholder="123456789"
               inputMode="numeric"
@@ -183,13 +185,13 @@ export function ClientForm({ mode, client }: ClientFormProps) {
           </Field>
         </div>
 
-        <Field label="Endereco" error={errors.addressLine?.message}>
-          <Input placeholder="Rua, numero e bairro" maxLength={200} {...register("addressLine")} />
+        <Field label="Endereço" error={errors.addressLine?.message}>
+          <Input placeholder="Rua, número e bairro" maxLength={200} {...register("addressLine")} />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Cidade" error={errors.addressCity?.message}>
-            <Input placeholder="Sao Paulo" maxLength={120} {...register("addressCity")} />
+            <Input placeholder="São Paulo" maxLength={120} {...register("addressCity")} />
           </Field>
 
           <Field label="UF" error={errors.addressState?.message}>
@@ -218,7 +220,7 @@ export function ClientForm({ mode, client }: ClientFormProps) {
           </Field>
         </div>
 
-        <Field label="Observacoes" error={errors.notes?.message}>
+        <Field label="Observações" error={errors.notes?.message}>
           <Textarea placeholder="Notas importantes sobre o cliente" maxLength={2000} {...register("notes")} />
         </Field>
 
@@ -226,25 +228,25 @@ export function ClientForm({ mode, client }: ClientFormProps) {
           <Checkbox
             {...register("isActive")}
             label="Cliente ativo"
-            checked={watch("isActive")}
+            checked={Boolean(isActive)}
             onChange={(event) => setValue("isActive", event.target.checked, { shouldDirty: true })}
           />
           <Checkbox
             {...register("requiresInvoice")}
             label="Exige nota fiscal"
-            checked={watch("requiresInvoice")}
+            checked={Boolean(requiresInvoice)}
             onChange={(event) => setValue("requiresInvoice", event.target.checked, { shouldDirty: true })}
           />
         </div>
 
-        <div className="flex gap-3">
-          <Button type="button" variant="ghost" className="flex-1" onClick={() => navigate(-1)}>
+        <StickyActionBar>
+          <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => navigate(-1)}>
             Voltar
           </Button>
-          <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar cliente" : "Salvar alteracoes"}
+          <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : mode === "create" ? "Criar cliente" : "Salvar alterações"}
           </Button>
-        </div>
+        </StickyActionBar>
       </form>
     </Card>
   );
