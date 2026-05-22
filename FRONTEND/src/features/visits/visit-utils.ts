@@ -3,11 +3,11 @@ import type { VisitItemDraftPayload } from "./visits-api";
 
 export function visitStatusLabel(status: VisitStatus): string {
   if (status === "DRAFT") {
-    return "Nao finalizada";
+    return "Não finalizada";
   }
 
   if (status === "COMPLETED") {
-    return "Concluida";
+    return "Concluída";
   }
 
   return "Cancelada";
@@ -30,7 +30,7 @@ export function visitTypeLabel(type: VisitType): string {
     return "Venda";
   }
 
-  return "Consignacao";
+  return "Consignação";
 }
 
 export function computeVisitItemPreview(input: {

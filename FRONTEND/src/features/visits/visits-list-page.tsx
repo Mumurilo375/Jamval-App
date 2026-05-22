@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, EmptyState, PageHeader, PageLoader, PaginationControls } from "../../components/ui";
+import { Button, ListSkeleton, PageHeader, PaginationControls, RetryableErrorState } from "../../components/ui";
 import { formatCount } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import {
@@ -40,14 +40,15 @@ export function VisitsListPage() {
   const historyPagination = paginateItems(queueData?.recentHistory ?? [], pages.history, VISITS_PAGE_SIZE);
 
   if (queueQuery.isPending) {
-    return <PageLoader label="Carregando organizador operacional..." />;
+    return <ListSkeleton rows={5} />;
   }
 
   if (queueQuery.isError || !queueQuery.data) {
     return (
-      <EmptyState
+      <RetryableErrorState
         title="Falha ao carregar visitas"
-        message="Confira a conexao com o backend e tente novamente."
+        message="Confira a conexão com o backend e tente novamente."
+        onRetry={() => void queueQuery.refetch()}
       />
     );
   }
@@ -64,7 +65,7 @@ export function VisitsListPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        eyebrow="Operacao"
+        eyebrow="Operação"
         title="Organizador de visitas"
         subtitle={`${formatCount(queue.returnQueue.length, "retorno")} • ${formatCount(queue.inProgress.length, "em andamento", "em andamento")} • ${formatCount(queue.recentHistory.length, "recente", "recentes")}`}
         action={
@@ -91,7 +92,7 @@ export function VisitsListPage() {
           <ReturnQueueList
             items={returnPagination.pageItems}
             emptyTitle="Nenhum cliente na fila de retorno"
-            emptyMessage="Quando uma consignacao ficar aguardando nova conferencia, ela aparece aqui."
+            emptyMessage="Quando uma consignação ficar aguardando nova conferência, ela aparece aqui."
             onStartVisit={startVisit.startVisit}
             pendingClientId={startVisit.pendingClientId}
           />
@@ -111,7 +112,7 @@ export function VisitsListPage() {
           <InProgressList
             items={inProgressPagination.pageItems}
             emptyTitle="Nenhuma visita em andamento"
-            emptyMessage="As visitas nao finalizadas ficam reunidas aqui para continuar depois."
+            emptyMessage="As visitas não finalizadas ficam reunidas aqui para continuar depois."
           />
           <PaginationControls
             page={inProgressPagination.page}
@@ -128,8 +129,8 @@ export function VisitsListPage() {
         <>
           <HistoryList
             items={historyPagination.pageItems}
-            emptyTitle="Nenhuma visita no historico"
-            emptyMessage="As visitas concluidas vao aparecer aqui conforme forem sendo processadas."
+            emptyTitle="Nenhuma visita no histórico"
+            emptyMessage="As visitas concluídas vão aparecer aqui conforme forem sendo processadas."
           />
           <PaginationControls
             page={historyPagination.page}

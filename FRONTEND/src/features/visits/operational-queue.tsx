@@ -21,7 +21,7 @@ export function StartVisitErrorBanner({ error }: { error: unknown }) {
     return null;
   }
 
-  const message = error instanceof Error ? error.message : "Nao foi possivel iniciar o acerto agora.";
+  const message = error instanceof Error ? error.message : "Não foi possível iniciar o acerto agora.";
   return <ErrorBanner message={message} />;
 }
 
@@ -109,7 +109,7 @@ export function InProgressList({
 
               <div className="flex flex-wrap items-center gap-2">
                 <VisitTypeBadge visitType={item.visitType} />
-                <ToneBadge label="Nao finalizada" tone="warning" />
+                <ToneBadge label="Não finalizada" tone="warning" />
                 <p className="text-sm text-[var(--jam-subtle)]">
                   {item.itemCount === 0 ? "Sem itens ainda" : `${formatItemCount(item.itemCount)} na visita`}
                 </p>
@@ -118,7 +118,7 @@ export function InProgressList({
 
             <div className="flex w-full flex-col gap-2 border-t border-[var(--jam-border)] pt-3 sm:w-auto sm:min-w-[200px] sm:border-t-0 sm:pt-0 sm:text-right">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Proximo passo</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Próximo passo</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{item.nextStepLabel}</p>
               </div>
 
@@ -161,7 +161,7 @@ export function HistoryList({
 
               <div className="flex flex-wrap items-center gap-2">
                 <VisitTypeBadge visitType={item.visitType} />
-                <ToneBadge label="Concluida" tone="success" />
+                <ToneBadge label="Concluída" tone="success" />
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[var(--jam-subtle)]">
@@ -204,7 +204,7 @@ export function QueueSegmentControl({
   }> = [
     { value: "return", label: "Fila de retorno", count: counts.return },
     { value: "in-progress", label: "Em andamento", count: counts.inProgress },
-    { value: "history", label: "Historico", count: counts.history }
+    { value: "history", label: "Histórico", count: counts.history }
   ];
 
   return (
