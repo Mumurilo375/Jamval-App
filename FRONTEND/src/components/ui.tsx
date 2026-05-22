@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, PropsWithChildren, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { Link } from "react-router-dom";
 
@@ -80,24 +80,62 @@ export function DrawerPanel({
   footer?: ReactNode;
   size?: "md" | "lg";
 }>) {
+  const titleId = useId();
+  const descriptionId = useId();
+  const panelRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!open) {
       return;
     }
 
     const previousOverflow = document.body.style.overflow;
+    previousActiveElementRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panelRef.current) {
+        return;
+      }
+
+      const focusableElements = panelRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (!firstElement || !lastElement) {
+        event.preventDefault();
+        panelRef.current.focus();
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
+    window.requestAnimationFrame(() => closeButtonRef.current?.focus());
 
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
+      previousActiveElementRef.current?.focus();
     };
   }, [open, onClose]);
 
@@ -116,6 +154,12 @@ export function DrawerPanel({
 
       <div className="absolute inset-0 flex items-end justify-end sm:items-stretch">
         <section
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={description ? descriptionId : undefined}
+          tabIndex={-1}
           className={cx(
             "relative flex h-[min(88vh,760px)] w-full flex-col rounded-t-[28px] border border-[var(--jam-border)] bg-[var(--jam-panel)] shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:h-full sm:rounded-none sm:border-b-0 sm:border-r-0 sm:border-t-0",
             size === "lg" ? "sm:max-w-[640px]" : "sm:max-w-[560px]"
@@ -123,14 +167,15 @@ export function DrawerPanel({
         >
           <div className="flex items-start justify-between gap-3 border-b border-[var(--jam-border)] px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="min-w-0">
-              <p className="text-[15px] font-semibold text-[var(--jam-ink)] sm:text-base">{title}</p>
-              {description ? <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{description}</p> : null}
+              <p id={titleId} className="text-[15px] font-semibold text-[var(--jam-ink)] sm:text-base">{title}</p>
+              {description ? <p id={descriptionId} className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{description}</p> : null}
             </div>
 
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-white text-[var(--jam-subtle)] transition hover:text-[var(--jam-ink)]"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)] transition hover:text-[var(--jam-ink)]"
               aria-label="Fechar"
             >
               <CloseIcon />
@@ -183,6 +228,22 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
         props.className
       )}
     />
+  );
+}
+
+export function MoneyInput(props: InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--jam-subtle)] sm:left-3.5 sm:text-sm">
+        R$
+      </span>
+      <Input
+        {...props}
+        inputMode={props.inputMode ?? "decimal"}
+        placeholder={props.placeholder ?? "0,00"}
+        className={cx("pl-10 text-right sm:pl-11", props.className)}
+      />
+    </div>
   );
 }
 
@@ -389,22 +450,26 @@ function DateValuePicker({
           <div className="mb-3 flex items-center justify-between gap-2">
             <button
               type="button"
-                className="rounded-lg border border-[var(--jam-border)] bg-white px-2.5 py-1.5 text-[13px] font-semibold text-[var(--jam-subtle)] sm:text-[12px]"
+              aria-label="Mês anterior"
+              title="Mês anterior"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--jam-border)] bg-white text-[var(--jam-subtle)] transition hover:text-[var(--jam-ink)]"
               onClick={() => setViewDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}
             >
-              Mes anterior
+              <ChevronLeftIcon />
             </button>
             <p className="text-[14px] font-semibold text-[var(--jam-ink)] sm:text-[13px]">{MONTH_LABELS[viewDate.getMonth()]} {viewDate.getFullYear()}</p>
             <button
               type="button"
-              className="rounded-lg border border-[var(--jam-border)] bg-white px-2.5 py-1.5 text-[13px] font-semibold text-[var(--jam-subtle)] sm:text-[12px]"
+              aria-label="Próximo mês"
+              title="Próximo mês"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--jam-border)] bg-white text-[var(--jam-subtle)] transition hover:text-[var(--jam-ink)]"
               onClick={() => setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}
             >
-              Proximo mes
+              <ChevronRightIcon />
             </button>
           </div>
 
-          <div className="mb-1 grid grid-cols-7 gap-1">
+          <div className="mb-1 grid grid-cols-7 gap-1" aria-hidden="true">
             {WEEKDAY_LABELS.map((weekday) => (
               <span key={weekday} className="px-1 py-1 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--jam-subtle)]">
                 {weekday}
@@ -431,6 +496,8 @@ function DateValuePicker({
                   type="button"
                   disabled={isDisabled}
                   onClick={() => assignDate(dayValue)}
+                  aria-label={`${dayValue} de ${MONTH_LABELS[viewDate.getMonth()]} de ${viewDate.getFullYear()}`}
+                  aria-pressed={isSelected}
                   className={cx(
                     "h-9 rounded-lg border text-[12px] font-semibold transition",
                     isSelected
@@ -693,7 +760,7 @@ export function PaginationControls({
         </Button>
 
         <p className="text-center text-sm font-semibold text-[var(--jam-ink)]">
-          Pagina {page} de {totalPages}
+          Página {page} de {totalPages}
         </p>
 
         <Button
@@ -703,9 +770,59 @@ export function PaginationControls({
           disabled={page >= totalPages}
           className="min-w-[96px]"
         >
-          Proxima
+          Próxima
         </Button>
       </div>
+    </div>
+  );
+}
+
+export function RetryableErrorState({
+  title,
+  message,
+  onRetry
+}: {
+  title: string;
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <EmptyState
+      title={title}
+      message={message}
+      action={
+        <Button type="button" variant="secondary" onClick={onRetry}>
+          Tentar novamente
+        </Button>
+      }
+    />
+  );
+}
+
+export function ListSkeleton({
+  rows = 4,
+  className
+}: {
+  rows?: number;
+  className?: string;
+}) {
+  return (
+    <Card className={cx("space-y-3", className)}>
+      {Array.from({ length: rows }).map((_, index) => (
+        <div key={index} className="animate-pulse rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] p-3">
+          <div className="h-3 w-2/5 rounded-full bg-[rgba(100,116,139,0.22)]" />
+          <div className="mt-3 h-3 w-4/5 rounded-full bg-[rgba(100,116,139,0.16)]" />
+          <div className="mt-2 h-3 w-3/5 rounded-full bg-[rgba(100,116,139,0.13)]" />
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+export function StickyActionBar({ children }: PropsWithChildren) {
+  return (
+    <div className="sticky bottom-0 z-20 -mx-2.5 mt-4 border-t border-[var(--jam-border)] bg-[var(--jam-bg)]/95 px-2.5 py-3 backdrop-blur sm:-mx-4 sm:px-4 md:-mx-6 md:px-6">
+      <div className="mx-auto grid w-full max-w-6xl gap-2 sm:flex sm:items-center sm:justify-end">{children}</div>
     </div>
   );
 }
@@ -774,11 +891,27 @@ function CloseIcon() {
   );
 }
 
+function ChevronLeftIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 const MONTH_LABELS = [
   "Janeiro",
   "Fevereiro",
-  "Marco",
+  "Março",
   "Abril",
   "Maio",
   "Junho",
