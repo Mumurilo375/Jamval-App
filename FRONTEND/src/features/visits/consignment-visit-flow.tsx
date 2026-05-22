@@ -10,8 +10,10 @@ import {
   ErrorBanner,
   Field,
   Input,
+  MoneyInput,
   PageHeader,
   Select,
+  StickyActionBar,
   Textarea,
   ToneBadge,
   WarningBanner
@@ -321,7 +323,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
     setDraftValidationError(null);
 
     if (rowValidationErrors.length > 0) {
-      setDraftValidationError("Revise a conferencia antes de salvar a visita. Existem produtos com saldo negativo ou campos invalidos.");
+      setDraftValidationError("Revise a conferência antes de salvar a visita. Existem produtos com saldo negativo ou campos inválidos.");
       return false;
     }
 
@@ -458,15 +460,15 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
 
   const addProductQuantityError =
     addProductPreviousInput.trim() !== "" && (Number.isNaN(parseCountInput(addProductPreviousInput)) || parseCountInput(addProductPreviousInput) < 0)
-      ? "Informe uma base anterior valida."
+      ? "Informe uma base anterior válida."
       : undefined;
   const addProductPriceError =
     addProductUnitPriceInput.trim() !== "" && (Number.isNaN(parseMoneyInput(addProductUnitPriceInput)) || parseMoneyInput(addProductUnitPriceInput) < 0)
-      ? "Informe um preco valido."
+      ? "Informe um preço válido."
       : undefined;
   const autoPopulateError =
     clientCatalogQuery.isError || completedHistoryQuery.isError || autoPopulateMutation.error
-      ? "Nao foi possivel carregar automaticamente os produtos ja presentes na loja. Voce pode seguir pela adicao manual."
+      ? "Não foi possível carregar automaticamente os produtos já presentes na loja. Você pode seguir pela adição manual."
       : null;
   const activeDraftError = formatUnknownError(draftMutationError);
   const activeCompletionError =
@@ -478,12 +480,12 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
       <PageHeader
         backTo={backTo}
         backLabel={backLabel}
-        eyebrow="Visita de consignacao"
+        eyebrow="Visita de consignação"
         title={clientName}
         subtitle={`${visit.visitCode} · ${formatDate(visit.visitedAt)}`}
         action={
           <div className="flex flex-wrap gap-2">
-            <ToneBadge label="Consignacao" tone="neutral" />
+            <ToneBadge label="Consignação" tone="neutral" />
             <ToneBadge label={visitStatusLabel(visit.status)} tone={visitStatusTone(visit.status)} />
           </div>
         }
@@ -513,7 +515,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
       <Card className="space-y-4">
         <StepHeader
           step="Etapa 1"
-          title="Conferir venda do periodo"
+          title="Conferir venda do período"
           subtitle="Preencha vendida; trocas e perdas ficam em ajustes."
           action={
             isDraft ? (
@@ -526,13 +528,13 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
 
         {autoPopulateCount > 0 ? (
           <div className="rounded-xl border border-[rgba(29,78,216,0.16)] bg-[rgba(29,78,216,0.05)] px-3.5 py-3 text-sm text-[var(--jam-ink)]">
-            A base anterior do cliente foi carregada automaticamente a partir do historico recente.
+            A base anterior do cliente foi carregada automaticamente a partir do histórico recente.
           </div>
         ) : null}
 
         {shouldAutopopulate && (clientCatalogQuery.isPending || completedHistoryQuery.isPending || autoPopulateMutation.isPending) ? (
           <div className="rounded-xl border border-[var(--jam-border)] bg-white px-3.5 py-3 text-sm text-[var(--jam-subtle)]">
-            Preparando os produtos que ja estavam no cliente para a conferencia de hoje.
+            Preparando os produtos que já estavam no cliente para a conferência de hoje.
           </div>
         ) : null}
 
@@ -540,8 +542,8 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
 
         {visit.items.length === 0 ? (
           <EmptyState
-            title="Nenhum produto na conferencia"
-            message="Adicione os produtos da consignacao para preencher a folha do periodo."
+            title="Nenhum produto na conferência"
+            message="Adicione os produtos da consignação para preencher a folha do período."
             action={
               isDraft ? (
                 <Button onClick={() => setIsAddProductOpen(true)} disabled={isBusy}>
@@ -556,7 +558,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
               <ColumnLabel>Anterior</ColumnLabel>
               <ColumnLabel>Vendida</ColumnLabel>
               <ColumnLabel>Produto</ColumnLabel>
-              <ColumnLabel>Preco</ColumnLabel>
+              <ColumnLabel>Preço</ColumnLabel>
               <ColumnLabel>Total</ColumnLabel>
               <ColumnLabel className="text-right">Ajustes</ColumnLabel>
             </div>
@@ -598,10 +600,9 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                       </div>
                     </DataCell>
 
-                    <DataCell label="Preco">
-                      <Input
+                    <DataCell label="Preço">
+                      <MoneyInput
                         value={row.draft.unitPrice}
-                        inputMode="decimal"
                         disabled={isReadOnly}
                         onChange={(event) => {
                           const value = event.target.value;
@@ -689,7 +690,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                         </Field>
                       </div>
 
-                      <Field label="Observacao do item">
+                      <Field label="Observação do item">
                         <Textarea
                           rows={3}
                           disabled={isReadOnly}
@@ -705,7 +706,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                               }
                             }));
                           }}
-                          placeholder="Observacoes opcionais sobre a conferencia deste produto"
+                          placeholder="Observações opcionais sobre a conferência deste produto"
                         />
                       </Field>
 
@@ -751,11 +752,9 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         {isDraft ? (
           <div className="max-w-md">
             <Field label="Valor recebido" error={receivedAmountError ?? undefined}>
-              <Input
+              <MoneyInput
                 value={receivedAmountInput}
-                inputMode="decimal"
                 onChange={(event) => setReceivedAmountInput(event.target.value)}
-                placeholder="0,00"
               />
             </Field>
           </div>
@@ -772,7 +771,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         />
 
         {visit.items.length === 0 ? (
-          <p className="text-sm text-[var(--jam-subtle)]">A reposicao aparece depois que voce montar a conferencia do periodo.</p>
+          <p className="text-sm text-[var(--jam-subtle)]">A reposição aparece depois que você montar a conferência do período.</p>
         ) : (
           <div className="space-y-3">
             <div className="hidden grid-cols-[minmax(0,1.5fr)_96px_110px_110px] gap-3 border-b border-[var(--jam-border)] px-1 pb-2 sm:grid">
@@ -789,7 +788,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{row.item.productSnapshotName}</p>
                       {isDraft ? (
-                        <p className="mt-0.5 text-xs text-[var(--jam-subtle)]">Central disponivel: {row.availableCentralQuantity}</p>
+                        <p className="mt-0.5 text-xs text-[var(--jam-subtle)]">Central disponível: {row.availableCentralQuantity}</p>
                       ) : null}
                     </div>
                   </DataCell>
@@ -825,7 +824,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
 
                 {isDraft && row.exceedsCentralStock ? (
                   <p className="mt-2 text-sm font-medium text-[var(--jam-danger)]">
-                    Reposicao acima do estoque central. Disponivel: {row.availableCentralQuantity}. Informado: {row.restockedQuantity}.
+                    Reposição acima do estoque central. Disponível: {row.availableCentralQuantity}. Informado: {row.restockedQuantity}.
                   </p>
                 ) : null}
               </div>
@@ -842,7 +841,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
 
         {stockWarnings.length > 0 ? (
           <WarningBanner
-            message={`Revise a reposicao antes de concluir. ${stockWarnings
+            message={`Revise a reposição antes de concluir. ${stockWarnings
               .map((row) => `${row.item.productSnapshotName}: repor ${row.restockedQuantity}, central ${row.availableCentralQuantity}`)
               .join(" | ")}`}
           />
@@ -853,19 +852,19 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         {activeCompletionError ? <ErrorBanner message={activeCompletionError} /> : null}
 
         {isDraft ? (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <StickyActionBar>
             <Button variant="secondary" disabled={isBusy} onClick={() => void saveDraft()}>
-              {saveBusy ? "Salvando..." : "Salvar visita"}
+              {saveBusy ? "Salvando..." : "Salvar rascunho"}
             </Button>
             <Button disabled={isBusy || !canConclude} onClick={() => void onConclude()}>
               {saveBusy ? "Salvando..." : completeMutation.isPending ? "Concluindo..." : "Concluir visita"}
             </Button>
-          </div>
+          </StickyActionBar>
         ) : (
           <p className="text-sm text-[var(--jam-subtle)]">
             {visit.status === "COMPLETED"
-              ? "A nova base desta visita ficou registrada e a tela agora esta somente para leitura."
-              : "A visita foi cancelada e a conferencia ficou apenas para consulta."}
+              ? "A nova base desta visita ficou registrada e a tela agora está somente para leitura."
+              : "A visita foi cancelada e a conferência ficou apenas para consulta."}
           </p>
         )}
       </Card>
@@ -873,25 +872,25 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
       {visit.status === "COMPLETED" ? <VisitReceiptCard visit={visit} /> : null}
 
       <Card className="space-y-4">
-        <StepHeader step="Observacoes" title="Observacoes da visita" />
+        <StepHeader step="Observações" title="Observações da visita" />
         {isDraft ? (
-          <Field label="Anotacoes gerais">
+          <Field label="Anotações gerais">
             <Textarea
               value={visitNotesInput}
               rows={4}
               maxLength={2000}
               onChange={(event) => setVisitNotesInput(event.target.value)}
-              placeholder="Anotacoes gerais desta visita"
+              placeholder="Anotações gerais desta visita"
             />
           </Field>
         ) : (
-          <p className="text-sm text-[var(--jam-subtle)]">{visit.notes || "Sem observacoes registradas."}</p>
+          <p className="text-sm text-[var(--jam-subtle)]">{visit.notes || "Sem observações registradas."}</p>
         )}
       </Card>
 
       {isDraft ? (
         <Card className="space-y-3">
-          <StepHeader step="Nao finalizada" title="Acoes da visita" />
+          <StepHeader step="Não finalizada" title="Ações da visita" />
           <Button
             variant="danger"
             className="w-full"
@@ -915,9 +914,9 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         }
         description={
           pendingAction?.type === "REMOVE_ITEM"
-            ? `O produto ${pendingAction.itemName} sera removido desta visita nao finalizada.`
+            ? `O produto ${pendingAction.itemName} será removido desta visita não finalizada.`
             : pendingAction?.type === "CANCEL"
-              ? "Essa visita nao finalizada sera cancelada e vai sair da sua fila de trabalho."
+              ? "Essa visita não finalizada será cancelada e vai sair da sua fila de trabalho."
               : "Depois de concluir, a visita fica somente para leitura e segue para o financeiro."
         }
         footer={
@@ -937,14 +936,14 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
               {pendingAction?.type === "REMOVE_ITEM"
                 ? deleteItemMutation.isPending
                   ? "Removendo..."
-                  : "Confirmar remocao"
+                  : "Confirmar remoção"
                 : pendingAction?.type === "CANCEL"
                   ? cancelMutation.isPending
                     ? "Cancelando..."
                     : "Confirmar cancelamento"
                   : completeMutation.isPending
                     ? "Concluindo..."
-                    : "Confirmar conclusao"}
+                    : "Confirmar conclusão"}
             </Button>
           </div>
         }
@@ -958,11 +957,11 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
             </div>
           ) : pendingAction?.type === "REMOVE_ITEM" ? (
             <p className="text-sm text-[var(--jam-subtle)]">
-              Se este produto ainda precisa ficar na conferência do periodo, volte agora antes de remover.
+              Se este produto ainda precisa ficar na conferência do período, volte agora antes de remover.
             </p>
           ) : (
             <p className="text-sm text-[var(--jam-subtle)]">
-              Se voce ainda precisa revisar conferencia, recebimento ou reposicao, volte agora antes de cancelar.
+              Se você ainda precisa revisar conferência, recebimento ou reposição, volte agora antes de cancelar.
             </p>
           )}
         </div>
@@ -972,7 +971,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         open={isAddProductOpen}
         onClose={() => setIsAddProductOpen(false)}
         title="Adicionar produto"
-        description="Selecione o produto da consignacao e informe a base anterior para colocar na folha."
+        description="Selecione o produto da consignação e informe a base anterior para colocar na folha."
         footer={
           <div className="grid gap-3 sm:grid-cols-2">
             <Button variant="ghost" onClick={() => setIsAddProductOpen(false)} disabled={addProductMutation.isPending}>
@@ -996,11 +995,11 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
           {activeAddProductError ? <ErrorBanner message={activeAddProductError} /> : null}
 
           {productsQuery.isPending ? (
-            <p className="text-sm text-[var(--jam-subtle)]">Carregando produtos disponiveis...</p>
+            <p className="text-sm text-[var(--jam-subtle)]">Carregando produtos disponíveis...</p>
           ) : availableProducts.length === 0 ? (
             <EmptyState
-              title="Sem produtos disponiveis"
-              message="Todos os produtos ativos ja estao na visita ou nao ha produtos liberados para este cliente."
+              title="Sem produtos disponíveis"
+              message="Todos os produtos ativos já estão na visita ou não há produtos liberados para este cliente."
             />
           ) : (
             <>
@@ -1033,8 +1032,8 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                 label="Base anterior"
                 hint={
                   selectedProductOption?.suggestedPrevious !== null && selectedProductOption?.suggestedPrevious !== undefined
-                    ? `Sugestao pelo ultimo historico concluido: ${selectedProductOption.suggestedPrevious}`
-                    : "Informe quanto ja estava no cliente antes desta visita."
+                    ? `Sugestão pelo último histórico concluído: ${selectedProductOption.suggestedPrevious}`
+                    : "Informe quanto já estava no cliente antes desta visita."
                 }
                 error={addProductQuantityError}
               >
@@ -1046,12 +1045,10 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                 />
               </Field>
 
-              <Field label="Preco" error={addProductPriceError}>
-                <Input
+              <Field label="Preço" error={addProductPriceError}>
+                <MoneyInput
                   value={addProductUnitPriceInput}
-                  inputMode="decimal"
                   onChange={(event) => setAddProductUnitPriceInput(event.target.value)}
-                  placeholder="0,00"
                 />
               </Field>
 
@@ -1077,7 +1074,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
               Voltar
             </Button>
             <Button onClick={() => void onConfirmPaymentAndConclude()} disabled={completeMutation.isPending || !paymentMethod}>
-              {completeMutation.isPending ? "Concluindo..." : "Confirmar conclusao"}
+              {completeMutation.isPending ? "Concluindo..." : "Confirmar conclusão"}
             </Button>
           </div>
         }
@@ -1100,22 +1097,22 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
             </Select>
           </Field>
 
-          <Field label="Referencia">
+          <Field label="Referência">
             <Input
               value={paymentReference}
               maxLength={160}
               onChange={(event) => setPaymentReference(event.target.value)}
-              placeholder="PIX, dinheiro, maquina, banco"
+              placeholder="PIX, dinheiro, máquina, banco"
             />
           </Field>
 
-          <Field label="Observacoes">
+          <Field label="Observações">
             <Textarea
               value={paymentNotes}
               rows={4}
               maxLength={2000}
               onChange={(event) => setPaymentNotes(event.target.value)}
-              placeholder="Observacoes do pagamento inicial"
+              placeholder="Observações do pagamento inicial"
             />
           </Field>
         </div>
@@ -1171,27 +1168,27 @@ function buildRowViewModel({
   const errors: string[] = [];
 
   if (Number.isNaN(quantitySoldInput) || quantitySoldInput < 0) {
-    errors.push("Vendida precisa ser um numero valido.");
+    errors.push("Vendida precisa ser um número válido.");
   }
 
   if (Number.isNaN(quantityDefectiveReturnInput) || quantityDefectiveReturnInput < 0) {
-    errors.push("Trocas precisam ser validas.");
+    errors.push("Trocas precisam ser válidas.");
   }
 
   if (Number.isNaN(quantityLossInput) || quantityLossInput < 0) {
-    errors.push("Perdas precisam ser validas.");
+    errors.push("Perdas precisam ser válidas.");
   }
 
   if (Number.isNaN(unitPriceInput) || unitPriceInput < 0) {
-    errors.push("Preco precisa ser valido.");
+    errors.push("Preço precisa ser válido.");
   }
 
   if (Number.isNaN(restockedQuantityInput) || restockedQuantityInput < 0) {
-    errors.push("Reposicao precisa ser valida.");
+    errors.push("Reposição precisa ser válida.");
   }
 
   if (remainingQuantity < 0) {
-    errors.push("O restante nao pode ficar negativo.");
+    errors.push("O restante não pode ficar negativo.");
   }
 
   return {
@@ -1250,11 +1247,11 @@ function normalizeMoneyValue(value: number): number {
 
 function buildReceivedAmountError(receivedAmountValue: number, totalAmount: number): string | null {
   if (Number.isNaN(receivedAmountValue) || receivedAmountValue < 0) {
-    return "Informe um valor recebido valido.";
+    return "Informe um valor recebido válido.";
   }
 
   if (normalizeMoneyValue(receivedAmountValue) > normalizeMoneyValue(totalAmount)) {
-    return "O valor recebido nao pode ser maior que o total do acerto.";
+    return "O valor recebido não pode ser maior que o total do acerto.";
   }
 
   return null;
@@ -1300,7 +1297,7 @@ function formatCompletionError(error: ApiError, visit: VisitDetail): string {
   const formattedItems = rawItems
     .map((entry) => {
       const label = visit.items.find((item) => item.productId === entry.productId)?.productSnapshotName ?? "Produto";
-      return `${label}: precisa ${entry.requiredQuantity}, disponivel ${entry.availableQuantity}`;
+      return `${label}: precisa ${entry.requiredQuantity}, disponível ${entry.availableQuantity}`;
     })
     .join(" | ");
 
@@ -1309,7 +1306,7 @@ function formatCompletionError(error: ApiError, visit: VisitDetail): string {
 
 function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
   if (method === "BANK_TRANSFER") {
-    return "Transferencia";
+    return "Transferência";
   }
 
   if (method === "CASH") {
@@ -1317,7 +1314,7 @@ function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
   }
 
   if (method === "CARD") {
-    return "Cartao";
+    return "Cartão";
   }
 
   if (method === "PIX") {
