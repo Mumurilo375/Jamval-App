@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, EmptyState, ErrorBanner, Field, Input, MoneyInput, PageHeader, PageLoader, Select, StickyActionBar, Textarea, ToneBadge } from "../../components/ui";
+import { Button, Card, EmptyState, ErrorBanner, Field, Input, MoneyInput, PageHeader, PageLoader, Select, Textarea, ToneBadge } from "../../components/ui";
 import { toOptionalString } from "../../lib/forms";
 import { formatCurrency, formatDate, formatDateTime } from "../../lib/format";
 import type { PaymentMethod, ReceivableDetail } from "../../types/domain";
@@ -275,11 +275,11 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
           <Textarea rows={3} placeholder="Detalhes do recebimento" maxLength={2000} {...register("notes")} />
         </Field>
 
-        <StickyActionBar>
+        <div className="pt-1">
           <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Registrar recebimento"}
           </Button>
-        </StickyActionBar>
+        </div>
       </form>
     </Card>
   );
