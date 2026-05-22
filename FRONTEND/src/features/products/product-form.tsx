@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
@@ -11,6 +11,8 @@ import {
   ErrorBanner,
   Field,
   Input,
+  MoneyInput,
+  StickyActionBar,
 } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { parseDecimalInput, toOptionalString } from "../../lib/forms";
@@ -22,27 +24,27 @@ const productFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Informe o SKU")
-    .max(120, "Use ate 120 caracteres"),
+    .max(120, "Use até 120 caracteres"),
   name: z
     .string()
     .trim()
     .min(1, "Informe o nome")
-    .max(200, "Use ate 200 caracteres"),
-  category: z.string().max(120, "Use ate 120 caracteres"),
-  brand: z.string().max(120, "Use ate 120 caracteres"),
-  model: z.string().max(120, "Use ate 120 caracteres"),
-  color: z.string().max(80, "Use ate 80 caracteres"),
-  voltage: z.string().max(80, "Use ate 80 caracteres"),
-  connectorType: z.string().max(80, "Use ate 80 caracteres"),
+    .max(200, "Use até 200 caracteres"),
+  category: z.string().max(120, "Use até 120 caracteres"),
+  brand: z.string().max(120, "Use até 120 caracteres"),
+  model: z.string().max(120, "Use até 120 caracteres"),
+  color: z.string().max(80, "Use até 80 caracteres"),
+  voltage: z.string().max(80, "Use até 80 caracteres"),
+  connectorType: z.string().max(80, "Use até 80 caracteres"),
   basePrice: z
     .string()
     .trim()
-    .min(1, "Informe o preco base")
+    .min(1, "Informe o preço base")
     .refine(
       (value) =>
         !Number.isNaN(parseDecimalInput(value)) &&
         parseDecimalInput(value) >= 0,
-      "Informe um valor valido",
+      "Informe um valor válido",
     ),
   costPrice: z
     .string()
@@ -52,7 +54,7 @@ const productFormSchema = z.object({
         value.length === 0 ||
         (!Number.isNaN(parseDecimalInput(value)) &&
           parseDecimalInput(value) >= 0),
-      "Informe um valor valido",
+      "Informe um valor válido",
     ),
   isActive: z.boolean(),
 });
@@ -70,9 +72,9 @@ export function ProductForm({ mode, product }: ProductFormProps) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setValue,
-    watch,
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -92,6 +94,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
       isActive: product?.isActive ?? true,
     },
   });
+  const isActive = useWatch({ control, name: "isActive" });
 
   const mutation = useMutation({
     mutationFn: async (values: ProductFormValues) => {
@@ -145,25 +148,17 @@ export function ProductForm({ mode, product }: ProductFormProps) {
             />
           </Field>
 
-          <Field label="Preco base" error={errors.basePrice?.message}>
-            <Input
-              inputMode="decimal"
-              placeholder="29.90"
-              {...register("basePrice")}
-            />
-          </Field>
-        </div>
+        <Field label="Preço base" error={errors.basePrice?.message}>
+          <MoneyInput {...register("basePrice")} />
+        </Field>
+      </div>
 
         <Field
           label="Custo de compra"
-          hint="Opcional. Use como custo inicial de compra. O custo real usado na operacao vem das entradas de estoque."
+          hint="Opcional. Use como custo inicial de compra. O custo real usado na operação vem das entradas de estoque."
           error={errors.costPrice?.message}
         >
-          <Input
-            inputMode="decimal"
-            placeholder="18.50"
-            {...register("costPrice")}
-          />
+          <MoneyInput {...register("costPrice")} />
         </Field>
 
         <Field label="Nome" error={errors.name?.message}>
@@ -219,34 +214,34 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         <Checkbox
           {...register("isActive")}
           label="Produto ativo"
-          hint="Produtos inativos continuam no historico, mas saem da operacao diaria."
-          checked={watch("isActive")}
+          hint="Produtos inativos continuam no histórico, mas saem da operação diária."
+          checked={Boolean(isActive)}
           onChange={(event) =>
             setValue("isActive", event.target.checked, { shouldDirty: true })
           }
         />
 
-        <div className="flex gap-3">
+        <StickyActionBar>
           <Button
             type="button"
             variant="ghost"
-            className="flex-1"
+            className="w-full sm:w-auto"
             onClick={() => navigate(-1)}
           >
             Voltar
           </Button>
           <Button
             type="submit"
-            className="flex-1"
+            className="w-full sm:w-auto"
             disabled={mutation.isPending}
           >
             {mutation.isPending
               ? "Salvando..."
               : mode === "create"
                 ? "Criar produto"
-                : "Salvar alteracoes"}
+                : "Salvar alterações"}
           </Button>
-        </div>
+        </StickyActionBar>
       </form>
     </Card>
   );

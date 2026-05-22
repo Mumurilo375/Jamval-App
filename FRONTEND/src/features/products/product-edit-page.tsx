@@ -19,7 +19,7 @@ export function ProductEditPage() {
   if (productQuery.isError || !productQuery.data) {
     return (
       <EmptyState
-        title="Produto nao encontrado"
+        title="Produto não encontrado"
         message="Volte para a lista e tente abrir o item novamente."
       />
     );
@@ -31,7 +31,7 @@ export function ProductEditPage() {
         backTo="/products"
         backLabel="Produtos"
         title="Editar produto"
-        subtitle={`${productQuery.data.sku} · preco base e custo de compra`}
+        subtitle={`${productQuery.data.sku} · preço base e custo de compra`}
       />
       <ProductForm mode="edit" product={productQuery.data} />
     </div>
