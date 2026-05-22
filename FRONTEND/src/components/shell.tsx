@@ -21,12 +21,12 @@ type NavigationSection = {
 
 const navigationSections: NavigationSection[] = [
   {
-    title: "Operacao",
+    title: "Operação",
     variant: "primary",
     items: [
       {
         to: "/",
-        label: "Inicio",
+        label: "Início",
         icon: <HomeIcon />,
         isActive: (pathname) => pathname === "/"
       },
@@ -78,7 +78,7 @@ const navigationSections: NavigationSection[] = [
       },
       {
         to: "/admin/dashboard",
-        label: "Administracao",
+        label: "Administração",
         icon: <SettingsIcon />,
         isActive: (pathname) => pathname.startsWith("/admin")
       }
@@ -145,6 +145,8 @@ export function AppShell() {
               className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-ink)] transition hover:bg-[var(--jam-panel-strong)] sm:h-9 sm:w-9 md:hidden"
               onClick={() => setIsDrawerOpen(true)}
               aria-label="Abrir menu"
+              aria-expanded={isDrawerOpen}
+              aria-controls="mobile-navigation"
             >
               <MenuIcon />
             </button>
@@ -152,7 +154,7 @@ export function AppShell() {
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
               <p className="truncate text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">
-                {activeNavigationItem?.label ?? "Operacao do consignado"}
+                {activeNavigationItem?.label ?? "Operação do consignado"}
               </p>
             </div>
           </div>
@@ -184,6 +186,7 @@ export function AppShell() {
           onClick={() => setIsDrawerOpen(false)}
         />
         <aside
+          id="mobile-navigation"
           className={cx(
             "fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[300px] flex-col border-r border-[var(--jam-border)] bg-[var(--jam-panel)] shadow-[0_24px_48px_rgba(15,23,42,0.18)] transition-transform duration-200",
             isDrawerOpen ? "translate-x-0" : "-translate-x-full"
@@ -194,6 +197,7 @@ export function AppShell() {
             firstName={firstName}
             pathname={location.pathname}
             onNavigate={() => setIsDrawerOpen(false)}
+            onClose={() => setIsDrawerOpen(false)}
             onLogout={() => {
               setIsDrawerOpen(false);
               void logoutMutation.mutateAsync();
@@ -228,12 +232,14 @@ function NavigationPanel({
   pathname,
   firstName,
   onNavigate,
+  onClose,
   onLogout,
   isLoggingOut
 }: {
   pathname: string;
   firstName: string;
   onNavigate?: () => void;
+  onClose?: () => void;
   onLogout: () => void;
   isLoggingOut: boolean;
 }) {
@@ -248,9 +254,21 @@ function NavigationPanel({
   return (
     <>
       <div className="border-b border-[var(--jam-border)] px-3.5 py-3.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
+          {onClose ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)] transition hover:text-[var(--jam-ink)] md:hidden"
+              aria-label="Fechar menu"
+            >
+              <CloseMenuIcon />
+            </button>
+          ) : null}
+        </div>
         <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="font-display text-xl font-semibold text-[var(--jam-ink)]">Operacao</p>
+          <p className="font-display text-xl font-semibold text-[var(--jam-ink)]">Operação</p>
           <p className="max-w-[112px] truncate rounded-full border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-2.5 py-1 text-[12px] font-medium text-[var(--jam-ink)]">
             {firstName}
           </p>
@@ -279,6 +297,7 @@ function NavigationPanel({
                     key={item.to}
                     to={item.to}
                     onClick={handleNavigate}
+                    aria-current={active ? "page" : undefined}
                     className={cx(
                       section.variant === "primary"
                         ? "group flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition"
@@ -335,6 +354,15 @@ function MenuIcon() {
       <path d="M4 7h16" />
       <path d="M4 12h16" />
       <path d="M4 17h16" />
+    </svg>
+  );
+}
+
+function CloseMenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
     </svg>
   );
 }
