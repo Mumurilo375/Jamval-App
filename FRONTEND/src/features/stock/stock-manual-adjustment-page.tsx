@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
@@ -14,7 +14,9 @@ import {
   Input,
   PageHeader,
   PageLoader,
+  RetryableErrorState,
   Select,
+  StickyActionBar,
   Textarea,
   WarningBanner
 } from "../../components/ui";
@@ -30,7 +32,7 @@ const adjustmentFormSchema = z.object({
     .trim()
     .min(1, "Informe a quantidade")
     .refine((value) => /^\d+$/.test(value) && Number(value) > 0, "Informe uma quantidade inteira maior que zero"),
-  reason: z.string().trim().min(1, "Informe o motivo do ajuste").max(500, "Use ate 500 caracteres")
+    reason: z.string().trim().min(1, "Informe o motivo do ajuste").max(500, "Use até 500 caracteres")
 });
 
 type AdjustmentFormValues = z.infer<typeof adjustmentFormSchema>;
@@ -49,7 +51,7 @@ export function StockManualAdjustmentPage() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors }
   } = useForm<AdjustmentFormValues>({
     resolver: zodResolver(adjustmentFormSchema),
@@ -61,8 +63,8 @@ export function StockManualAdjustmentPage() {
     }
   });
 
-  const selectedProductId = watch("productId");
-  const selectedDirection = watch("direction");
+  const selectedProductId = useWatch({ control, name: "productId" });
+  const selectedDirection = useWatch({ control, name: "direction" });
   const overviewItem = useMemo(
     () => overviewQuery.data?.items.find((item) => item.productId === selectedProductId) ?? null,
     [overviewQuery.data?.items, selectedProductId]
@@ -88,9 +90,13 @@ export function StockManualAdjustmentPage() {
 
   if (productsQuery.isError || overviewQuery.isError) {
     return (
-      <EmptyState
-        title="Nao foi possivel abrir o ajuste"
-        message="Confira a conexao com o backend e tente novamente."
+      <RetryableErrorState
+        title="Não foi possível abrir o ajuste"
+        message="Confira a conexão com o backend e tente novamente."
+        onRetry={() => {
+          void productsQuery.refetch();
+          void overviewQuery.refetch();
+        }}
       />
     );
   }
@@ -105,7 +111,7 @@ export function StockManualAdjustmentPage() {
           backLabel="Estoque"
           eyebrow="Estoque central"
           title="Ajuste manual"
-          subtitle="Fluxo corretivo para acertar diferencas do estoque central."
+          subtitle="Fluxo corretivo para acertar diferenças do estoque central."
         />
         <EmptyState
           title="Cadastre produtos primeiro"
@@ -129,11 +135,11 @@ export function StockManualAdjustmentPage() {
         backLabel="Estoque"
         eyebrow="Estoque central"
         title="Ajuste manual"
-        subtitle="Use apenas para correcao operacional. Para mercadoria nova, o fluxo certo e Entrada manual."
+        subtitle="Use apenas para correção operacional. Para mercadoria nova, o fluxo certo é Entrada manual."
       />
 
       <Card className="space-y-4">
-        <WarningBanner message="Ajuste manual e um fluxo de correcao. Nao use para entrada normal de mercadoria." />
+        <WarningBanner message="Ajuste manual é um fluxo de correção. Não use para entrada normal de mercadoria." />
 
         {mutationError ? <ErrorBanner message={mutationError} /> : null}
 
@@ -175,30 +181,30 @@ export function StockManualAdjustmentPage() {
 
           {selectedDirection === "OUT" ? (
             <p className="text-sm text-[var(--jam-subtle)]">
-              Ajuste de saida reduz o estoque central e nao pode passar do saldo disponivel.
+              Ajuste de saída reduz o estoque central e não pode passar do saldo disponível.
             </p>
           ) : (
             <p className="text-sm text-[var(--jam-subtle)]">
-              Ajuste de entrada corrige saldo para cima quando houver diferenca positiva.
+              Ajuste de entrada corrige saldo para cima quando houver diferença positiva.
             </p>
           )}
 
           <Field label="Motivo do ajuste" error={errors.reason?.message}>
             <Textarea
-              placeholder="Ex.: contagem refeita, avaria interna, caixa encontrada no deposito"
+              placeholder="Ex.: contagem refeita, avaria interna, caixa encontrada no depósito"
               maxLength={500}
               {...register("reason")}
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
+          <StickyActionBar>
+            <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => navigate(-1)}>
               Voltar
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
               {mutation.isPending ? "Salvando..." : "Salvar ajuste"}
             </Button>
-          </div>
+          </StickyActionBar>
         </form>
       </Card>
     </div>
