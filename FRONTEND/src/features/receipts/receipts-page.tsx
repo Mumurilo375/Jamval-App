@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { Button, Card, EmptyState, Field, Input, PageHeader, PageLoader, PaginationControls, ToneBadge } from "../../components/ui";
+import { Button, Card, EmptyState, Field, Input, ListSkeleton, PageHeader, PaginationControls, RetryableErrorState, ToneBadge } from "../../components/ui";
 import { formatCurrency, formatDate } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import { listClients } from "../clients/clients-api";
@@ -44,12 +44,12 @@ export function ReceiptsPage() {
       <PageHeader
         eyebrow="Documentos"
         title="Comprovantes"
-        subtitle="Use esta area para encontrar visitas concluidas e abrir o detalhe que gera ou baixa o comprovante."
+        subtitle="Use esta área para encontrar visitas concluídas e abrir o detalhe que gera ou baixa o comprovante."
       />
 
       <Card className="space-y-3">
         <p className="text-sm text-[var(--jam-subtle)]">
-          A geracao e o download do comprovante continuam acontecendo dentro da visita concluida. Aqui voce localiza rapidamente as ultimas visitas ja fechadas.
+          A geração e o download do comprovante continuam acontecendo dentro da visita concluída. Aqui você localiza rapidamente as últimas visitas já fechadas.
         </p>
 
         <Field label="Buscar visita ou cliente">
@@ -59,21 +59,28 @@ export function ReceiptsPage() {
               setSearch(event.target.value);
               setPage(1);
             }}
-            placeholder="Buscar por codigo da visita ou cliente"
+            placeholder="Buscar por código da visita ou cliente"
           />
         </Field>
       </Card>
 
-      {visitsQuery.isPending || clientsQuery.isPending ? <PageLoader label="Carregando comprovantes..." /> : null}
+      {visitsQuery.isPending || clientsQuery.isPending ? <ListSkeleton rows={4} /> : null}
 
       {visitsQuery.isError || clientsQuery.isError ? (
-        <EmptyState title="Nao foi possivel carregar os comprovantes" message="Confira a conexao com o backend e tente novamente." />
+        <RetryableErrorState
+          title="Não foi possível carregar os comprovantes"
+          message="Confira a conexão com o backend e tente novamente."
+          onRetry={() => {
+            void visitsQuery.refetch();
+            void clientsQuery.refetch();
+          }}
+        />
       ) : null}
 
       {!visitsQuery.isPending && !clientsQuery.isPending && !visitsQuery.isError && !clientsQuery.isError && filteredVisits.length === 0 ? (
         <EmptyState
-          title="Nenhuma visita concluida encontrada"
-          message="Quando houver visitas concluidas, elas vao aparecer aqui para abrir o comprovante."
+          title="Nenhuma visita concluída encontrada"
+          message="Quando houver visitas concluídas, elas vão aparecer aqui para abrir o comprovante."
         />
       ) : null}
 
@@ -87,7 +94,7 @@ export function ReceiptsPage() {
                 </p>
                 <p className="mt-0.5 truncate text-sm text-[var(--jam-subtle)]">{visit.visitCode}</p>
               </div>
-              <ToneBadge label="Concluida" tone="success" />
+              <ToneBadge label="Concluída" tone="success" />
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -103,7 +110,7 @@ export function ReceiptsPage() {
 
             <Link to={`/visits/${visit.id}`} state={{ backTo: "/receipts", backLabel: "Comprovantes" }}>
               <Button className="w-full justify-between">
-                <span>Abrir visita concluida</span>
+                <span>Abrir visita concluída</span>
                 <span>→</span>
               </Button>
             </Link>
