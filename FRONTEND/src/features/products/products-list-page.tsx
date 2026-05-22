@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import {
   Button,
@@ -8,9 +8,10 @@ import {
   EmptyState,
   Field,
   Input,
+  ListSkeleton,
   PageHeader,
-  PageLoader,
   PaginationControls,
+  RetryableErrorState,
   Select,
   StatusBadge,
 } from "../../components/ui";
@@ -21,16 +22,18 @@ import { listProducts } from "./products-api";
 const PRODUCTS_PAGE_SIZE = 6;
 
 export function ProductsListPage() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
+  const search = searchParams.get("search") ?? "";
+  const status = normalizeStatusFilter(searchParams.get("status"));
+  const deferredSearch = useDeferredValue(search);
 
   const filters = useMemo(
     () => ({
-      search: search.trim() || undefined,
+      search: deferredSearch.trim() || undefined,
       isActive: status === "all" ? undefined : status === "active",
     }),
-    [search, status],
+    [deferredSearch, status],
   );
 
   const productsQuery = useQuery({
@@ -45,6 +48,30 @@ export function ProductsListPage() {
   const headerSubtitle = productsQuery.data
     ? `${formatCount(productsQuery.data.length, "produto")} no recorte atual`
     : undefined;
+  const hasActiveFilters = search.trim().length > 0 || status !== "all";
+
+  const updateFilters = (updates: { search?: string; status?: "all" | "active" | "inactive" }) => {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (updates.search !== undefined) {
+      if (updates.search.trim()) {
+        nextParams.set("search", updates.search);
+      } else {
+        nextParams.delete("search");
+      }
+    }
+
+    if (updates.status !== undefined) {
+      if (updates.status === "all") {
+        nextParams.delete("status");
+      } else {
+        nextParams.set("status", updates.status);
+      }
+    }
+
+    setPage(1);
+    setSearchParams(nextParams, { replace: true });
+  };
 
   return (
     <div className="space-y-4">
@@ -54,7 +81,7 @@ export function ProductsListPage() {
         subtitle={headerSubtitle}
         action={
           <Link to="/products/new">
-            <Button>Novo</Button>
+            <Button>Novo produto</Button>
           </Link>
         }
       />
@@ -65,10 +92,10 @@ export function ProductsListPage() {
             <Input
               value={search}
               onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
+                updateFilters({ search: event.target.value });
               }}
               placeholder="SKU, nome ou marca"
+              autoComplete="off"
             />
           </Field>
 
@@ -76,8 +103,7 @@ export function ProductsListPage() {
             <Select
               value={status}
               onChange={(event) => {
-                setStatus(event.target.value as typeof status);
-                setPage(1);
+                updateFilters({ status: event.target.value as "all" | "active" | "inactive" });
               }}
             >
               <option value="all">Todos</option>
@@ -86,16 +112,32 @@ export function ProductsListPage() {
             </Select>
           </Field>
         </div>
+        {hasActiveFilters ? (
+          <div className="mt-3 flex justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              className="border border-[var(--jam-border)]"
+              onClick={() => {
+                setPage(1);
+                setSearchParams(new URLSearchParams(), { replace: true });
+              }}
+            >
+              Limpar filtros
+            </Button>
+          </div>
+        ) : null}
       </Card>
 
       {productsQuery.isPending ? (
-        <PageLoader label="Carregando produtos..." />
+        <ListSkeleton rows={4} />
       ) : null}
 
       {productsQuery.isError ? (
-        <EmptyState
+        <RetryableErrorState
           title="Falha ao carregar produtos"
-          message="Confira a conexao com o backend e tente novamente."
+          message="Confira a conexão com o backend e tente novamente."
+          onRetry={() => void productsQuery.refetch()}
         />
       ) : null}
 
@@ -104,7 +146,7 @@ export function ProductsListPage() {
       productsQuery.data?.length === 0 ? (
         <EmptyState
           title="Nenhum produto encontrado"
-          message="Comece cadastrando os itens principais do consignado."
+          message={hasActiveFilters ? "Nenhum produto combina com os filtros atuais." : "Comece cadastrando os itens principais do consignado."}
           action={
             <Link to="/products/new">
               <Button>Criar primeiro produto</Button>
@@ -113,7 +155,7 @@ export function ProductsListPage() {
         />
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 lg:hidden sm:grid-cols-2">
         {paginatedProducts.pageItems.map((product) => (
           <Card key={product.id} className="space-y-3">
             <div className="flex items-start justify-between gap-3">
@@ -136,7 +178,7 @@ export function ProductsListPage() {
                 </p>
                 <div className="mt-2 grid gap-1">
                   <p className="text-sm font-semibold text-[var(--jam-ink)]">
-                    Preco base: {formatCurrency(Number(product.basePrice))}
+                    Preço base: {formatCurrency(Number(product.basePrice))}
                   </p>
                   <p className="text-sm text-[var(--jam-subtle)]">
                     Custo de compra:{" "}
@@ -156,6 +198,42 @@ export function ProductsListPage() {
         ))}
       </div>
 
+      {paginatedProducts.pageItems.length > 0 ? (
+        <Card className="hidden overflow-hidden p-0 lg:block">
+          <table className="w-full table-fixed border-collapse text-left">
+            <thead className="bg-[rgba(15,23,42,0.04)]">
+              <tr className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
+                <th className="px-4 py-3">Produto</th>
+                <th className="px-4 py-3">SKU</th>
+                <th className="px-4 py-3">Categoria</th>
+                <th className="px-4 py-3">Preço base</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--jam-border)]">
+              {paginatedProducts.pageItems.map((product) => (
+                <tr key={product.id} className="transition hover:bg-[rgba(29,78,216,0.04)]">
+                  <td className="px-4 py-3">
+                    <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{product.name}</p>
+                    <p className="mt-0.5 truncate text-xs text-[var(--jam-subtle)]">{product.brand ?? "Sem marca"}</p>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-[var(--jam-subtle)]">{product.sku}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--jam-subtle)]">{product.category ?? "Sem categoria"}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(Number(product.basePrice))}</td>
+                  <td className="px-4 py-3"><StatusBadge active={product.isActive} /></td>
+                  <td className="px-4 py-3 text-right">
+                    <Link to={`/products/${product.id}/edit`}>
+                      <Button variant="secondary">Editar</Button>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      ) : null}
+
       <PaginationControls
         page={paginatedProducts.page}
         totalPages={paginatedProducts.totalPages}
@@ -166,4 +244,8 @@ export function ProductsListPage() {
       />
     </div>
   );
+}
+
+function normalizeStatusFilter(value: string | null): "all" | "active" | "inactive" {
+  return value === "active" || value === "inactive" ? value : "all";
 }
