@@ -22,23 +22,23 @@ import { getAdminCompanyProfile, updateAdminCompanyProfile } from "./admin-api";
 import { AdminInfoPanel, AdminQueryErrorState, AdminSectionCard } from "./admin-ui";
 
 const adminCompanyProfileSchema = z.object({
-  companyName: z.string().trim().min(1, "Informe o nome da empresa").max(200, "Use ate 200 caracteres"),
+  companyName: z.string().trim().min(1, "Informe o nome da empresa").max(200, "Use até 200 caracteres"),
   document: z
     .string()
     .refine((value) => value.trim() === "" || onlyDigits(value).length === 14, "Informe o CNPJ no formato 00.000.000/0001-00"),
   phone: z
     .string()
     .refine((value) => value.trim() === "" || [10, 11].includes(onlyDigits(value).length), "Informe telefone com DDD"),
-  address: z.string().max(200, "Use ate 200 caracteres"),
+  address: z.string().max(200, "Use até 200 caracteres"),
   email: z
     .string()
     .trim()
-    .max(160, "Use ate 160 caracteres")
+    .max(160, "Use até 160 caracteres")
     .refine(
       (value) => value.length === 0 || z.string().email().safeParse(value).success,
-      "Informe um email valido"
+      "Informe um e-mail válido"
     ),
-  contactName: z.string().max(160, "Use ate 160 caracteres")
+  contactName: z.string().max(160, "Use até 160 caracteres")
 });
 
 type AdminCompanyProfileValues = z.infer<typeof adminCompanyProfileSchema>;
@@ -118,13 +118,13 @@ export function AdminSettingsPage() {
   const phoneRegistration = register("phone");
 
   if (companyProfileQuery.isPending) {
-    return <PageLoader label="Carregando configuracoes..." />;
+    return <PageLoader label="Carregando configurações..." />;
   }
 
   if (companyProfileQuery.isError || !companyProfileQuery.data) {
     return (
       <AdminQueryErrorState
-        title="Nao foi possivel carregar as configuracoes"
+        title="Não foi possível carregar as configurações"
         error={companyProfileQuery.error}
         onRetry={() => void companyProfileQuery.refetch()}
       />
@@ -136,16 +136,16 @@ export function AdminSettingsPage() {
       <PageHeader
         backTo="/admin/dashboard"
         backLabel="Admin"
-        eyebrow="Administracao"
-        title="Configuracoes"
-        subtitle="Dados da empresa, comprovantes, parametros futuros e leitura da sessao atual."
+        eyebrow="Administração"
+        title="Configurações"
+        subtitle="Dados da empresa, comprovantes, parâmetros futuros e leitura da sessão atual."
       />
 
       {successMessage ? <SuccessBanner message={successMessage} /> : null}
 
-      <AdminInfoPanel title="Uso atual desta area">
+      <AdminInfoPanel title="Uso atual desta área">
         <p>Os dados da empresa aparecem nos comprovantes emitidos pelo Jamval.</p>
-        <p>Outras secoes ja ficam preparadas para evolucoes futuras sem transformar a pagina em um formulario gigante.</p>
+        <p>Outras seções já ficam preparadas para evoluções futuras sem transformar a página em um formulário gigante.</p>
       </AdminInfoPanel>
 
       <AdminSectionCard
@@ -162,7 +162,7 @@ export function AdminSettingsPage() {
           <SummaryRow label="Nome da empresa" value={companyProfileQuery.data.companyName} />
           <SummaryRow label="Documento/CNPJ" value={companyProfileQuery.data.document} />
           <SummaryRow label="Telefone" value={companyProfileQuery.data.phone} />
-          <SummaryRow label="Endereco" value={companyProfileQuery.data.address} />
+          <SummaryRow label="Endereço" value={companyProfileQuery.data.address} />
           <SummaryRow label="Email" value={companyProfileQuery.data.email} />
           <SummaryRow label="Responsavel" value={companyProfileQuery.data.contactName} />
         </div>
@@ -172,31 +172,31 @@ export function AdminSettingsPage() {
         <AdminSectionCard
           eyebrow="Comprovantes"
           title="Comprovantes"
-          description="Espaco reservado para futuras configuracoes de layout e emissao."
+          description="Espaço reservado para futuras configurações de layout e emissão."
         >
-          <PlaceholderCopy text="Padrao visual, dados complementares e preferencias de geracao vao entrar aqui em rodadas futuras." />
+          <PlaceholderCopy text="Padrão visual, dados complementares e preferências de geração vão entrar aqui em rodadas futuras." />
         </AdminSectionCard>
 
         <AdminSectionCard
-          eyebrow="Operacao"
-          title="Parametros operacionais"
-          description="Centralizacao futura de ajustes que impactam a rotina."
+          eyebrow="Operação"
+          title="Parâmetros operacionais"
+          description="Centralização futura de ajustes que impactam a rotina."
         >
-          <PlaceholderCopy text="Regras de visita, catalogo e estoque poderao ser configuradas aqui quando essa frente entrar no escopo." />
+          <PlaceholderCopy text="Regras de visita, catálogo e estoque poderão ser configuradas aqui quando essa frente entrar no escopo." />
         </AdminSectionCard>
 
         <AdminSectionCard
-          eyebrow="Preferencias"
-          title="Preferencias futuras"
-          description="Espaco reservado para ajustes pessoais e preferenciais."
+          eyebrow="Preferências"
+          title="Preferências futuras"
+          description="Espaço reservado para ajustes pessoais e preferenciais."
         >
-          <PlaceholderCopy text="Preferencias pessoais, automacoes e detalhes de uso ainda nao estao disponiveis nesta versao." />
+          <PlaceholderCopy text="Preferências pessoais, automações e detalhes de uso ainda não estão disponíveis nesta versão." />
         </AdminSectionCard>
       </div>
 
       <AdminSectionCard
-        eyebrow="Seguranca"
-        title="Sessao e seguranca"
+        eyebrow="Segurança"
+        title="Sessão e segurança"
         description="Leitura da conta atualmente conectada."
         action={
           <Button
@@ -208,15 +208,15 @@ export function AdminSettingsPage() {
             }}
             disabled={logoutMutation.isPending}
           >
-            {logoutMutation.isPending ? "Saindo..." : "Sair da sessao"}
+            {logoutMutation.isPending ? "Saindo..." : "Sair da sessão"}
           </Button>
         }
       >
         <div className="grid gap-2.5 sm:grid-cols-2">
           <SummaryRow label="Nome" value={sessionUser?.name ?? "-"} />
           <SummaryRow label="Email" value={sessionUser?.email ?? "-"} />
-          <SummaryRow label="Ultimo login" value={sessionUser?.lastLoginAt ? formatDateTime(sessionUser.lastLoginAt) : "Sem registro"} />
-          <SummaryRow label="Estado da conta" value={sessionUser?.isActive ? "Sessao ativa" : "Conta inativa"} />
+          <SummaryRow label="Último login" value={sessionUser?.lastLoginAt ? formatDateTime(sessionUser.lastLoginAt) : "Sem registro"} />
+          <SummaryRow label="Estado da conta" value={sessionUser?.isActive ? "Sessão ativa" : "Conta inativa"} />
         </div>
       </AdminSectionCard>
 
@@ -272,8 +272,8 @@ export function AdminSettingsPage() {
             </Field>
           </div>
 
-          <Field label="Endereco" error={errors.address?.message}>
-            <Input placeholder="Campo Mourao - PR" maxLength={200} {...register("address")} />
+          <Field label="Endereço" error={errors.address?.message}>
+            <Input placeholder="Campo Mourão - PR" maxLength={200} {...register("address")} />
           </Field>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -281,8 +281,8 @@ export function AdminSettingsPage() {
               <Input type="email" placeholder="contato@empresa.com" maxLength={160} {...register("email")} />
             </Field>
 
-            <Field label="Responsavel" error={errors.contactName?.message}>
-              <Input placeholder="Nome do contato responsavel" maxLength={160} {...register("contactName")} />
+            <Field label="Responsável" error={errors.contactName?.message}>
+              <Input placeholder="Nome do contato responsável" maxLength={160} {...register("contactName")} />
             </Field>
           </div>
 
@@ -303,7 +303,7 @@ export function AdminSettingsPage() {
               }
               disabled={!isDirty || mutation.isPending}
             >
-              Descartar alteracoes
+              Descartar alterações
             </Button>
             <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
               {mutation.isPending ? "Salvando..." : "Salvar dados"}
