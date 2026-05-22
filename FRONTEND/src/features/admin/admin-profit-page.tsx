@@ -42,7 +42,7 @@ export function AdminProfitPage() {
   if (profitQuery.isError || !profitQuery.data) {
     return (
       <AdminQueryErrorState
-        title="Nao foi possivel carregar o resultado"
+        title="Não foi possível carregar o resultado"
         error={profitQuery.error}
         onRetry={() => void profitQuery.refetch()}
       />
@@ -61,12 +61,12 @@ export function AdminProfitPage() {
       <PageHeader
         backTo="/admin/dashboard"
         backLabel="Admin"
-        eyebrow="Administracao"
+        eyebrow="Administração"
         title="Lucro das vendas"
-        subtitle="Leitura simples do que ja esta apurado, do que ainda esta em revisao e do que segue sem custo."
+        subtitle="Leitura simples do que já está apurado, do que ainda está em revisão e do que segue sem custo."
       />
 
-      <AdminSectionCard eyebrow="Periodo" title="Periodo" description="Escolha o recorte das vendas concluidas.">
+      <AdminSectionCard eyebrow="Período" title="Período" description="Escolha o recorte das vendas concluídas.">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Data inicial">
             <DateInput
@@ -81,10 +81,10 @@ export function AdminProfitPage() {
             />
           </Field>
         </div>
-        {invalidPeriod ? <ErrorBanner message="A data inicial nao pode ser maior que a data final." /> : null}
+        {invalidPeriod ? <ErrorBanner message="A data inicial não pode ser maior que a data final." /> : null}
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button type="button" onClick={() => setFilters(draftFilters)} disabled={invalidPeriod} className="w-full sm:w-auto">
-            Aplicar periodo
+            Aplicar período
           </Button>
           <Button
             type="button"
@@ -103,21 +103,21 @@ export function AdminProfitPage() {
 
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetricCard
-          label="Lucro ja apurado"
+          label="Lucro já apurado"
           value={summary.estimatedGrossProfitAmount === null ? "-" : formatCurrency(summary.estimatedGrossProfitAmount)}
-          hint={summary.estimatedGrossProfitAmount === null ? "Ainda falta apurar custo." : "Parte ja fechada do periodo."}
+          hint={summary.estimatedGrossProfitAmount === null ? "Ainda falta apurar custo." : "Parte já fechada do período."}
           tone={summary.estimatedGrossProfitAmount === null && summary.revenueAmount > 0 ? "warning" : "neutral"}
         />
         <AdminMetricCard
-          label="Vendas ja apuradas"
+          label="Vendas já apuradas"
           value={formatCurrency(coverage.confirmed.revenueAmount)}
           hint={`${coverage.confirmed.soldUnits} un. com custo apurado.`}
           tone={coverage.confirmed.revenueAmount > 0 ? "success" : "neutral"}
         />
         <AdminMetricCard
-          label="Vendas em revisao"
+          label="Vendas em revisão"
           value={formatCurrency(coverage.reference.revenueAmount)}
-          hint={`${coverage.reference.soldUnits} un. ainda usando referencia.`}
+          hint={`${coverage.reference.soldUnits} un. ainda usando referência.`}
           tone={coverage.reference.revenueAmount > 0 ? "warning" : "neutral"}
         />
         <AdminMetricCard
@@ -130,19 +130,19 @@ export function AdminProfitPage() {
 
       <AdminSectionCard
         eyebrow="Leitura"
-        title="Ja apurado, em revisao e sem custo"
-        description="Ja apurado entrou no lucro. Em revisao ainda usa referencia. Sem custo ainda espera base real."
+        title="Já apurado, em revisão e sem custo"
+        description="Já apurado entrou no lucro. Em revisão ainda usa referência. Sem custo ainda espera base real."
       >
         {resultTotal <= 0 ? (
-          <AdminEmptyBlock title="Sem vendas concluidas" message="Ainda nao ha vendas suficientes neste recorte para montar esta leitura." />
+          <AdminEmptyBlock title="Sem vendas concluídas" message="Ainda não há vendas suficientes neste recorte para montar esta leitura." />
         ) : (
           <div className="space-y-3">
             <div className="rounded-xl border border-[var(--jam-border)] bg-white p-3">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-[var(--jam-ink)]">Lucro ja apurado</p>
+                  <p className="text-[13px] font-semibold text-[var(--jam-ink)]">Lucro já apurado</p>
                   <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)]">
-                    {summary.estimatedGrossProfitAmount === null ? "Ainda falta apurar parte do custo." : "Base ja apurada neste periodo."}
+                    {summary.estimatedGrossProfitAmount === null ? "Ainda falta apurar parte do custo." : "Base já apurada neste período."}
                   </p>
                 </div>
                 <p className="text-[13px] font-semibold text-[var(--jam-ink)]">
@@ -159,8 +159,8 @@ export function AdminProfitPage() {
             </div>
 
             <div className="grid gap-2.5 sm:grid-cols-3">
-              <StageCard title="Ja apurado" note="Custo real ja encontrado" value={formatCurrency(coverage.confirmed.revenueAmount)} itemCount={coverage.confirmed.visitItemsCount} tone="success" />
-              <StageCard title="Em revisao" note="Ainda usando referencia" value={formatCurrency(coverage.reference.revenueAmount)} itemCount={coverage.reference.visitItemsCount} tone="warning" />
+              <StageCard title="Já apurado" note="Custo real já encontrado" value={formatCurrency(coverage.confirmed.revenueAmount)} itemCount={coverage.confirmed.visitItemsCount} tone="success" />
+              <StageCard title="Em revisão" note="Ainda usando referência" value={formatCurrency(coverage.reference.revenueAmount)} itemCount={coverage.reference.visitItemsCount} tone="warning" />
               <StageCard title="Sem custo" note="Ainda sem base de custo" value={formatCurrency(coverage.missing.revenueAmount)} itemCount={coverage.missing.visitItemsCount} tone="danger" />
             </div>
           </div>
@@ -168,13 +168,13 @@ export function AdminProfitPage() {
       </AdminSectionCard>
 
       <AdminSectionCard
-        eyebrow="Revisao"
-        title="O que precisa revisao"
+        eyebrow="Revisão"
+        title="O que precisa revisão"
         description="Produtos com venda parcial ou pendente neste recorte."
         action={<Link to="/products"><Button variant="secondary" className="w-full sm:w-auto">Abrir produtos</Button></Link>}
       >
         {reviewItems.length === 0 ? (
-          <AdminEmptyBlock title="Nada para revisar" message="Nao ha produtos com venda parcial ou pendente neste recorte." />
+          <AdminEmptyBlock title="Nada para revisar" message="Não há produtos com venda parcial ou pendente neste recorte." />
         ) : (
           <div className="space-y-2">
             {reviewItems.map((item) => (
@@ -191,9 +191,9 @@ export function AdminProfitPage() {
       </AdminSectionCard>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <AdminSectionCard eyebrow="Resultado" title="Produtos com maior resultado" description="Quem mais contribuiu no periodo.">
+        <AdminSectionCard eyebrow="Resultado" title="Produtos com maior resultado" description="Quem mais contribuiu no período.">
           {topProductsByProfit.length === 0 ? (
-            <AdminEmptyBlock title="Sem base fechada" message="Ainda nao ha itens suficientes com resultado fechado para montar este ranking." />
+            <AdminEmptyBlock title="Sem base fechada" message="Ainda não há itens suficientes com resultado fechado para montar este ranking." />
           ) : (
             <div className="space-y-2">
               {topProductsByProfit.map((product) => (
@@ -212,7 +212,7 @@ export function AdminProfitPage() {
 
         <AdminSectionCard eyebrow="Giro" title="Produtos com maior giro" description="Volume vendido com leitura visual do status do custo.">
           {topProductsBySales.length === 0 ? (
-            <AdminEmptyBlock title="Sem vendas concluidas" message="Nao houve itens vendidos suficientes para montar o ranking neste periodo." />
+            <AdminEmptyBlock title="Sem vendas concluídas" message="Não houve itens vendidos suficientes para montar o ranking neste período." />
           ) : (
             <div className="space-y-2">
               {topProductsBySales.map((product) => (
@@ -302,11 +302,11 @@ function mergeReviewItems(
 
 function buildReviewSubtitle(item: ReviewItem) {
   if (item.referenceItems > 0 && item.missingItems > 0) {
-    return `${item.sku} · ${item.referenceItems} item(ns) com referencia · ${item.missingItems} item(ns) pendente(s)`;
+    return `${item.sku} · ${item.referenceItems} item(ns) com referência · ${item.missingItems} item(ns) pendente(s)`;
   }
 
   if (item.referenceItems > 0) {
-    return `${item.sku} · ${item.referenceItems} item(ns) ainda usando referencia`;
+    return `${item.sku} · ${item.referenceItems} item(ns) ainda usando referência`;
   }
 
   return `${item.sku} · ${item.missingItems} item(ns) ainda sem custo`;
@@ -321,7 +321,7 @@ function mapStage(status: CostCoverageStatus) {
     return { label: "Sem custo", tone: "danger" as const };
   }
 
-  return { label: "Revisao", tone: "warning" as const };
+  return { label: "Revisão", tone: "warning" as const };
 }
 
 function toPercent(value: number, total: number) {
@@ -357,7 +357,7 @@ function StageCard({
         </div>
         <p className="shrink-0 text-[13px] font-semibold text-[var(--jam-ink)]">{value}</p>
       </div>
-      <p className="mt-3 text-[12px] text-[var(--jam-subtle)]">{itemCount} item(ns) no periodo.</p>
+      <p className="mt-3 text-[12px] text-[var(--jam-subtle)]">{itemCount} item(ns) no período.</p>
     </div>
   );
 }
