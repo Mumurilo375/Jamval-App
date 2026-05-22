@@ -19,7 +19,7 @@ export function AdminMetricCard({
     <Card className="space-y-1.5 p-3">
       <div className="flex items-start justify-between gap-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
-        {tone !== "neutral" ? <ToneBadge label={tone === "warning" ? "Atencao" : "Ok"} tone={tone === "warning" ? "warning" : "success"} /> : null}
+        {tone !== "neutral" ? <ToneBadge label={tone === "warning" ? "Atenção" : "Ok"} tone={tone === "warning" ? "warning" : "success"} /> : null}
       </div>
       <p className="font-display text-[1.05rem] font-semibold leading-none text-[var(--jam-ink)] sm:text-[1.35rem]">{value}</p>
       {hint ? <p className="text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{hint}</p> : null}
@@ -187,35 +187,35 @@ function getAdminErrorCopy(error: unknown): {
 
     if (error.status === 401) {
       return {
-        message: "Sua sessao nao foi aceita para consultar a Administracao. Entre novamente e tente abrir a pagina outra vez."
+        message: "Sua sessão não foi aceita para consultar a Administração. Entre novamente e tente abrir a página outra vez."
       };
     }
 
     if (error.status === 0) {
       return {
-        message: "Nao foi possivel alcancar o backend agora. Confira se a API do Jamval esta rodando e tente novamente."
+        message: "Não foi possível alcançar o backend agora. Confira se a API do Jamval está rodando e tente novamente."
       };
     }
 
     if (error.status >= 500) {
       return {
-        message: `O backend respondeu com erro interno ao carregar esta area administrativa. Detalhe atual: ${detailSuffix ?? error.message}.`
+        message: `O backend respondeu com erro interno ao carregar esta área administrativa. Detalhe atual: ${detailSuffix ?? error.message}.`
       };
     }
 
     return {
-      message: `Nao foi possivel carregar esta area administrativa. Detalhe atual: ${detailSuffix ?? error.message}.`
+      message: `Não foi possível carregar esta área administrativa. Detalhe atual: ${detailSuffix ?? error.message}.`
     };
   }
 
   if (error instanceof Error && error.message.trim().length > 0) {
     return {
-      message: `Nao foi possivel carregar esta area administrativa. Detalhe atual: ${error.message}.`
+      message: `Não foi possível carregar esta área administrativa. Detalhe atual: ${error.message}.`
     };
   }
 
   return {
-    message: "Nao foi possivel carregar esta area administrativa no momento. Tente novamente em alguns instantes."
+    message: "Não foi possível carregar esta área administrativa no momento. Tente novamente em alguns instantes."
   };
 }
 
