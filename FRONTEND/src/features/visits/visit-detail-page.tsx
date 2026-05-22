@@ -25,7 +25,7 @@ export function VisitDetailPage() {
   }
 
   if (visitQuery.isError || !visitQuery.data || clientQuery.isError) {
-    return <EmptyState title="Visita nao encontrada" message="Volte para a lista de visitas e tente novamente." />;
+    return <EmptyState title="Visita não encontrada" message="Volte para a lista de visitas e tente novamente." />;
   }
 
   const visit = visitQuery.data;

@@ -23,7 +23,7 @@ export function VisitEditPage() {
   }
 
   if (visitQuery.isError || !visitQuery.data || clientQuery.isError) {
-    return <EmptyState title="Visita nao encontrada" message="Volte para a lista e tente abrir a visita nao finalizada novamente." />;
+    return <EmptyState title="Visita não encontrada" message="Volte para a lista e tente abrir a visita não finalizada novamente." />;
   }
 
   return (
@@ -32,7 +32,7 @@ export function VisitEditPage() {
         backTo={`/visits/${visitId}`}
         backLabel="Visita"
         title="Editar dados da visita"
-        subtitle={`${visitQuery.data.visitCode} · conferencia e financeiro ficam no detalhe`}
+        subtitle={`${visitQuery.data.visitCode} · conferência e financeiro ficam no detalhe`}
       />
       <VisitForm mode="edit" visit={visitQuery.data} client={clientQuery.data ?? null} />
     </div>
