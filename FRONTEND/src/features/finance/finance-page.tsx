@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 
-import { EmptyState, PageHeader, PageLoader, PaginationControls, ToneBadge } from "../../components/ui";
+import { Button, Card, EmptyState, Field, Input, ListSkeleton, PageHeader, PaginationControls, RetryableErrorState, ToneBadge } from "../../components/ui";
 import { formatCount, formatCurrency, formatDate } from "../../lib/format";
 import { paginateItems } from "../../lib/pagination";
 import { listReceivables } from "./finance-api";
@@ -22,34 +22,32 @@ export function FinancePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const activeStatus = normalizeFinanceQueueStatus(searchParams.get("status"));
+  const search = searchParams.get("search") ?? "";
+  const deferredSearch = useDeferredValue(search);
 
   const receivablesQuery = useQuery({
     queryKey: ["finance", "receivables", activeStatus],
     queryFn: () => listReceivables({ status: activeStatus })
   });
 
-  const receivables = useMemo(
-    () => sortReceivablesForQueue(receivablesQuery.data ?? []),
-    [receivablesQuery.data]
-  );
+  const receivables = useMemo(() => {
+    const normalizedSearch = deferredSearch.trim().toLocaleLowerCase();
+    const baseReceivables = receivablesQuery.data ?? [];
+    const filteredReceivables = normalizedSearch
+      ? baseReceivables.filter((receivable) =>
+          `${receivable.client.tradeName} ${receivable.visit.visitCode} ${receivableOriginLabel(receivable.visit.visitType)}`
+            .toLocaleLowerCase()
+            .includes(normalizedSearch)
+        )
+      : baseReceivables;
+
+    return sortReceivablesForQueue(filteredReceivables);
+  }, [deferredSearch, receivablesQuery.data]);
   const outstandingTotal = useMemo(
     () => receivables.reduce((total, receivable) => total + receivable.amountOutstanding, 0),
     [receivables]
   );
   const paginatedReceivables = paginateItems(receivables, page, RECEIVABLES_PAGE_SIZE);
-
-  if (receivablesQuery.isPending) {
-    return <PageLoader label="Carregando fila de recebimento..." />;
-  }
-
-  if (receivablesQuery.isError) {
-    return (
-      <EmptyState
-        title="Nao foi possivel carregar o receber"
-        message="Confira a conexao com o backend e tente novamente."
-      />
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -64,6 +62,7 @@ export function FinancePage() {
           <button
             key={option.value}
             type="button"
+            aria-pressed={activeStatus === option.value}
             onClick={() => {
               const nextParams = new URLSearchParams(searchParams);
               nextParams.set("status", option.value);
@@ -82,13 +81,62 @@ export function FinancePage() {
         ))}
       </div>
 
-      {receivables.length === 0 ? (
-        <EmptyState
-          title="Nenhum titulo nesta fila"
-          message={resolveEmptyMessage(activeStatus)}
+      <Card>
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <Field label="Buscar na fila">
+            <Input
+              value={search}
+              onChange={(event) => {
+                const nextParams = new URLSearchParams(searchParams);
+                if (event.target.value.trim()) {
+                  nextParams.set("search", event.target.value);
+                } else {
+                  nextParams.delete("search");
+                }
+                setPage(1);
+                setSearchParams(nextParams, { replace: true });
+              }}
+              placeholder="Cliente, código da visita ou origem"
+              autoComplete="off"
+            />
+          </Field>
+          {search.trim().length > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="border border-[var(--jam-border)]"
+              onClick={() => {
+                const nextParams = new URLSearchParams(searchParams);
+                nextParams.delete("search");
+                setPage(1);
+                setSearchParams(nextParams, { replace: true });
+              }}
+            >
+              Limpar busca
+            </Button>
+          ) : null}
+        </div>
+      </Card>
+
+      {receivablesQuery.isPending ? <ListSkeleton rows={4} /> : null}
+
+      {receivablesQuery.isError ? (
+        <RetryableErrorState
+          title="Não foi possível carregar o receber"
+          message="Confira a conexão com o backend e tente novamente."
+          onRetry={() => void receivablesQuery.refetch()}
         />
-      ) : (
-        <div className="space-y-2.5">
+      ) : null}
+
+      {!receivablesQuery.isPending && !receivablesQuery.isError && receivables.length === 0 ? (
+        <EmptyState
+          title="Nenhum título nesta fila"
+          message={search.trim().length > 0 ? "Nenhum recebimento combina com a busca atual." : resolveEmptyMessage(activeStatus)}
+        />
+      ) : null}
+
+      {!receivablesQuery.isPending && !receivablesQuery.isError && receivables.length > 0 ? (
+        <div className="space-y-2.5 lg:hidden">
           {paginatedReceivables.pageItems.map((receivable) => (
             <Link
               key={receivable.id}
@@ -121,7 +169,45 @@ export function FinancePage() {
             </Link>
           ))}
         </div>
-      )}
+      ) : null}
+
+      {paginatedReceivables.pageItems.length > 0 ? (
+        <Card className="hidden overflow-hidden p-0 lg:block">
+          <table className="w-full table-fixed border-collapse text-left">
+            <thead className="bg-[rgba(15,23,42,0.04)]">
+              <tr className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
+                <th className="px-4 py-3">Cliente</th>
+                <th className="px-4 py-3">Origem</th>
+                <th className="px-4 py-3">Data</th>
+                <th className="px-4 py-3">Total</th>
+                <th className="px-4 py-3">Recebido</th>
+                <th className="px-4 py-3">Saldo</th>
+                <th className="px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--jam-border)]">
+              {paginatedReceivables.pageItems.map((receivable) => (
+                <tr key={receivable.id} className="transition hover:bg-[rgba(29,78,216,0.04)]">
+                  <td className="px-4 py-3">
+                    <Link to={buildReceivableRoute(receivable.id, activeStatus)} className="block">
+                      <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{receivable.client.tradeName}</p>
+                      <p className="mt-0.5 truncate text-xs text-[var(--jam-subtle)]">{receivable.visit.visitCode}</p>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-[var(--jam-subtle)]">{receivableOriginLabel(receivable.visit.visitType)}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--jam-subtle)]">{formatDate(receivable.visit.visitedAt)}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--jam-ink)]">{formatCurrency(receivable.originalAmount)}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--jam-ink)]">{formatCurrency(receivable.amountReceived)}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(receivable.amountOutstanding)}</td>
+                  <td className="px-4 py-3">
+                    <ToneBadge label={receivableStatusLabel(receivable.status)} tone={receivableStatusTone(receivable.status)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      ) : null}
 
       <PaginationControls
         page={paginatedReceivables.page}
@@ -146,12 +232,12 @@ function QueueMetric({ label, value }: { label: string; value: string }) {
 
 function resolveEmptyMessage(status: "PENDING" | "PARTIAL" | "PAID") {
   if (status === "PARTIAL") {
-    return "Nao ha recebimentos parciais para tratar agora.";
+    return "Não há recebimentos parciais para tratar agora.";
   }
 
   if (status === "PAID") {
-    return "Nenhum titulo quitado encontrado neste momento.";
+    return "Nenhum título quitado encontrado neste momento.";
   }
 
-  return "Nao ha titulos em aberto para receber agora.";
+  return "Não há títulos em aberto para receber agora.";
 }

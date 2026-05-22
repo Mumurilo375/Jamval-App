@@ -147,11 +147,11 @@ export function groupClientsByOutstanding(receivables: ReceivableListItem[], lim
 
 export function paymentMethodLabel(paymentMethod: PaymentMethod): string {
   if (paymentMethod === "BANK_TRANSFER") {
-    return "Transferencia";
+    return "Transferência";
   }
 
   if (paymentMethod === "CARD") {
-    return "Cartao";
+    return "Cartão";
   }
 
   if (paymentMethod === "CASH") {
