@@ -1,4 +1,4 @@
-import { type Dispatch, type ReactNode, type SetStateAction, useDeferredValue, useMemo, useState } from "react";
+import { type Dispatch, type ReactNode, type SetStateAction, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -10,10 +10,13 @@ import {
   ErrorBanner,
   Field,
   Input,
+  MoneyInput,
   PageHeader,
   Select,
+  StickyActionBar,
   Textarea,
-  ToneBadge
+  ToneBadge,
+  WarningBanner
 } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { cx } from "../../lib/cx";
@@ -72,6 +75,8 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
   const [rows, setRows] = useState<SaleRowDraft[]>(() => buildSaleRows(visit));
   const [removedItems, setRemovedItems] = useState<RemovedItem[]>([]);
   const [searchInput, setSearchInput] = useState("");
+  const [savedReceivedAmount, setSavedReceivedAmount] = useState(() => visitNumber(visit.receivedAmountOnVisit));
+  const [savedNotes, setSavedNotes] = useState(visit.notes ?? "");
   const [receivedAmountInput, setReceivedAmountInput] = useState(() =>
     visitNumber(visit.receivedAmountOnVisit) > 0 ? String(visitNumber(visit.receivedAmountOnVisit)) : ""
   );
@@ -104,8 +109,9 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
   const itemsHaveChanges = rowViews.some((row) => row.hasChanges);
   const rowErrors = rowViews.flatMap((row) => row.errors);
   const metadataHasChanges =
-    normalizeMoneyValue(safeReceivedAmount) !== normalizeMoneyValue(visitNumber(visit.receivedAmountOnVisit)) ||
-    visitNotesInput !== (visit.notes ?? "");
+    normalizeMoneyValue(safeReceivedAmount) !== normalizeMoneyValue(savedReceivedAmount) ||
+    visitNotesInput !== savedNotes;
+  const hasUnsavedChanges = itemsHaveChanges || removedItems.length > 0 || metadataHasChanges;
 
   const availableProductIds = useMemo(() => new Set(rows.map((row) => row.productId)), [rows]);
   const searchResults = useMemo(
@@ -138,6 +144,20 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
   });
   const saveBusy = saveItemsMutation.isPending || saveMetadataMutation.isPending || deleteItemMutation.isPending;
 
+  useEffect(() => {
+    if (!hasUnsavedChanges || isReadOnly) {
+      return;
+    }
+
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [hasUnsavedChanges, isReadOnly]);
+
   const onConfirmPaymentAndConclude = async () => {
     if (!paymentMethods.some((method) => method === paymentMethod)) {
       return;
@@ -154,7 +174,7 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
     setValidationError(null);
 
     if (rowErrors.length > 0) {
-      setValidationError("Revise a venda antes de salvar. Existem linhas com quantidade ou preco invalidos.");
+      setValidationError("Revise a venda antes de salvar. Existem linhas com quantidade ou preço inválidos.");
       return false;
     }
 
@@ -164,12 +184,14 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
     }
 
     try {
+      let latestVisit: VisitDetail | null = null;
+
       for (const removedItem of removedItems) {
-        await deleteItemMutation.mutateAsync({ itemId: removedItem.itemId });
+        latestVisit = await deleteItemMutation.mutateAsync({ itemId: removedItem.itemId });
       }
 
       if (rows.length > 0 && (itemsHaveChanges || removedItems.length > 0)) {
-        await saveItemsMutation.mutateAsync(
+        latestVisit = await saveItemsMutation.mutateAsync(
           rowViews.map((row) => ({
             productId: row.row.productId,
             clientProductId: null,
@@ -185,10 +207,19 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
       }
 
       if (metadataHasChanges) {
-        await saveMetadataMutation.mutateAsync({
+        const trimmedNotes = visitNotesInput.trim();
+        latestVisit = await saveMetadataMutation.mutateAsync({
           receivedAmountOnVisit: normalizeMoneyValue(safeReceivedAmount),
-          notes: visitNotesInput.trim()
+          notes: trimmedNotes
         });
+        setVisitNotesInput(trimmedNotes);
+      }
+
+      if (latestVisit) {
+        setRows(buildSaleRows(latestVisit));
+        setRemovedItems([]);
+        setSavedReceivedAmount(visitNumber(latestVisit.receivedAmountOnVisit));
+        setSavedNotes(latestVisit.notes ?? "");
       }
     } catch {
       return false;
@@ -239,7 +270,7 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
       : productsQuery.isPending
         ? "Buscando produtos..."
         : searchResults.length === 0
-          ? "Nenhum produto disponivel para essa busca."
+          ? "Nenhum produto disponível para essa busca."
           : null;
 
   return (
@@ -278,12 +309,12 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
       </Card>
 
       <Card className="space-y-4">
-        <StepHeader step="Etapa 1" title="Montar venda" subtitle="Produto, quantidade, preco e subtotal." />
+        <StepHeader step="Etapa 1" title="Montar venda" subtitle="Produto, quantidade, preço e subtotal." />
 
         {isDraft ? (
           <div className="space-y-2">
             <Field label="Busca rapida de produto">
-              <Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Buscar por nome ou SKU" />
+              <Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Buscar por nome ou SKU" autoComplete="off" />
             </Field>
             {productSearchHelp ? <p className="text-sm text-[var(--jam-subtle)]">{productSearchHelp}</p> : null}
             {searchResults.length > 0 ? (
@@ -309,7 +340,7 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
             <div className="hidden grid-cols-[minmax(0,1.6fr)_100px_120px_120px_92px] gap-3 border-b border-[var(--jam-border)] px-1 pb-2 sm:grid">
               <ColumnLabel>Produto</ColumnLabel>
               <ColumnLabel>Quantidade</ColumnLabel>
-              <ColumnLabel>Preco</ColumnLabel>
+              <ColumnLabel>Preço</ColumnLabel>
               <ColumnLabel>Subtotal</ColumnLabel>
               <ColumnLabel className="text-right">Acao</ColumnLabel>
             </div>
@@ -323,10 +354,15 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
                     </div>
                   </DataCell>
                   <DataCell label="Quantidade">
-                    <Input value={rowView.row.quantityInput} inputMode="numeric" disabled={isReadOnly} onChange={(event) => updateRow(rowView.row.productId, "quantityInput", event.target.value, setRows)} className="text-right" />
+                    <QuantityControl
+                      value={rowView.row.quantityInput}
+                      disabled={isReadOnly}
+                      onChange={(value) => updateRow(rowView.row.productId, "quantityInput", value, setRows)}
+                      onStep={(delta) => stepQuantity(rowView.row.productId, delta, setRows)}
+                    />
                   </DataCell>
-                  <DataCell label="Preco">
-                    <Input value={rowView.row.unitPriceInput} inputMode="decimal" disabled={isReadOnly} onChange={(event) => updateRow(rowView.row.productId, "unitPriceInput", event.target.value, setRows)} className="text-right" />
+                  <DataCell label="Preço">
+                    <MoneyInput value={rowView.row.unitPriceInput} disabled={isReadOnly} onChange={(event) => updateRow(rowView.row.productId, "unitPriceInput", event.target.value, setRows)} />
                   </DataCell>
                   <DataCell label="Subtotal">
                     <ReadonlyValue value={formatCurrency(rowView.subtotal)} emphasize />
@@ -358,7 +394,7 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
         {isDraft ? (
           <div className="max-w-md">
             <Field label="Valor recebido agora" error={paymentError ?? undefined}>
-              <Input value={receivedAmountInput} inputMode="decimal" disabled={isReadOnly} onChange={(event) => setReceivedAmountInput(event.target.value)} placeholder="Deixe em branco se nada foi recebido" />
+              <MoneyInput value={receivedAmountInput} disabled={isReadOnly} onChange={(event) => setReceivedAmountInput(event.target.value)} placeholder="0,00" />
             </Field>
           </div>
         ) : null}
@@ -373,55 +409,67 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
           Situacao: {describePaymentStatus(safeReceivedAmount, totalAmount)}
         </p>
 
+        {isDraft && hasUnsavedChanges ? (
+          <WarningBanner message="Existem alterações ainda não salvas nesta venda." />
+        ) : null}
+
         {validationError ? <ErrorBanner message={validationError} /> : null}
         {saveItemsMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(saveItemsMutation.error)} /> : null}
         {saveMetadataMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(saveMetadataMutation.error)} /> : null}
         {deleteItemMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(deleteItemMutation.error)} /> : null}
         {completeMutation.error instanceof ApiError ? <ErrorBanner message={formatApiErrorMessage(completeMutation.error)} /> : null}
 
-        {isDraft ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button variant="secondary" onClick={() => void saveDraft()} disabled={saveBusy}>
-              {saveBusy ? "Salvando..." : "Salvar visita"}
-            </Button>
-            <Button onClick={() => void onConclude()} disabled={saveBusy || completeMutation.isPending || rows.length === 0}>
-              {saveBusy ? "Salvando..." : completeMutation.isPending ? "Concluindo..." : "Concluir venda"}
-            </Button>
-          </div>
-        ) : (
-          <p className="text-sm text-[var(--jam-subtle)]">{visit.status === "COMPLETED" ? "A venda foi concluida e ficou apenas para leitura." : "A venda foi cancelada e ficou apenas para consulta."}</p>
-        )}
+        {!isDraft ? (
+          <p className="text-sm text-[var(--jam-subtle)]">{visit.status === "COMPLETED" ? "A venda foi concluída e ficou apenas para leitura." : "A venda foi cancelada e ficou apenas para consulta."}</p>
+        ) : null}
       </Card>
 
       {visit.status === "COMPLETED" ? <VisitReceiptCard visit={visit} /> : null}
 
       <Card className="space-y-4">
-        <StepHeader step="Observacoes" title="Observacoes da venda" />
+        <StepHeader step="Observações" title="Observações da venda" />
         {isDraft ? (
-          <Field label="Anotacoes gerais">
+          <Field label="Anotações gerais">
             <Textarea
               value={visitNotesInput}
               rows={4}
               maxLength={2000}
               onChange={(event) => setVisitNotesInput(event.target.value)}
-              placeholder="Observacoes opcionais da venda"
+              placeholder="Observações opcionais da venda"
             />
           </Field>
         ) : (
-          <p className="text-sm text-[var(--jam-subtle)]">{visit.notes || "Sem observacoes registradas."}</p>
+          <p className="text-sm text-[var(--jam-subtle)]">{visit.notes || "Sem observações registradas."}</p>
         )}
       </Card>
 
       {isDraft ? (
         <Card className="space-y-3">
-          <StepHeader step="Nao finalizada" title="Acoes da venda" />
+          <StepHeader step="Não finalizada" title="Ações da venda" />
           <Button variant="danger" className="w-full" disabled={cancelMutation.isPending} onClick={() => setPendingAction("CANCEL")}>
             {cancelMutation.isPending ? "Cancelando..." : "Cancelar venda"}
           </Button>
         </Card>
       ) : null}
 
-      <DrawerPanel open={isPaymentDrawerOpen} onClose={() => setIsPaymentDrawerOpen(false)} title="Forma de pagamento" description="Como houve valor recebido, confirme o pagamento inicial antes de concluir a venda." footer={<div className="grid gap-3 sm:grid-cols-2"><Button variant="ghost" onClick={() => setIsPaymentDrawerOpen(false)} disabled={completeMutation.isPending}>Voltar</Button><Button onClick={() => void onConfirmPaymentAndConclude()} disabled={completeMutation.isPending || !paymentMethod}>{completeMutation.isPending ? "Concluindo..." : "Confirmar conclusao"}</Button></div>}>
+      {isDraft ? (
+        <StickyActionBar>
+          <div className="min-w-0 rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] px-3 py-2 sm:mr-auto">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Resumo</p>
+            <p className="mt-0.5 text-sm font-semibold text-[var(--jam-ink)]">
+              {formatCurrency(totalAmount)} total • {formatCurrency(pendingAmount)} saldo
+            </p>
+          </div>
+          <Button variant="secondary" onClick={() => void saveDraft()} disabled={saveBusy || !hasUnsavedChanges}>
+            {saveBusy ? "Salvando..." : hasUnsavedChanges ? "Salvar rascunho" : "Tudo salvo"}
+          </Button>
+          <Button onClick={() => void onConclude()} disabled={saveBusy || completeMutation.isPending || rows.length === 0}>
+            {saveBusy ? "Salvando..." : completeMutation.isPending ? "Concluindo..." : "Concluir venda"}
+          </Button>
+        </StickyActionBar>
+      ) : null}
+
+      <DrawerPanel open={isPaymentDrawerOpen} onClose={() => setIsPaymentDrawerOpen(false)} title="Forma de pagamento" description="Como houve valor recebido, confirme o pagamento inicial antes de concluir a venda." footer={<div className="grid gap-3 sm:grid-cols-2"><Button variant="ghost" onClick={() => setIsPaymentDrawerOpen(false)} disabled={completeMutation.isPending}>Voltar</Button><Button onClick={() => void onConfirmPaymentAndConclude()} disabled={completeMutation.isPending || !paymentMethod}>{completeMutation.isPending ? "Concluindo..." : "Confirmar conclusão"}</Button></div>}>
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <MetricCell label="Total" value={formatCurrency(totalAmount)} />
@@ -434,21 +482,21 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
               {paymentMethods.map((method) => <option key={method} value={method}>{formatPaymentMethod(method)}</option>)}
             </Select>
           </Field>
-          <Field label="Referencia">
+          <Field label="Referência">
             <Input
               value={paymentReference}
               maxLength={160}
               onChange={(event) => setPaymentReference(event.target.value)}
-              placeholder="PIX, dinheiro, maquina, banco"
+              placeholder="PIX, dinheiro, máquina, banco"
             />
           </Field>
-          <Field label="Observacoes">
+          <Field label="Observações">
             <Textarea
               value={paymentNotes}
               rows={4}
               maxLength={2000}
               onChange={(event) => setPaymentNotes(event.target.value)}
-              placeholder="Observacoes do pagamento inicial"
+              placeholder="Observações do pagamento inicial"
             />
           </Field>
         </div>
@@ -460,7 +508,7 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
         title={pendingAction === "CANCEL" ? "Cancelar venda" : "Concluir venda"}
         description={
           pendingAction === "CANCEL"
-            ? "Essa venda nao finalizada sera cancelada e vai sair da sua fila de trabalho."
+            ? "Essa venda não finalizada será cancelada e vai sair da sua fila de trabalho."
             : "Depois de concluir, a venda fica somente para leitura e entra no fluxo financeiro."
         }
         footer={
@@ -479,7 +527,7 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
                   : "Confirmar cancelamento"
                 : completeMutation.isPending
                   ? "Concluindo..."
-                  : "Confirmar conclusao"}
+                  : "Confirmar conclusão"}
             </Button>
           </div>
         }
@@ -493,7 +541,7 @@ function DirectSaleVisitFlowContent({ visit, clientName, backTo, backLabel }: Di
             </div>
           ) : (
             <p className="text-sm text-[var(--jam-subtle)]">
-              Se voce ainda precisar revisar itens ou pagamento, volte agora antes de cancelar.
+              Se você ainda precisar revisar itens ou pagamento, volte agora antes de cancelar.
             </p>
           )}
         </div>
@@ -523,7 +571,7 @@ function buildSaleRowView(row: SaleRowDraft): SaleRowView {
     errors.push("Quantidade precisa ser um inteiro maior que zero.");
   }
   if (Number.isNaN(unitPrice) || unitPrice < 0) {
-    errors.push("Preco precisa ser valido.");
+    errors.push("Preço precisa ser válido.");
   }
   const safeQuantity = Number.isNaN(quantity) ? 0 : quantity;
   const safeUnitPrice = Number.isNaN(unitPrice) ? 0 : unitPrice;
@@ -561,10 +609,10 @@ function buildReceivedAmountError(inputValue: string, receivedAmount: number, to
     return null;
   }
   if (Number.isNaN(receivedAmount) || receivedAmount < 0) {
-    return "Informe um valor recebido valido.";
+    return "Informe um valor recebido válido.";
   }
   if (receivedAmount > totalAmount) {
-    return "O valor recebido nao pode ser maior que o total da venda.";
+    return "O valor recebido não pode ser maior que o total da venda.";
   }
   return null;
 }
@@ -602,6 +650,20 @@ function updateRow(productId: string, field: "quantityInput" | "unitPriceInput",
   setRows((current) => current.map((row) => row.productId === productId ? { ...row, [field]: value } : row));
 }
 
+function stepQuantity(productId: string, delta: number, setRows: Dispatch<SetStateAction<SaleRowDraft[]>>) {
+  setRows((current) =>
+    current.map((row) => {
+      if (row.productId !== productId) {
+        return row;
+      }
+
+      const currentQuantity = parseSaleQuantity(row.quantityInput);
+      const nextQuantity = Math.max(1, (Number.isNaN(currentQuantity) ? 1 : currentQuantity) + delta);
+      return { ...row, quantityInput: String(nextQuantity) };
+    })
+  );
+}
+
 function handleVisitMutationSuccess(queryClient: QueryClient) {
   return async (nextVisit: VisitDetail) => {
     await queryClient.invalidateQueries({ queryKey: ["visits"] });
@@ -611,9 +673,9 @@ function handleVisitMutationSuccess(queryClient: QueryClient) {
 }
 
 function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
-  if (method === "BANK_TRANSFER") return "Transferencia";
+  if (method === "BANK_TRANSFER") return "Transferência";
   if (method === "CASH") return "Dinheiro";
-  if (method === "CARD") return "Cartao";
+  if (method === "CARD") return "Cartão";
   if (method === "PIX") return "PIX";
   return "Outro";
 }
@@ -668,4 +730,47 @@ function DataCell({ label, children }: { label: string; children: ReactNode }) {
 
 function ReadonlyValue({ value, emphasize = false }: { value: string; emphasize?: boolean }) {
   return <div className={cx("flex min-h-10 items-center rounded-xl border border-[var(--jam-border)] px-3 text-right text-sm font-medium text-[var(--jam-ink)]", emphasize ? "bg-[var(--jam-panel-strong)]" : "bg-white")}><span className="w-full truncate">{value}</span></div>;
+}
+
+function QuantityControl({
+  value,
+  disabled,
+  onChange,
+  onStep
+}: {
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+  onStep: (delta: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-[36px_1fr_36px] overflow-hidden rounded-xl border border-[var(--jam-border)] bg-white">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onStep(-1)}
+        className="min-h-10 border-r border-[var(--jam-border)] text-sm font-semibold text-[var(--jam-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Diminuir quantidade"
+      >
+        -
+      </button>
+      <input
+        value={value}
+        inputMode="numeric"
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="min-h-10 min-w-0 bg-white px-2 text-center text-sm font-semibold text-[var(--jam-ink)] outline-none disabled:cursor-not-allowed disabled:opacity-60"
+        aria-label="Quantidade"
+      />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onStep(1)}
+        className="min-h-10 border-l border-[var(--jam-border)] text-sm font-semibold text-[var(--jam-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Aumentar quantidade"
+      >
+        +
+      </button>
+    </div>
+  );
 }
