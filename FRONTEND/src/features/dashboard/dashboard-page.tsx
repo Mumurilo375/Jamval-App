@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 import {
   Button,
   Card,
-  EmptyState,
+  ListSkeleton,
   PageHeader,
-  PageLoader,
+  RetryableErrorState,
   SectionHeader,
 } from "../../components/ui";
 import { formatCount } from "../../lib/format";
@@ -27,14 +27,15 @@ export function DashboardPage() {
   const startVisit = useStartConsignmentVisit();
 
   if (queueQuery.isPending) {
-    return <PageLoader label="Montando a fila do dia..." />;
+    return <ListSkeleton rows={5} />;
   }
 
   if (queueQuery.isError || !queueQuery.data) {
     return (
-      <EmptyState
-        title="Nao foi possivel montar a fila do dia"
-        message="Confira a conexao com o backend e tente novamente."
+      <RetryableErrorState
+        title="Não foi possível montar a fila do dia"
+        message="Confira a conexão com o backend e tente novamente."
+        onRetry={() => void queueQuery.refetch()}
       />
     );
   }
@@ -59,7 +60,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Operacao"
+        eyebrow="Operação"
         title="Fila do dia"
         subtitle={`${formatCount(returnCount, "retorno")} • ${formatCount(inProgressCount, "em andamento", "em andamento")} • ${formatCount(historyCount, "recente", "recentes")}`}
       />
@@ -102,7 +103,7 @@ export function DashboardPage() {
         <ReturnQueueList
           items={queue.returnQueue.slice(0, 5)}
           emptyTitle="Nenhum cliente na fila de retorno"
-          emptyMessage="Quando uma base de consignacao estiver aguardando nova conferencia, ela aparece aqui."
+          emptyMessage="Quando uma base de consignação estiver aguardando nova conferência, ela aparece aqui."
           onStartVisit={startVisit.startVisit}
           pendingClientId={startVisit.pendingClientId}
         />
@@ -124,18 +125,18 @@ export function DashboardPage() {
         <InProgressList
           items={queue.inProgress.slice(0, 5)}
           emptyTitle="Nada em andamento agora"
-          emptyMessage="Quando voce abrir uma visita e ainda nao concluir, ela aparece aqui."
+          emptyMessage="Quando você abrir uma visita e ainda não concluir, ela aparece aqui."
         />
       </div>
 
       <div className="space-y-3">
         <SectionHeader
-          title="Historico recente"
-          subtitle={`${formatCount(historyCount, "visita")} ${historyCount === 1 ? "concluida" : "concluidas"} para consulta`}
+          title="Histórico recente"
+          subtitle={`${formatCount(historyCount, "visita")} ${historyCount === 1 ? "concluída" : "concluídas"} para consulta`}
           action={
             <Link to="/visits">
               <Button variant="ghost" className="px-0">
-                Ver historico
+                Ver histórico
               </Button>
             </Link>
           }
@@ -143,8 +144,8 @@ export function DashboardPage() {
 
         <HistoryList
           items={queue.recentHistory.slice(0, 5)}
-          emptyTitle="Nenhuma visita concluida ainda"
-          emptyMessage="As visitas concluidas vao aparecer aqui para consulta rapida."
+          emptyTitle="Nenhuma visita concluída ainda"
+          emptyMessage="As visitas concluídas vão aparecer aqui para consulta rápida."
         />
       </div>
 
@@ -169,7 +170,7 @@ export function DashboardPage() {
           <ShortcutLink
             to="/products"
             title="Produtos"
-            detail="Preco e cadastro"
+            detail="Preço e cadastro"
             iconSrc="/icones/carregador.png"
           />
         </div>
