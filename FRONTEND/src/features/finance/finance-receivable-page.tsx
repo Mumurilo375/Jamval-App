@@ -5,7 +5,20 @@ import { useForm } from "react-hook-form";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, EmptyState, ErrorBanner, Field, Input, MoneyInput, PageHeader, PageLoader, Select, Textarea, ToneBadge } from "../../components/ui";
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorBanner,
+  Field,
+  Input,
+  MoneyInput,
+  PageHeader,
+  PageLoader,
+  Select,
+  Textarea,
+  ToneBadge,
+} from "../../components/ui";
 import { toOptionalString } from "../../lib/forms";
 import { formatCurrency, formatDate, formatDateTime } from "../../lib/format";
 import type { PaymentMethod, ReceivableDetail } from "../../types/domain";
@@ -16,7 +29,7 @@ import {
   paymentMethodLabel,
   receivableOriginLabel,
   receivableStatusLabel,
-  receivableStatusTone
+  receivableStatusTone,
 } from "./finance-utils";
 
 const paymentMethodOptions: Array<{ value: PaymentMethod; label: string }> = [
@@ -24,7 +37,7 @@ const paymentMethodOptions: Array<{ value: PaymentMethod; label: string }> = [
   { value: "CASH", label: "Dinheiro" },
   { value: "CARD", label: "Cartão" },
   { value: "BANK_TRANSFER", label: "Transferência" },
-  { value: "OTHER", label: "Outro" }
+  { value: "OTHER", label: "Outro" },
 ];
 
 const paymentFormSchema = z.object({
@@ -32,14 +45,21 @@ const paymentFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Informe o valor recebido")
-    .refine((value) => !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) > 0, "Informe um valor válido"),
+    .refine(
+      (value) =>
+        !Number.isNaN(parseDecimalInput(value)) && parseDecimalInput(value) > 0,
+      "Informe um valor válido",
+    ),
   paymentMethod: z
     .string()
     .trim()
     .min(1, "Selecione a forma de pagamento")
-    .refine((value) => paymentMethodOptions.some((option) => option.value === value), "Selecione a forma de pagamento"),
+    .refine(
+      (value) => paymentMethodOptions.some((option) => option.value === value),
+      "Selecione a forma de pagamento",
+    ),
   reference: z.string().max(160, "Use até 160 caracteres"),
-  notes: z.string().max(2000, "Use até 2000 caracteres")
+  notes: z.string().max(2000, "Use até 2000 caracteres"),
 });
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
@@ -52,7 +72,7 @@ export function FinanceReceivablePage() {
   const receivableQuery = useQuery({
     queryKey: ["finance", "receivable", receivableId],
     queryFn: () => getReceivable(receivableId!),
-    enabled: Boolean(receivableId)
+    enabled: Boolean(receivableId),
   });
 
   if (!receivableId) {
@@ -102,9 +122,12 @@ export function FinanceReceivablePage() {
       <Card className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--jam-ink)]">{receivableOriginLabel(receivable.visit.visitType)}</p>
+            <p className="text-sm font-semibold text-[var(--jam-ink)]">
+              {receivableOriginLabel(receivable.visit.visitType)}
+            </p>
             <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-              {receivable.visit.visitCode} • {formatDate(receivable.visit.visitedAt)}
+              {receivable.visit.visitCode} •{" "}
+              {formatDate(receivable.visit.visitedAt)}
             </p>
           </div>
           <ToneBadge
@@ -114,9 +137,18 @@ export function FinanceReceivablePage() {
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <SummaryMetric label="Total" value={formatCurrency(receivable.originalAmount)} />
-          <SummaryMetric label="Recebido" value={formatCurrency(receivable.amountReceived)} />
-          <SummaryMetric label="Saldo atual" value={formatCurrency(receivable.amountOutstanding)} />
+          <SummaryMetric
+            label="Total"
+            value={formatCurrency(receivable.originalAmount)}
+          />
+          <SummaryMetric
+            label="Recebido"
+            value={formatCurrency(receivable.amountReceived)}
+          />
+          <SummaryMetric
+            label="Saldo atual"
+            value={formatCurrency(receivable.amountOutstanding)}
+          />
         </div>
       </Card>
 
@@ -128,7 +160,9 @@ export function FinanceReceivablePage() {
         </summary>
         <div className="mt-3 space-y-2">
           {receivable.payments.length === 0 ? (
-            <p className="text-sm text-[var(--jam-subtle)]">Nenhum recebimento registrado até agora.</p>
+            <p className="text-sm text-[var(--jam-subtle)]">
+              Nenhum recebimento registrado até agora.
+            </p>
           ) : (
             receivable.payments.map((payment) => (
               <div
@@ -140,15 +174,25 @@ export function FinanceReceivablePage() {
                     <p className="text-sm font-semibold text-[var(--jam-ink)]">
                       {paymentMethodLabel(payment.paymentMethod)}
                     </p>
-                    <p className="mt-0.5 text-sm text-[var(--jam-subtle)]">{formatDateTime(payment.paidAt)}</p>
+                    <p className="mt-0.5 text-sm text-[var(--jam-subtle)]">
+                      {formatDateTime(payment.paidAt)}
+                    </p>
                   </div>
-                  <p className="text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(payment.amount)}</p>
+                  <p className="text-sm font-semibold text-[var(--jam-ink)]">
+                    {formatCurrency(payment.amount)}
+                  </p>
                 </div>
 
                 {payment.reference ? (
-                  <p className="mt-2 text-sm text-[var(--jam-subtle)]">Referência: {payment.reference}</p>
+                  <p className="mt-2 text-sm text-[var(--jam-subtle)]">
+                    Referência: {payment.reference}
+                  </p>
                 ) : null}
-                {payment.notes ? <p className="mt-1 text-sm text-[var(--jam-subtle)]">{payment.notes}</p> : null}
+                {payment.notes ? (
+                  <p className="mt-1 text-sm text-[var(--jam-subtle)]">
+                    {payment.notes}
+                  </p>
+                ) : null}
               </div>
             ))
           )}
@@ -158,22 +202,26 @@ export function FinanceReceivablePage() {
   );
 }
 
-function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail }) {
+function ReceivablePaymentCard({
+  receivable,
+}: {
+  receivable: ReceivableDetail;
+}) {
   const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
     reset,
     setError,
-    formState: { errors }
+    formState: { errors },
   } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
       amount: "",
       paymentMethod: "",
       reference: "",
-      notes: ""
-    }
+      notes: "",
+    },
   });
 
   useEffect(() => {
@@ -181,7 +229,7 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
       amount: "",
       paymentMethod: "",
       reference: "",
-      notes: ""
+      notes: "",
     });
   }, [receivable.id, receivable.amountOutstanding, reset]);
 
@@ -191,23 +239,28 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
         amount: parseDecimalInput(values.amount),
         paymentMethod: values.paymentMethod as PaymentMethod,
         reference: toOptionalString(values.reference),
-        notes: toOptionalString(values.notes)
+        notes: toOptionalString(values.notes),
       }),
     onSuccess: async (result) => {
       reset({
         amount: "",
         paymentMethod: "",
         reference: "",
-        notes: ""
+        notes: "",
       });
-      queryClient.setQueryData(["finance", "receivable", receivable.id], result.receivable);
+      queryClient.setQueryData(
+        ["finance", "receivable", receivable.id],
+        result.receivable,
+      );
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["finance", "receivables"] }),
-        queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["visits", "operational-queue"],
+        }),
         queryClient.invalidateQueries({ queryKey: ["operation-home"] }),
-        queryClient.invalidateQueries({ queryKey: ["admin"] })
+        queryClient.invalidateQueries({ queryKey: ["admin"] }),
       ]);
-    }
+    },
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -215,7 +268,7 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
 
     if (amount > Number(receivable.amountOutstanding)) {
       setError("amount", {
-        message: "O valor recebido não pode ser maior que o saldo atual."
+        message: "O valor recebido não pode ser maior que o saldo atual.",
       });
       return;
     }
@@ -226,7 +279,9 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
   if (receivable.status === "PAID") {
     return (
       <Card className="space-y-2">
-        <p className="text-sm font-semibold text-[var(--jam-ink)]">Título quitado</p>
+        <p className="text-sm font-semibold text-[var(--jam-ink)]">
+          Título quitado
+        </p>
         <p className="text-sm text-[var(--jam-subtle)]">
           Este título já foi encerrado e não precisa de novo recebimento.
         </p>
@@ -237,18 +292,26 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
   return (
     <Card className="space-y-4">
       <div>
-        <p className="text-sm font-semibold text-[var(--jam-ink)]">Registrar recebimento</p>
+        <p className="text-sm font-semibold text-[var(--jam-ink)]">
+          Registrar recebimento
+        </p>
         <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-          Informe apenas o valor recebido agora. O saldo atualiza automaticamente.
+          Informe apenas o valor recebido agora. O saldo atualiza
+          automaticamente.
         </p>
       </div>
 
-      {mutation.error instanceof Error ? <ErrorBanner message={mutation.error.message} /> : null}
+      {mutation.error instanceof Error ? (
+        <ErrorBanner message={mutation.error.message} />
+      ) : null}
 
       <form className="space-y-4" onSubmit={onSubmit}>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Saldo atual">
-            <Input value={formatCurrency(receivable.amountOutstanding)} readOnly />
+            <Input
+              value={formatCurrency(receivable.amountOutstanding)}
+              readOnly
+            />
           </Field>
 
           <Field label="Valor recebido" error={errors.amount?.message}>
@@ -267,16 +330,37 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
           </Select>
         </Field>
 
-        <Field label="Referência" hint="Opcional" error={errors.reference?.message}>
-          <Input placeholder="PIX, comprovante ou observação curta" maxLength={160} {...register("reference")} />
+        <Field
+          label="Referência"
+          hint="Opcional"
+          error={errors.reference?.message}
+        >
+          <Input
+            placeholder="PIX, comprovante ou observação curta"
+            maxLength={160}
+            {...register("reference")}
+          />
         </Field>
 
-        <Field label="Observações" hint="Opcional" error={errors.notes?.message}>
-          <Textarea rows={3} placeholder="Detalhes do recebimento" maxLength={2000} {...register("notes")} />
+        <Field
+          label="Observações"
+          hint="Opcional"
+          error={errors.notes?.message}
+        >
+          <Textarea
+            rows={3}
+            placeholder="Detalhes do recebimento"
+            maxLength={2000}
+            {...register("notes")}
+          />
         </Field>
 
         <div className="pt-1">
-          <Button type="submit" className="w-full sm:w-auto" disabled={mutation.isPending}>
+          <Button
+            type="submit"
+            className="w-full sm:w-auto"
+            disabled={mutation.isPending}
+          >
             {mutation.isPending ? "Salvando..." : "Registrar recebimento"}
           </Button>
         </div>
@@ -288,8 +372,12 @@ function ReceivablePaymentCard({ receivable }: { receivable: ReceivableDetail })
 function SummaryMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-[var(--jam-panel-strong)] px-3 py-2.5">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--jam-subtle)]">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{value}</p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--jam-subtle)]">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">
+        {value}
+      </p>
     </div>
   );
 }
