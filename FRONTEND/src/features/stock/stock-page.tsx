@@ -10,9 +10,11 @@ import {
   EmptyState,
   Field,
   Input,
+  ListSkeleton,
   PageHeader,
   PageLoader,
   PaginationControls,
+  RetryableErrorState,
   Select,
   ToneBadge
 } from "../../components/ui";
@@ -30,8 +32,8 @@ import {
 
 const tabs = [
   { value: "saldo", label: "Saldo atual" },
-  { value: "historico", label: "Historico" },
-  { value: "saidas", label: "Saidas das visitas" }
+  { value: "historico", label: "Histórico" },
+  { value: "saidas", label: "Saídas das visitas" }
 ] as const;
 
 const movementKindOptions: Array<{ value: "" | CentralMovementKind; label: string }> = [
@@ -39,8 +41,8 @@ const movementKindOptions: Array<{ value: "" | CentralMovementKind; label: strin
   { value: "INITIAL_LOAD", label: "Carga inicial" },
   { value: "MANUAL_ENTRY", label: "Entrada manual" },
   { value: "MANUAL_ADJUSTMENT", label: "Ajustes" },
-  { value: "RESTOCK_TO_CLIENT", label: "Saidas para clientes" },
-  { value: "DIRECT_SALE_OUT", label: "Saidas por venda" },
+  { value: "RESTOCK_TO_CLIENT", label: "Saídas para clientes" },
+  { value: "DIRECT_SALE_OUT", label: "Saídas por venda" },
   { value: "DEFECTIVE_RETURN_LOG", label: "Retornos com defeito" }
 ];
 
@@ -141,9 +143,10 @@ export function StockPage() {
 
   if (overviewQuery.isError || !overviewQuery.data) {
     return (
-      <EmptyState
-        title="Nao foi possivel carregar o estoque"
-        message="Confira a conexao com o backend e tente novamente."
+      <RetryableErrorState
+        title="Não foi possível carregar o estoque"
+        message="Confira a conexão com o backend e tente novamente."
+        onRetry={() => void overviewQuery.refetch()}
       />
     );
   }
@@ -230,7 +233,7 @@ export function StockPage() {
 
           <section className="space-y-2 border-b border-[var(--jam-border)] px-4 py-3 lg:border-b-0 lg:border-r">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">
-              Ultimo lancamento
+              Último lançamento
             </p>
 
             {summary.lastMovement ? (
@@ -247,7 +250,7 @@ export function StockPage() {
                 </p>
               </div>
             ) : (
-              <p className="text-base font-semibold text-[var(--jam-ink)]">Sem lancamento ainda</p>
+              <p className="text-base font-semibold text-[var(--jam-ink)]">Sem lançamento ainda</p>
             )}
           </section>
 
@@ -448,7 +451,7 @@ export function StockPage() {
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_220px_1fr_1fr]">
               <Field label="Busca">
                 <Input
-                  placeholder="Produto, referencia ou observacao"
+                  placeholder="Produto, referência ou observação"
                   value={historySearch}
                   onChange={(event) =>
                     updateParams({ historySearch: event.target.value }, { history: true })
@@ -480,7 +483,7 @@ export function StockPage() {
                 />
               </Field>
 
-              <Field label="Ate">
+              <Field label="Até">
                 <DateInput
                   value={historyDateTo}
                   onValueChange={(value) =>
@@ -491,19 +494,36 @@ export function StockPage() {
             </div>
           </Card>
 
-          {movementsQuery.isPending ? <PageLoader label="Carregando historico..." /> : null}
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              className="border border-[var(--jam-border)]"
+              onClick={() =>
+                updateParams(
+                  { historySearch: "", movementKind: "", historyDateFrom: "", historyDateTo: "" },
+                  { history: true }
+                )
+              }
+            >
+              Limpar filtros
+            </Button>
+          </div>
+
+          {movementsQuery.isPending ? <ListSkeleton rows={4} /> : null}
 
           {movementsQuery.isError ? (
-            <EmptyState
-              title="Nao foi possivel carregar o historico"
-              message="Confira a conexao com o backend e tente novamente."
+            <RetryableErrorState
+              title="Não foi possível carregar o histórico"
+              message="Confira a conexão com o backend e tente novamente."
+              onRetry={() => void movementsQuery.refetch()}
             />
           ) : null}
 
           {!movementsQuery.isPending && !movementsQuery.isError && (movementsQuery.data?.length ?? 0) === 0 ? (
             <Card>
               <p className="text-sm text-[var(--jam-subtle)]">
-                Nenhuma movimentacao encontrada para os filtros atuais.
+                Nenhuma movimentação encontrada para os filtros atuais.
               </p>
             </Card>
           ) : null}
@@ -587,19 +607,31 @@ export function StockPage() {
             </div>
           </Card>
 
-          {outflowsQuery.isPending ? <PageLoader label="Carregando saidas..." /> : null}
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              className="border border-[var(--jam-border)]"
+              onClick={() => updateParams({ outflowDateFrom: "", outflowDateTo: "" }, { outflow: true })}
+            >
+              Limpar período
+            </Button>
+          </div>
+
+          {outflowsQuery.isPending ? <ListSkeleton rows={4} /> : null}
 
           {outflowsQuery.isError ? (
-            <EmptyState
-              title="Nao foi possivel carregar as saidas"
-              message="Confira a conexao com o backend e tente novamente."
+            <RetryableErrorState
+              title="Não foi possível carregar as saídas"
+              message="Confira a conexão com o backend e tente novamente."
+              onRetry={() => void outflowsQuery.refetch()}
             />
           ) : null}
 
           {!outflowsQuery.isPending && !outflowsQuery.isError && (outflowsQuery.data?.length ?? 0) === 0 ? (
             <Card>
               <p className="text-sm text-[var(--jam-subtle)]">
-                Nenhuma saida de visita encontrada nesse periodo.
+                Nenhuma saída de visita encontrada nesse período.
               </p>
             </Card>
           ) : null}
@@ -873,7 +905,7 @@ function getCompactMovementLabel(label: string) {
   }
 
   if (normalized === "saida para cliente") {
-    return "Saida cliente";
+    return "Saída cliente";
   }
 
   if (normalized === "saida por venda") {
@@ -905,7 +937,7 @@ function getMovementEffectLabel(effect: "IN" | "OUT" | "NEUTRAL") {
   }
 
   if (effect === "OUT") {
-    return "Saida do estoque";
+    return "Saída do estoque";
   }
 
   return "Ajuste no estoque";
