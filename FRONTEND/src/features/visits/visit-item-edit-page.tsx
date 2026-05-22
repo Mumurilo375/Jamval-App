@@ -16,7 +16,7 @@ export function VisitItemEditPage() {
   }
 
   if (visitQuery.isError || !visitQuery.data) {
-    return <EmptyState title="Item nao encontrado" message="Volte para os detalhes da visita e tente novamente." />;
+    return <EmptyState title="Item não encontrado" message="Volte para os detalhes da visita e tente novamente." />;
   }
 
   return <Navigate to={`/visits/${visitId}`} replace />;

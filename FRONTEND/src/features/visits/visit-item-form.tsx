@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef } from "react";
-import { useForm, type UseFormRegisterReturn } from "react-hook-form";
+import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
-import { Button, Card, ErrorBanner, Field, Input, Select, WarningBanner } from "../../components/ui";
+import { Button, Card, ErrorBanner, Field, Input, MoneyInput, Select, StickyActionBar, WarningBanner } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { isNonNegativeIntegerInput } from "../../lib/forms";
 import { formatCurrency } from "../../lib/format";
@@ -19,9 +19,9 @@ const visitItemFormSchema = z
     quantityPrevious: numericField("Informe a quantidade anterior"),
     quantityGoodRemaining: numericField("Informe o restante na loja"),
     quantityDefectiveReturn: numericField("Informe a quantidade de trocas"),
-    unitPrice: moneyField("Informe o preco unitario"),
+    unitPrice: moneyField("Informe o preço unitário"),
     restockedQuantity: numericField("Informe a quantidade reposta"),
-    notes: z.string().max(1000, "Use ate 1000 caracteres")
+    notes: z.string().max(1000, "Use até 1000 caracteres")
   })
   .superRefine((values, context) => {
     const quantityPrevious = Number(values.quantityPrevious || 0);
@@ -31,7 +31,7 @@ const visitItemFormSchema = z
     if (quantityGoodRemaining + quantityDefectiveReturn > quantityPrevious) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Restante e trocas nao podem passar da quantidade anterior",
+        message: "Restante e trocas não podem passar da quantidade anterior",
         path: ["quantityGoodRemaining"]
       });
     }
@@ -71,8 +71,8 @@ export function VisitItemForm({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
-    watch,
     setValue,
     getValues
   } = useForm<VisitItemFormValues>({
@@ -88,12 +88,12 @@ export function VisitItemForm({
     }
   });
 
-  const selectedProductId = watch("selectedProductId");
-  const quantityPreviousValue = watch("quantityPrevious");
-  const quantityGoodRemainingValue = watch("quantityGoodRemaining");
-  const quantityDefectiveReturnValue = watch("quantityDefectiveReturn");
-  const unitPriceValue = watch("unitPrice");
-  const restockedQuantityValue = watch("restockedQuantity");
+  const selectedProductId = useWatch({ control, name: "selectedProductId" });
+  const quantityPreviousValue = useWatch({ control, name: "quantityPrevious" });
+  const quantityGoodRemainingValue = useWatch({ control, name: "quantityGoodRemaining" });
+  const quantityDefectiveReturnValue = useWatch({ control, name: "quantityDefectiveReturn" });
+  const unitPriceValue = useWatch({ control, name: "unitPrice" });
+  const restockedQuantityValue = useWatch({ control, name: "restockedQuantity" });
   const selectedProduct = useMemo(
     () => productOptions.find((entry) => entry.productId === selectedProductId) ?? null,
     [productOptions, selectedProductId]
@@ -164,7 +164,7 @@ export function VisitItemForm({
   const restockedQuantity = Number(restockedQuantityValue || 0);
   const stockWarningMessage =
     selectedProductIdForBalance && !centralBalanceQuery.isError && restockedQuantity > availableCentralQuantity
-      ? `Quantidade reposta maior que o estoque central disponivel. Disponivel agora: ${availableCentralQuantity}. Reposto informado: ${restockedQuantity}.`
+      ? `Quantidade reposta maior que o estoque central disponível. Disponível agora: ${availableCentralQuantity}. Reposto informado: ${restockedQuantity}.`
       : null;
   const preview = computeVisitItemPreview({
     quantityPrevious: Number(quantityPreviousValue || 0),
@@ -180,7 +180,7 @@ export function VisitItemForm({
       const selectedProductOption = productOptions.find((entry) => entry.productId === values.selectedProductId);
 
       if (!selectedProductOption) {
-        throw new Error("Selecione um produto valido para a visita.");
+        throw new Error("Selecione um produto válido para a visita.");
       }
 
       return bulkUpsertVisitItems(visit.id, [
@@ -242,10 +242,10 @@ export function VisitItemForm({
     mode === "create"
       ? selectedProduct
         ? suggestedPreviousQuantity !== null
-          ? "Anterior no cliente sugerido pela ultima visita concluida."
-          : "Primeira visita deste item para o cliente. Use 0 se nao havia saldo anterior."
-        : "Selecione um produto para iniciar a conferencia."
-      : "Use esse saldo como base da conferencia atual.";
+          ? "Anterior no cliente sugerido pela última visita concluída."
+          : "Primeira visita deste item para o cliente. Use 0 se não havia saldo anterior."
+        : "Selecione um produto para iniciar a conferência."
+      : "Use esse saldo como base da conferência atual.";
 
   return (
     <div className="space-y-4">
@@ -274,7 +274,7 @@ export function VisitItemForm({
 
           <div className="space-y-3">
             <SectionLabel
-              title="Base da conferencia"
+              title="Base da conferência"
               subtitle="Primeiro confirme qual era o saldo anterior do produto no cliente."
             />
 
@@ -289,14 +289,14 @@ export function VisitItemForm({
               </Field>
             </div>
 
-            <Field label="Preco unitario" error={errors.unitPrice?.message}>
-              <Input inputMode="decimal" placeholder="39.90" {...register("unitPrice")} />
+            <Field label="Preço unitário" error={errors.unitPrice?.message}>
+              <MoneyInput {...register("unitPrice")} />
             </Field>
           </div>
 
           <div className="space-y-3">
             <SectionLabel
-              title="Conferencia atual"
+              title="Conferência atual"
               subtitle="Conte o que sobrou no local e informe apenas o que foi visto agora."
             />
 
@@ -316,8 +316,8 @@ export function VisitItemForm({
 
           <div className="space-y-3">
             <SectionLabel
-              title="Reposicao para a proxima visita"
-              subtitle="Defina o que esta voltando para o cliente ainda nesta mesma visita."
+              title="Reposição para a próxima visita"
+              subtitle="Defina o que está voltando para o cliente ainda nesta mesma visita."
             />
 
             <NumberField
@@ -329,37 +329,37 @@ export function VisitItemForm({
             {stockWarningMessage ? <WarningBanner message={stockWarningMessage} /> : null}
           </div>
 
-          <Field label="Observacoes">
-            <Input placeholder="Notas rapidas sobre o item" maxLength={1000} {...register("notes")} />
+          <Field label="Observações">
+            <Input placeholder="Notas rápidas sobre o item" maxLength={1000} {...register("notes")} />
           </Field>
 
-          <div className="flex gap-3">
-            <Button type="button" variant="ghost" className="flex-1" onClick={() => navigate(-1)}>
+          <StickyActionBar>
+            <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => navigate(-1)}>
               Voltar
             </Button>
-            <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : mode === "create" ? "Salvar conferencia" : "Salvar conferencia"}
+            <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+              {isSubmitting ? "Salvando..." : "Salvar conferência"}
             </Button>
-          </div>
+          </StickyActionBar>
         </form>
       </Card>
 
       <Card className="space-y-3">
         <SectionLabel
-          title="Resultado automatico da conferencia"
-          subtitle="O sistema calcula automaticamente o vendido, a cobranca e o novo saldo do cliente."
+          title="Resultado automático da conferência"
+          subtitle="O sistema calcula automaticamente o vendido, a cobrança e o novo saldo do cliente."
         />
 
         <div className="grid grid-cols-2 gap-3">
           <PreviewMetric label="Vendido" value={preview.quantitySold} highlight />
-          <PreviewMetric label="Preco unitario" value={formatCurrency(unitPriceNumber)} />
-          <PreviewMetric label="Subtotal da cobranca" value={formatCurrency(preview.subtotalAmount)} highlight />
+          <PreviewMetric label="Preço unitário" value={formatCurrency(unitPriceNumber)} />
+          <PreviewMetric label="Subtotal da cobrança" value={formatCurrency(preview.subtotalAmount)} highlight />
           <PreviewMetric label="Novo saldo no cliente" value={preview.resultingClientQuantity} />
         </div>
 
         {preview.quantitySold < 0 ? (
           <p className="text-sm font-medium text-[var(--jam-danger)]">
-            A conta ficou negativa. Revise a contagem atual antes de salvar a conferencia.
+            A conta ficou negativa. Revise a contagem atual antes de salvar a conferência.
           </p>
         ) : null}
       </Card>
