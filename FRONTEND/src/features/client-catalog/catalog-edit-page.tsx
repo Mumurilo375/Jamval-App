@@ -24,7 +24,7 @@ export function CatalogEditPage() {
   const item = catalogQuery.data?.find((entry) => entry.id === clientProductId);
 
   if (clientQuery.isError || catalogQuery.isError || !clientQuery.data || !item) {
-    return <EmptyState title="Item nao encontrado" message="Volte para o mix do cliente e tente novamente." />;
+    return <EmptyState title="Item não encontrado" message="Volte para o mix do cliente e tente novamente." />;
   }
 
   return (
@@ -32,7 +32,7 @@ export function CatalogEditPage() {
       <PageHeader
         backTo={`/clients/${clientId}/catalog`}
         backLabel="Mix"
-        title="Editar mix e preco"
+        title="Editar mix e preço"
         subtitle={`${clientQuery.data.tradeName} · ${item.product.name}`}
       />
       <CatalogForm client={clientQuery.data} item={item} mode="edit" />

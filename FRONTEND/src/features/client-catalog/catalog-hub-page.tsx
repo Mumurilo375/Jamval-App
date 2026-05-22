@@ -34,23 +34,23 @@ export function CatalogHubPage() {
     <div className="space-y-4">
       <PageHeader
         eyebrow="Cadastros"
-        title="Catalogo por cliente"
-        subtitle="Acesse o mix configurado de cada cliente sem confundir isso com o estoque fisico atual da loja."
+        title="Catálogo por cliente"
+        subtitle="Acesse o mix configurado de cada cliente sem confundir isso com o estoque físico atual da loja."
       />
 
       <Card className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl bg-white px-3 py-3">
-            <p className="text-sm font-semibold text-[var(--jam-ink)]">O que esta area mostra</p>
+            <p className="text-sm font-semibold text-[var(--jam-ink)]">O que esta área mostra</p>
             <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-              Produtos habilitados para o cliente, com preco configurado, quantidade ideal, ordem e se entram nas proximas visitas.
+              Produtos habilitados para o cliente, com preço configurado, quantidade ideal, ordem e se entram nas próximas visitas.
             </p>
           </div>
 
           <div className="rounded-xl bg-white px-3 py-3">
-            <p className="text-sm font-semibold text-[var(--jam-ink)]">O que esta area nao mostra</p>
+            <p className="text-sm font-semibold text-[var(--jam-ink)]">O que esta área não mostra</p>
             <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-              O estoque fisico atual da loja. Esse saldo real depende do historico das visitas e da ultima conferencia feita no cliente.
+              O estoque físico atual da loja. Esse saldo real depende do histórico das visitas e da última conferência feita no cliente.
             </p>
           </div>
         </div>
@@ -70,13 +70,13 @@ export function CatalogHubPage() {
       {clientsQuery.isPending ? <PageLoader label="Carregando clientes..." /> : null}
 
       {clientsQuery.isError ? (
-        <EmptyState title="Nao foi possivel carregar o catalogo" message="Confira a conexao com o backend e tente novamente." />
+        <EmptyState title="Não foi possível carregar o catálogo" message="Confira a conexão com o backend e tente novamente." />
       ) : null}
 
       {!clientsQuery.isPending && !clientsQuery.isError && filteredClients.length === 0 ? (
         <EmptyState
           title="Nenhum cliente encontrado"
-          message="Ajuste a busca ou cadastre clientes para organizar o catalogo por loja."
+          message="Ajuste a busca ou cadastre clientes para organizar o catálogo por loja."
         />
       ) : null}
 
@@ -94,12 +94,12 @@ export function CatalogHubPage() {
             </div>
 
             <p className="text-sm text-[var(--jam-subtle)]">
-              Entre para revisar preco atual, ordem e os produtos que aparecem nas proximas visitas.
+              Entre para revisar preço atual, ordem e os produtos que aparecem nas próximas visitas.
             </p>
 
             <Link to={`/clients/${client.id}/catalog`}>
               <Button className="w-full justify-between">
-                <span>Abrir catalogo do cliente</span>
+                <span>Abrir catálogo do cliente</span>
                 <span>→</span>
               </Button>
             </Link>

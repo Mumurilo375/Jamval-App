@@ -30,11 +30,11 @@ function CatalogListPageContent({ clientId }: { clientId: string }) {
   const paginatedCatalog = paginateItems(catalogItems, page, CATALOG_PAGE_SIZE);
 
   if (clientQuery.isPending || catalogQuery.isPending) {
-    return <PageLoader label="Carregando mix e preco..." />;
+    return <PageLoader label="Carregando mix e preço..." />;
   }
 
   if (clientQuery.isError || catalogQuery.isError || !clientQuery.data) {
-    return <EmptyState title="Mix indisponivel" message="Nao foi possivel carregar os dados desse cliente." />;
+    return <EmptyState title="Mix indisponível" message="Não foi possível carregar os dados desse cliente." />;
   }
 
   return (
@@ -43,7 +43,7 @@ function CatalogListPageContent({ clientId }: { clientId: string }) {
         backTo={`/clients/${clientId}/edit`}
         backLabel="Cliente"
         eyebrow="Clientes"
-        title="Mix e preco"
+        title="Mix e preço"
         subtitle={clientQuery.data.tradeName}
         action={
           <Link to={`/clients/${clientId}/catalog/new`}>
@@ -53,14 +53,14 @@ function CatalogListPageContent({ clientId }: { clientId: string }) {
       />
 
       <Card className="space-y-3">
-        <p className="text-sm font-semibold text-[var(--jam-ink)]">Isto define mix e preco do cliente.</p>
-        <p className="text-sm text-[var(--jam-subtle)]">Nao mostra o estoque fisico atual da loja.</p>
+        <p className="text-sm font-semibold text-[var(--jam-ink)]">Isto define mix e preço do cliente.</p>
+        <p className="text-sm text-[var(--jam-subtle)]">Não mostra o estoque físico atual da loja.</p>
       </Card>
 
       {catalogItems.length === 0 ? (
         <EmptyState
           title="Mix vazio"
-          message="Adicione os primeiros produtos ao mix e preco deste cliente."
+          message="Adicione os primeiros produtos ao mix e preço deste cliente."
           action={
             <Link to={`/clients/${clientId}/catalog/new`}>
               <Button>Adicionar produto</Button>
@@ -81,7 +81,7 @@ function CatalogListPageContent({ clientId }: { clientId: string }) {
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Preco configurado</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Preço configurado</p>
               <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{formatCurrency(item.currentUnitPrice)}</p>
             </div>
 
@@ -104,7 +104,7 @@ function CatalogListPageContent({ clientId }: { clientId: string }) {
               <div className="mt-3">
                 <Link to={`/clients/${clientId}/catalog/${item.id}/edit`}>
                   <Button variant="secondary" className="w-full">
-                    Editar mix e preco
+                    Editar mix e preço
                   </Button>
                 </Link>
               </div>

@@ -17,7 +17,7 @@ export function CatalogCreatePage() {
   }
 
   if (clientQuery.isError || !clientQuery.data) {
-    return <EmptyState title="Cliente nao encontrado" message="Volte para a lista e tente abrir o mix e preco novamente." />;
+    return <EmptyState title="Cliente não encontrado" message="Volte para a lista e tente abrir o mix e preço novamente." />;
   }
 
   return (
@@ -25,7 +25,7 @@ export function CatalogCreatePage() {
       <PageHeader
         backTo={`/clients/${clientId}/catalog`}
         backLabel="Mix"
-        title="Adicionar ao mix e preco"
+        title="Adicionar ao mix e preço"
         subtitle={clientQuery.data.tradeName}
       />
       <CatalogForm client={clientQuery.data} mode="create" />
