@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "appRoot": "/home/murilopm/code/jamval/Jamval-App/FRONTEND",
+  "repoRoot": "/home/murilopm/code/jamval/Jamval-App",
+  "contextRoot": "/home/murilopm/code/jamval/Jamval-App/FRONTEND",
+  "sessionRoot": "/home/murilopm/code/jamval/Jamval-App/FRONTEND/.impeccable/live",
+  "productPath": "/home/murilopm/code/jamval/Jamval-App/FRONTEND/PRODUCT.md",
+  "designPath": "/home/murilopm/code/jamval/Jamval-App/FRONTEND/DESIGN.md",
+  "resolvedFrom": "target:FRONTEND/src/App.tsx"
+}
