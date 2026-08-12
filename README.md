@@ -203,6 +203,19 @@ docker compose up frontend  # frontend + backend + banco
 
 URLs: `http://localhost:5173` (frontend) e `http://localhost:3333` (backend).
 
+### Compartilhar temporariamente com Cloudflare Tunnel
+
+Com a aplicação local em execução, abra outro terminal na raiz do projeto e execute:
+
+```bash
+npm run tunnel:temp
+```
+
+O Cloudflare exibirá uma URL pública temporária `https://<nome-aleatorio>.trycloudflare.com`.
+Compartilhe essa URL para acessar o frontend; as requisições para `/api` continuam sendo encaminhadas pelo Vite para o backend local. O endereço deixa de funcionar ao encerrar o comando. Não há token ou credencial do Cloudflare salvo no projeto.
+
+Caso o `cloudflared` ainda não esteja instalado, instale-o primeiro conforme o seu sistema operacional: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+
 ### Sem Docker
 
 Na raiz do projeto:

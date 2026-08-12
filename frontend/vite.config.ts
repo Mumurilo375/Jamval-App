@@ -9,7 +9,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     server: {
-      allowedHosts: ["localhost."],
+      // Cloudflare Quick Tunnels use a random `*.trycloudflare.com` hostname.
+      // Keep the allowlist narrow to avoid accepting arbitrary Host headers.
+      allowedHosts: ["localhost", ".trycloudflare.com"],
       proxy: {
         "/api": {
           target: proxyTarget,

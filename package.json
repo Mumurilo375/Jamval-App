@@ -9,6 +9,7 @@
     "dev": "concurrently -n backend,frontend -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace backend",
     "dev:frontend": "npm run dev --workspace frontend",
+    "tunnel:temp": "cloudflared tunnel --url http://127.0.0.1:5173",
     "build": "npm run build --workspace backend && npm run build --workspace frontend",
     "lint:frontend": "npm run lint --workspace frontend",
     "prisma:generate": "npm run prisma:generate --workspace backend",
