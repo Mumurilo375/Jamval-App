@@ -265,6 +265,8 @@ model VisitItem {
   quantityPrevious         Int            @default(0)
   quantityGoodRemaining    Int            @default(0)
   quantityDefectiveReturn  Int            @default(0)
+  /// Produto defeituoso substituido durante a visita. Nao reduz o saldo do cliente nem a cobranca.
+  quantityExchangeOnVisit  Int            @default(0)
   quantityLoss             Int            @default(0)
   quantitySold             Int            @default(0)
   /// Snapshot historico do preco praticado na visita. Mudancas em ClientProduct.currentUnitPrice nao alteram este valor.

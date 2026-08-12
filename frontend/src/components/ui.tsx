@@ -323,10 +323,59 @@ export function Button({
   );
 }
 
-export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+function sanitizeNumericInput(value: string, inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"]): string {
+  if (inputMode === "numeric") {
+    return value.replace(/\D/g, "");
+  }
+
+  if (inputMode !== "decimal") {
+    return value;
+  }
+
+  const filtered = value.replace(/[^\d.,]/g, "");
+  const separatorIndex = filtered.search(/[.,]/);
+
+  if (separatorIndex < 0) {
+    return filtered;
+  }
+
+  const integerPart = filtered.slice(0, separatorIndex);
+  const decimalPart = filtered.slice(separatorIndex + 1).replace(/[.,]/g, "");
+  return `${integerPart},${decimalPart}`;
+}
+
+export function Input({ onBeforeInput, onChange, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  const isNumericInput = props.inputMode === "numeric" || props.inputMode === "decimal";
+
   return (
     <input
       {...props}
+      onBeforeInput={(event) => {
+        onBeforeInput?.(event);
+
+        if (event.defaultPrevented || !isNumericInput) {
+          return;
+        }
+
+        const nativeEvent = event.nativeEvent as InputEvent;
+        if (nativeEvent.inputType !== "insertText" || !nativeEvent.data) {
+          return;
+        }
+
+        if (sanitizeNumericInput(nativeEvent.data, props.inputMode) !== nativeEvent.data) {
+          event.preventDefault();
+        }
+      }}
+      onChange={(event) => {
+        if (isNumericInput) {
+          const sanitizedValue = sanitizeNumericInput(event.currentTarget.value, props.inputMode);
+          if (sanitizedValue !== event.currentTarget.value) {
+            event.currentTarget.value = sanitizedValue;
+          }
+        }
+
+        onChange?.(event);
+      }}
       className={cx(
         "min-h-10 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-[13px] text-[var(--jam-ink)] outline-none transition placeholder:text-slate-400 focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] sm:min-h-11 sm:px-3.5 sm:text-sm",
         props.className

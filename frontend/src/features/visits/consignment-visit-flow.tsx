@@ -56,6 +56,7 @@ type ConsignmentVisitFlowProps = {
 type ItemDraftState = {
   quantitySold: string;
   quantityDefectiveReturn: string;
+  quantityExchangeOnVisit: string;
   quantityLoss: string;
   unitPrice: string;
   restockedQuantity: string;
@@ -82,6 +83,7 @@ type RowViewModel = {
   draft: ItemDraftState;
   quantitySold: number;
   quantityDefectiveReturn: number;
+  quantityExchangeOnVisit: number;
   quantityLoss: number;
   unitPrice: number;
   restockedQuantity: number;
@@ -319,6 +321,20 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
     completeMutation.isPending;
   const canConclude = rowViewModels.length > 0;
 
+  const updateItemDraft = (itemId: string, changes: Partial<ItemDraftState>) => {
+    setItemDrafts((current) => ({
+      ...current,
+      [itemId]: { ...current[itemId], ...changes }
+    }));
+  };
+
+  const setExchangeType = (itemId: string, type: "later" | "now") => {
+    updateItemDraft(itemId, {
+      quantityDefectiveReturn: type === "later" ? "1" : "0",
+      quantityExchangeOnVisit: type === "now" ? "1" : "0"
+    });
+  };
+
   const saveDraft = async () => {
     setDraftValidationError(null);
 
@@ -341,6 +357,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
             quantityPrevious: row.item.quantityPrevious,
             quantityGoodRemaining: row.remainingQuantity,
             quantityDefectiveReturn: row.quantityDefectiveReturn,
+            quantityExchangeOnVisit: row.quantityExchangeOnVisit,
             quantityLoss: row.quantityLoss,
             unitPrice: row.unitPrice,
             suggestedRestockQuantity: row.item.suggestedRestockQuantity,
@@ -647,24 +664,46 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                   {isExpanded ? (
                     <div className="mt-3 space-y-3 rounded-xl bg-[var(--jam-panel-strong)] p-3">
                       <div className="grid gap-3 sm:grid-cols-3">
-                        <Field label="Trocas">
-                          <Input
-                            value={row.draft.quantityDefectiveReturn}
-                            inputMode="decimal"
-                            disabled={isReadOnly}
-                            onChange={(event) => {
-                              const value = event.target.value;
-                              setItemDrafts((current) => ({
-                                ...current,
-                                [row.item.id]: {
-                                  ...current[row.item.id],
-                                  quantityDefectiveReturn: value
-                                }
-                              }));
-                            }}
-                            className="text-right"
-                          />
-                        </Field>
+                        <div className="sm:col-span-3">
+                          <p className="text-sm font-semibold text-[var(--jam-ink)]">Teve troca?</p>
+                          <p className="mt-1 text-xs text-[var(--jam-subtle)]">Escolha o que aconteceu com o produto defeituoso.</p>
+                          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                            <ExchangeOption
+                              checked={Number(row.draft.quantityDefectiveReturn) > 0}
+                              disabled={isReadOnly}
+                              title="Levar para trocar depois"
+                              description="Sai da loja agora e será reposto em outra visita."
+                              onClick={() => setExchangeType(row.item.id, "later")}
+                            >
+                              <Input
+                                value={row.draft.quantityDefectiveReturn}
+                                inputMode="numeric"
+                                disabled={isReadOnly || Number(row.draft.quantityExchangeOnVisit) > 0}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={(event) => updateItemDraft(row.item.id, { quantityDefectiveReturn: event.target.value })}
+                                className="mt-2 text-right"
+                                aria-label="Quantidade levada para trocar depois"
+                              />
+                            </ExchangeOption>
+                            <ExchangeOption
+                              checked={Number(row.draft.quantityExchangeOnVisit) > 0}
+                              disabled={isReadOnly}
+                              title="Trocar agora durante a visita"
+                              description="Já foi substituído no local. O restante não muda."
+                              onClick={() => setExchangeType(row.item.id, "now")}
+                            >
+                              <Input
+                                value={row.draft.quantityExchangeOnVisit}
+                                inputMode="numeric"
+                                disabled={isReadOnly || Number(row.draft.quantityDefectiveReturn) > 0}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={(event) => updateItemDraft(row.item.id, { quantityExchangeOnVisit: event.target.value })}
+                                className="mt-2 text-right"
+                                aria-label="Quantidade trocada durante a visita"
+                              />
+                            </ExchangeOption>
+                          </div>
+                        </div>
 
                         <Field label="Perdas">
                           <Input
@@ -1129,6 +1168,7 @@ function createItemDraft(item: VisitItem): ItemDraftState {
   return {
     quantitySold: formatCountDraftValue(item.quantitySold),
     quantityDefectiveReturn: String(item.quantityDefectiveReturn),
+    quantityExchangeOnVisit: String(item.quantityExchangeOnVisit ?? 0),
     quantityLoss: String(item.quantityLoss),
     unitPrice: String(visitNumber(item.unitPrice)),
     restockedQuantity: formatCountDraftValue(item.restockedQuantity),
@@ -1138,6 +1178,62 @@ function createItemDraft(item: VisitItem): ItemDraftState {
 
 function formatCountDraftValue(value: number) {
   return value === 0 ? "" : String(value);
+}
+
+function ExchangeOption({
+  checked,
+  disabled,
+  title,
+  description,
+  onClick,
+  children
+}: {
+  checked: boolean;
+  disabled: boolean;
+  title: string;
+  description: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      role="radio"
+      aria-checked={checked}
+      aria-disabled={disabled}
+      tabIndex={disabled ? -1 : 0}
+      onClick={disabled ? undefined : onClick}
+      onKeyDown={(event) => {
+        if (!disabled && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      className={cx(
+        "rounded-xl border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--jam-blue)]",
+        checked
+          ? "border-[var(--jam-blue)] bg-[rgba(29,78,216,0.07)]"
+          : "border-[var(--jam-border)] bg-white",
+        disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <span
+          aria-hidden="true"
+          className={cx(
+            "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+            checked ? "border-[var(--jam-blue)]" : "border-[var(--jam-border)]"
+          )}
+        >
+          {checked ? <span className="h-2.5 w-2.5 rounded-full bg-[var(--jam-blue)]" /> : null}
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold text-[var(--jam-ink)]">{title}</span>
+          <span className="mt-1 block text-xs leading-5 text-[var(--jam-subtle)]">{description}</span>
+        </span>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 function buildRowViewModel({
@@ -1153,12 +1249,14 @@ function buildRowViewModel({
 }): RowViewModel {
   const quantitySoldInput = parseCountInput(draft.quantitySold);
   const quantityDefectiveReturnInput = parseCountInput(draft.quantityDefectiveReturn);
+  const quantityExchangeOnVisitInput = parseCountInput(draft.quantityExchangeOnVisit);
   const quantityLossInput = parseCountInput(draft.quantityLoss);
   const unitPriceInput = parseMoneyInput(draft.unitPrice);
   const restockedQuantityInput = parseCountInput(draft.restockedQuantity);
 
   const quantitySold = Number.isNaN(quantitySoldInput) ? 0 : quantitySoldInput;
   const quantityDefectiveReturn = Number.isNaN(quantityDefectiveReturnInput) ? 0 : quantityDefectiveReturnInput;
+  const quantityExchangeOnVisit = Number.isNaN(quantityExchangeOnVisitInput) ? 0 : quantityExchangeOnVisitInput;
   const quantityLoss = Number.isNaN(quantityLossInput) ? 0 : quantityLossInput;
   const unitPrice = Number.isNaN(unitPriceInput) ? 0 : unitPriceInput;
   const restockedQuantity = Number.isNaN(restockedQuantityInput) ? 0 : restockedQuantityInput;
@@ -1173,6 +1271,10 @@ function buildRowViewModel({
 
   if (Number.isNaN(quantityDefectiveReturnInput) || quantityDefectiveReturnInput < 0) {
     errors.push("Trocas precisam ser válidas.");
+  }
+
+  if (Number.isNaN(quantityExchangeOnVisitInput) || quantityExchangeOnVisitInput < 0) {
+    errors.push("Trocas durante a visita precisam ser válidas.");
   }
 
   if (Number.isNaN(quantityLossInput) || quantityLossInput < 0) {
@@ -1196,6 +1298,7 @@ function buildRowViewModel({
     draft,
     quantitySold,
     quantityDefectiveReturn,
+    quantityExchangeOnVisit,
     quantityLoss,
     unitPrice,
     restockedQuantity,
@@ -1205,6 +1308,7 @@ function buildRowViewModel({
     hasChanges:
       quantitySold !== item.quantitySold ||
       quantityDefectiveReturn !== item.quantityDefectiveReturn ||
+      quantityExchangeOnVisit !== item.quantityExchangeOnVisit ||
       quantityLoss !== item.quantityLoss ||
       normalizeMoneyValue(unitPrice) !== normalizeMoneyValue(item.unitPrice) ||
       restockedQuantity !== item.restockedQuantity ||

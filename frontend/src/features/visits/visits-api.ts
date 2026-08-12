@@ -21,6 +21,7 @@ export type VisitItemDraftPayload = {
   quantityPrevious: number;
   quantityGoodRemaining: number;
   quantityDefectiveReturn: number;
+  quantityExchangeOnVisit?: number;
   quantityLoss: number;
   unitPrice?: number;
   suggestedRestockQuantity?: number;

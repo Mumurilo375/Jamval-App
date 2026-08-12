@@ -92,6 +92,7 @@ export type VisitItem = {
   quantityPrevious: number;
   quantityGoodRemaining: number;
   quantityDefectiveReturn: number;
+  quantityExchangeOnVisit: number;
   quantityLoss: number;
   quantitySold: number;
   unitPrice: number;
