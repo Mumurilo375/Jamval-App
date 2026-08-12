@@ -1,20 +1,34 @@
-import { useState } from "react";
+import { useState, type SetStateAction } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { Button, DateInput, ErrorBanner, Field, PageHeader, PageLoader, ToneBadge } from "../../components/ui";
 import { formatCurrency } from "../../lib/format";
 import { getAdminProfit, type CostCoverageStatus } from "./admin-api";
-import { AdminEmptyBlock, AdminQueryErrorState } from "./admin-ui";
+import { AdminEmptyBlock, AdminInfoPanel, AdminQueryErrorState } from "./admin-ui";
 
 type ProfitFilters = { dateFrom: string; dateTo: string };
 type ReviewItem = { productId: string; name: string; sku: string; soldUnits: number; revenueAmount: number; referenceItems: number; missingItems: number; stage: "PARCIAL" | "PENDENTE" };
 
 export function AdminProfitPage() {
-  const [draftFilters, setDraftFilters] = useState<ProfitFilters>({ dateFrom: "", dateTo: "" });
-  const [filters, setFilters] = useState<ProfitFilters>({ dateFrom: "", dateTo: "" });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dateFrom = searchParams.get("dateFrom") ?? "";
+  const dateTo = searchParams.get("dateTo") ?? "";
+  const periodKey = `${dateFrom}|${dateTo}`;
+  const [draftFilterState, setDraftFilterState] = useState(() => ({
+    periodKey,
+    filters: { dateFrom, dateTo }
+  }));
+  const draftFilters = draftFilterState.periodKey === periodKey ? draftFilterState.filters : { dateFrom, dateTo };
+  const setDraftFilters = (nextValue: SetStateAction<ProfitFilters>) => {
+    setDraftFilterState((current) => {
+      const currentFilters = current.periodKey === periodKey ? current.filters : { dateFrom, dateTo };
+      const nextFilters = typeof nextValue === "function" ? nextValue(currentFilters) : nextValue;
+      return { periodKey, filters: nextFilters };
+    });
+  };
   const invalidPeriod = draftFilters.dateFrom.length > 0 && draftFilters.dateTo.length > 0 && new Date(draftFilters.dateFrom).getTime() > new Date(draftFilters.dateTo).getTime();
-  const profitQuery = useQuery({ queryKey: ["admin", "profit", filters], queryFn: () => getAdminProfit({ dateFrom: filters.dateFrom || undefined, dateTo: filters.dateTo || undefined }) });
+  const profitQuery = useQuery({ queryKey: ["admin", "profit", dateFrom, dateTo], queryFn: () => getAdminProfit({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined }) });
 
   if (profitQuery.isPending) return <PageLoader label="Carregando lucro..." />;
   if (profitQuery.isError || !profitQuery.data) return <AdminQueryErrorState title="Não foi possível carregar o lucro" error={profitQuery.error} onRetry={() => void profitQuery.refetch()} />;
@@ -23,6 +37,11 @@ export function AdminProfitPage() {
   const resultTotal = coverage.confirmed.revenueAmount + coverage.reference.revenueAmount + coverage.missing.revenueAmount;
   const coveragePercent = toPercent(coverage.confirmed.revenueAmount, resultTotal);
   const reviewItems = mergeReviewItems(productsWithReferenceCost, productsWithoutCost);
+  const applyFilters = () => setSearchParams(toSearchParams(draftFilters));
+  const clearFilters = () => {
+    setDraftFilters({ dateFrom: "", dateTo: "" });
+    setSearchParams(new URLSearchParams());
+  };
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden pb-2">
@@ -37,8 +56,8 @@ export function AdminProfitPage() {
           </div>
           {invalidPeriod ? <div className="mt-3"><ErrorBanner message="A data inicial não pode ser maior que a data final." /></div> : null}
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <Button type="button" onClick={() => setFilters(draftFilters)} disabled={invalidPeriod} className="w-full sm:w-auto">Aplicar período</Button>
-            <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={() => { const cleared = { dateFrom: "", dateTo: "" }; setDraftFilters(cleared); setFilters(cleared); }}>Limpar filtro</Button>
+            <Button type="button" onClick={applyFilters} disabled={invalidPeriod} className="w-full sm:w-auto">Aplicar período</Button>
+            <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={clearFilters}>Limpar filtro</Button>
           </div>
         </div>
       </details>
@@ -48,10 +67,16 @@ export function AdminProfitPage() {
           <dl className="grid divide-y divide-[var(--jam-border)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <ProfitMetric label="Lucro bruto estimado" value={summary.estimatedGrossProfitAmount === null ? "—" : formatCurrency(summary.estimatedGrossProfitAmount)} note={summary.estimatedGrossProfitAmount === null ? "Há custo pendente de apuração" : "Base de custo disponível"} />
             <ProfitMetric label="Receita vendida" value={formatCurrency(summary.revenueAmount)} note={`${summary.soldUnits} unidade(s) vendida(s)`} />
-            <ProfitMetric label="Receita apurada" value={`${coveragePercent.toFixed(0)}%`} note={`${formatCurrency(coverage.confirmed.revenueAmount)} com custo real`} />
+            <ProfitMetric label="Receita apurada" value={`${coveragePercent.toFixed(0)}%`} note={`${formatCurrency(coverage.confirmed.revenueAmount)} · ${coverage.confirmed.visitItemsCount} item(ns) com custo real`} />
           </dl>
         </section>
       )}
+
+      <AdminInfoPanel title="Como ler o lucro">
+        <p><strong className="font-semibold text-[var(--jam-ink)]">Custo real:</strong> o item possui custo de compra cadastrado.</p>
+        <p><strong className="font-semibold text-[var(--jam-ink)]">Em revisão:</strong> o cálculo usa um custo de referência e merece conferência.</p>
+        <p><strong className="font-semibold text-[var(--jam-ink)]">Sem custo:</strong> não existe base suficiente para calcular o lucro daquele item.</p>
+      </AdminInfoPanel>
 
       <section className="rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-4">
         <SectionHeading title="Pendências de custo" action={<Link to="/products"><Button variant="secondary">Abrir produtos</Button></Link>} />
@@ -102,3 +127,4 @@ function mergeReviewItems(productsWithReferenceCost: Array<{ productId: string; 
 function buildReviewSubtitle(item: ReviewItem) { if (item.referenceItems > 0 && item.missingItems > 0) return `${item.sku} · ${item.referenceItems} item(ns) com referência · ${item.missingItems} pendente(s)`; if (item.referenceItems > 0) return `${item.sku} · ${item.referenceItems} item(ns) usando referência`; return `${item.sku} · ${item.missingItems} item(ns) sem custo`; }
 function mapStage(status: CostCoverageStatus) { if (status === "CONFIRMED") return { label: "Apurado", tone: "success" as const }; if (status === "MISSING") return { label: "Sem custo", tone: "danger" as const }; return { label: "Em revisão", tone: "warning" as const }; }
 function toPercent(value: number, total: number) { return total <= 0 || value <= 0 ? 0 : Math.min((value / total) * 100, 100); }
+function toSearchParams(filters: ProfitFilters) { const params = new URLSearchParams(); if (filters.dateFrom) params.set("dateFrom", filters.dateFrom); if (filters.dateTo) params.set("dateTo", filters.dateTo); return params; }

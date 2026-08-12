@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { Button, Card, EmptyState, ToneBadge } from "../../components/ui";
 import { cx } from "../../lib/cx";
-import { ApiError } from "../../lib/api";
+import { getAdminErrorMessage } from "./admin-error-copy";
 
 export function AdminMetricCard({
   label,
@@ -182,57 +182,7 @@ function getAdminErrorCopy(error: unknown): {
   message: string;
   secondaryAction?: ReactNode;
 } {
-  if (error instanceof ApiError) {
-    const detailSuffix = extractApiErrorDetail(error.details);
-
-    if (error.status === 401) {
-      return {
-        message: "Sua sessão não foi aceita para consultar a Administração. Entre novamente e tente abrir a página outra vez."
-      };
-    }
-
-    if (error.status === 0) {
-      return {
-        message: "Não foi possível alcançar o backend agora. Confira se a API do Jamval está rodando e tente novamente."
-      };
-    }
-
-    if (error.status >= 500) {
-      return {
-        message: `O backend respondeu com erro interno ao carregar esta área administrativa. Detalhe atual: ${detailSuffix ?? error.message}.`
-      };
-    }
-
-    return {
-      message: `Não foi possível carregar esta área administrativa. Detalhe atual: ${detailSuffix ?? error.message}.`
-    };
-  }
-
-  if (error instanceof Error && error.message.trim().length > 0) {
-    return {
-      message: `Não foi possível carregar esta área administrativa. Detalhe atual: ${error.message}.`
-    };
-  }
-
   return {
-    message: "Não foi possível carregar esta área administrativa no momento. Tente novamente em alguns instantes."
+    message: getAdminErrorMessage(error)
   };
-}
-
-function extractApiErrorDetail(details: unknown): string | null {
-  if (!details || typeof details !== "object") {
-    return null;
-  }
-
-  const detailRecord = details as Record<string, unknown>;
-
-  if (typeof detailRecord.message === "string" && detailRecord.message.trim().length > 0) {
-    return detailRecord.message;
-  }
-
-  if (typeof detailRecord.name === "string" && detailRecord.name.trim().length > 0) {
-    return detailRecord.name;
-  }
-
-  return null;
 }

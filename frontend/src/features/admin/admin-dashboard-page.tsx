@@ -48,12 +48,13 @@ export function AdminDashboardPage() {
     return <AdminQueryErrorState title="Não foi possível carregar o resumo financeiro" error={dashboardQuery.error} onRetry={() => void dashboardQuery.refetch()} />;
   }
 
-  const { headline, salesVsReceiptsSeries, receivablesStatus, profitCoverage } = dashboardQuery.data;
+  const { headline, salesVsReceiptsSeries, receivablesStatus, profitCoverage, stockAlerts } = dashboardQuery.data;
   const financeHasData = salesVsReceiptsSeries.some((entry) => entry.soldAmount > 0 || entry.receivedAmount > 0);
   const openTitles = receivablesStatus.pending.count + receivablesStatus.partial.count;
   const reviewedRevenue = profitCoverage.reference.revenueAmount + profitCoverage.missing.revenueAmount;
   const reviewedItems = profitCoverage.reference.visitItemsCount + profitCoverage.missing.visitItemsCount;
   const resultTotal = profitCoverage.confirmed.revenueAmount + reviewedRevenue;
+  const stockAlertCount = stockAlerts.zeroStockProducts + stockAlerts.lowStockProducts;
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden pb-2">
@@ -87,6 +88,36 @@ export function AdminDashboardPage() {
           <SummaryMetric label="Em aberto" value={formatCurrency(headline.outstandingAmount)} note={`${openTitles} título(s) para acompanhar`} tone={headline.outstandingAmount > 0 ? "warning" : "success"} />
           <SummaryMetric label="Lucro apurado" value={headline.confirmedGrossProfitAmount === null ? "—" : formatCurrency(headline.confirmedGrossProfitAmount)} note={headline.confirmedGrossProfitAmount === null ? "Custo ainda incompleto" : "Com custo real encontrado"} tone={headline.confirmedGrossProfitAmount === null ? "warning" : "neutral"} />
         </dl>
+      </section>
+
+      <section className="rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-4">
+        <div>
+          <h2 className="text-[15px] font-semibold text-[var(--jam-ink)] sm:text-base">Próximas ações</h2>
+          <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">Os pontos que merecem atenção antes da próxima visita.</p>
+        </div>
+        <div className="mt-3 divide-y divide-[var(--jam-border)]">
+          <DashboardActionRow
+            title={openTitles > 0 ? "Acompanhar recebimentos" : "Carteira em dia"}
+            description={openTitles > 0 ? `${openTitles} título(s) em aberto ou parcial · ${formatCurrency(headline.outstandingAmount)}` : "Não há títulos em aberto neste período."}
+            actionLabel="Ver títulos"
+            to="/financeiro"
+            tone={openTitles > 0 ? "warning" : "success"}
+          />
+          <DashboardActionRow
+            title={stockAlertCount > 0 ? "Revisar estoque" : "Estoque sem alertas"}
+            description={stockAlertCount > 0 ? `${stockAlerts.zeroStockProducts} sem saldo e ${stockAlerts.lowStockProducts} com saldo baixo.` : "Não há produto ativo em nível crítico."}
+            actionLabel="Abrir estoque"
+            to="/stock"
+            tone={stockAlertCount > 0 ? "warning" : "success"}
+          />
+          <DashboardActionRow
+            title={reviewedRevenue > 0 ? "Completar custos do lucro" : "Custos do lucro conferidos"}
+            description={reviewedRevenue > 0 ? `${formatCurrency(reviewedRevenue)} em vendas ainda precisa de revisão (${reviewedItems} item(ns)).` : "As vendas do período possuem base de custo suficiente."}
+            actionLabel="Revisar custos"
+            to="/admin/lucro"
+            tone={reviewedRevenue > 0 ? "warning" : "success"}
+          />
+        </div>
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.85fr)]">
@@ -161,6 +192,35 @@ function SectionHeading({ title, action }: { title: string; action: React.ReactN
 
 function Legend({ label, color }: { label: string; color: string }) {
   return <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} /><span>{label}</span></span>;
+}
+
+function DashboardActionRow({
+  title,
+  description,
+  actionLabel,
+  to,
+  tone
+}: {
+  title: string;
+  description: string;
+  actionLabel: string;
+  to: string;
+  tone: "warning" | "success";
+}) {
+  return (
+    <div className="flex flex-col gap-2.5 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[13px] font-semibold text-[var(--jam-ink)] sm:text-sm">{title}</p>
+          <ToneBadge label={tone === "warning" ? "Atenção" : "Ok"} tone={tone} />
+        </div>
+        <p className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-[13px]">{description}</p>
+      </div>
+      <Link to={to} className="shrink-0 self-start sm:self-auto">
+        <Button variant="secondary">{actionLabel}</Button>
+      </Link>
+    </div>
+  );
 }
 
 function createDefaultPeriod() { const today = new Date(); return { dateFrom: toDateValue(addDays(today, -29)), dateTo: toDateValue(today) }; }

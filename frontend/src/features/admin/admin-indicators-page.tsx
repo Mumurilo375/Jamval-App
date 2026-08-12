@@ -72,7 +72,7 @@ export function AdminIndicatorsPage() {
           tone={counts.productsWithoutCost > 0 ? "warning" : "success"}
         />
         <AdminMetricCard
-          label="Clientes com maior pendência"
+          label="Clientes com pendência"
           value={String(counts.clientsWithOutstanding)}
           tone={counts.clientsWithOutstanding > 0 ? "warning" : "success"}
         />
