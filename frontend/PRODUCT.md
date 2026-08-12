@@ -48,11 +48,11 @@ The application is used in the field on a mobile device, with occasional desktop
 
 ## Evidence on Hand
 
-- Product overview, workflows, scope, and success criteria: `BACKEND/PRD.md`.
-- Business rules and visit calculations: `BACKEND/RULES.md`.
+- Product overview, workflows, scope, and success criteria: `backend/PRD.md`.
+- Business rules and visit calculations: `backend/RULES.md`.
 - Current feature inventory, routes, screenshots, and operational rationale: `README.md`.
-- Existing frontend implementation: `FRONTEND/src/`.
-- Existing company logo: `FRONTEND/public/Jamval.svg`.
+- Existing frontend implementation: `frontend/src/`.
+- Existing company logo: `frontend/public/Jamval.svg`.
 - No public customer testimonials, external proof, or confirmed marketing claims are available; future work must not fabricate them.
 
 ## Product Principles
