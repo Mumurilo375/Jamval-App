@@ -110,6 +110,47 @@ export async function downloadApiFile(path: string, fallbackFileName: string): P
   }, 0);
 }
 
+export async function previewApiPdf(path: string, previewWindow: Window | null): Promise<void> {
+  if (!previewWindow) {
+    throw new ApiError(0, "PREVIEW_WINDOW_BLOCKED", "Não foi possível abrir a visualização do comprovante. Libere os pop-ups e tente novamente.", null);
+  }
+
+  try {
+    const response = await fetch(`${env.apiBaseUrl}${path}`, {
+      credentials: "include"
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      const payload = parseResponsePayload<unknown>(response, text);
+
+      throw new ApiError(
+        response.status,
+        payload?.error?.code ?? "HTTP_ERROR",
+        payload?.error?.message ?? getFallbackErrorMessage(response, text),
+        payload?.error?.details ?? null
+      );
+    }
+
+    const contentType = response.headers.get("content-type") ?? "";
+
+    if (!contentType.toLowerCase().startsWith("application/pdf")) {
+      throw new ApiError(response.status, "INVALID_FILE_TYPE", "O comprovante recebido não é um PDF válido.", null);
+    }
+
+    const objectUrl = window.URL.createObjectURL(await response.blob());
+    previewWindow.location.replace(objectUrl);
+    previewWindow.focus();
+
+    window.setTimeout(() => {
+      window.URL.revokeObjectURL(objectUrl);
+    }, 60_000);
+  } catch (error) {
+    previewWindow.close();
+    throw error;
+  }
+}
+
 export const api = {
   get: <T>(path: string) => apiRequest<T>(path),
   post: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: "POST", body }),

@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-11T00:00:00.000Z",
+  "title": "Design System: Jamval",
+  "extensions": {
+    "colorMeta": {
+      "technical-blue": {
+        "role": "primary",
+        "displayName": "Azul técnico discreto",
+        "canonical": "#1d4ed8",
+        "tonalRamp": ["#eff6ff", "#dbeafe", "#1d4ed8", "#1e3a8a"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Tela fria",
+        "canonical": "#f3f3f6",
+        "tonalRamp": ["#ffffff", "#f8fafc", "#f3f3f6", "#e2e8f0"]
+      },
+      "success-teal": {
+        "role": "secondary",
+        "displayName": "Teal de sucesso",
+        "canonical": "#0f766e",
+        "tonalRamp": ["#f0fdfa", "#ccfbf1", "#0f766e", "#134e4a"]
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Âmbar de atenção",
+        "canonical": "#b45309",
+        "tonalRamp": ["#fffbeb", "#fef3c7", "#b45309", "#78350f"]
+      },
+      "danger-red": {
+        "role": "tertiary",
+        "displayName": "Vermelho de risco",
+        "canonical": "#b42318",
+        "tonalRamp": ["#fef2f2", "#fee2e2", "#b42318", "#7f1d1d"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "IBM Plex Sans Condensed",
+        "purpose": "Compact operational titles and prominent quantities."
+      },
+      "body": {
+        "displayName": "IBM Plex Sans",
+        "purpose": "Readable field operations, forms, lists, and financial context."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-rest",
+        "value": "0 1px 2px rgba(15,23,42,0.04)",
+        "purpose": "Quiet separation for standard cards."
+      },
+      {
+        "name": "drawer-overlay",
+        "value": "0 24px 60px rgba(15,23,42,0.24)",
+        "purpose": "Separate drawers and bottom sheets from the page."
+      }
+    ],
+    "motion": [
+      {
+        "name": "page-fade",
+        "value": "220ms ease-out",
+        "purpose": "Subtle page transition without slowing field work."
+      },
+      {
+        "name": "interaction",
+        "value": "transition with active scale 0.98",
+        "purpose": "Confirm button press while remaining restrained."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The obvious next action in an operational flow.",
+      "html": "<button class=\"ds-btn-primary\">Concluir visita</button>",
+      "css": ".ds-btn-primary { background: #1d4ed8; color: #fff; min-height: 40px; padding: 0 14px; border: 0; border-radius: 12px; font: 600 13px 'IBM Plex Sans', sans-serif; }"
+    },
+    {
+      "name": "Operational Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "One clear purpose per surface, with restrained elevation.",
+      "html": "<section class=\"ds-card\"><h2>Resumo da visita</h2><p>Valores e próximo passo.</p></section>",
+      "css": ".ds-card { background: #fff; border: 1px solid #d9e2ec; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }"
+    },
+    {
+      "name": "Field Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Comfortable, high-contrast entry control for quick mobile input.",
+      "html": "<input class=\"ds-input\" aria-label=\"Quantidade\" inputmode=\"numeric\" />",
+      "css": ".ds-input { width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid #d9e2ec; border-radius: 12px; background: #fff; color: #111827; } .ds-input:focus { border-color: rgba(29,78,216,.45); outline: 4px solid rgba(29,78,216,.12); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Painel de operação confiável",
+    "overview": "Jamval is a practical field-operations interface: calm enough for financial review, direct enough to use in a client store, and structured so the next action is obvious at a glance. Its personality is simples, prático e confiável.",
+    "keyCharacteristics": [
+      "Mobile-first and scan-friendly",
+      "Lightly elevated surfaces",
+      "Direct, prominent actions",
+      "Short purposeful copy",
+      "One operational step visible at a time"
+    ],
+    "rules": [
+      {
+        "name": "The One Clear Action Rule",
+        "body": "Primary actions must look unmistakably actionable.",
+        "section": "colors"
+      },
+      {
+        "name": "The Useful Text Rule",
+        "body": "Every sentence must help the operator decide, enter, verify, or act.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Elevation Rule",
+        "body": "Use one surface boundary at a time; avoid nested cards as the default structure.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do make the next operational action visually prominent and label it with a direct verb.",
+      "Do keep copy short, concrete, and in Brazilian Portuguese.",
+      "Do preserve generous touch targets and fast numeric entry on mobile.",
+      "Do use one clear card per purpose."
+    ],
+    "donts": [
+      "Don't create cards inside cards as the default organization pattern.",
+      "Don't fill cards with generic explanatory text.",
+      "Don't hide important actions behind subtle links or ambiguous icons.",
+      "Don't replace a simple flow with a dense all-at-once form."
+    ]
+  }
+}

@@ -1,6 +1,18 @@
-import { PrismaClient, type Client, type ClientProduct, type Product } from "@prisma/client";
+import {
+  CentralStockMovementType,
+  ConsignedStockMovementType,
+  PaymentMethod,
+  ReceivableStatus,
+  StockReferenceType,
+  VisitStatus,
+  type Client,
+  type ClientProduct,
+  type Product
+} from "@prisma/client";
 
 import { computeDraftVisitItem, ensureReceivedAmountWithinTotal } from "../src/modules/visits/visit.validators";
+
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -63,6 +75,11 @@ type VisitSeed = {
   dueDate?: string;
   notes: string;
   items: VisitItemSeed[];
+};
+
+type CompletedVisitSeed = VisitSeed & {
+  visitType: "CONSIGNMENT" | "SALE";
+  payments: Array<{ amount: number; method: PaymentMethod; paidAt: string; reference?: string }>;
 };
 
 const productSeeds: ProductSeed[] = [
@@ -155,6 +172,116 @@ const productSeeds: ProductSeed[] = [
     connectorType: "USB-C",
     basePrice: 79.9,
     costPrice: 52.3
+  },
+  {
+    sku: "JMV-CABO-USBC-2M-RD",
+    name: "Cabo USB-C 2m Reforçado",
+    category: "Cabos",
+    brand: "Hrebos",
+    model: "Nylon 2m",
+    color: "Vermelho",
+    connectorType: "USB-C",
+    basePrice: 29.9,
+    costPrice: 16.7
+  },
+  {
+    sku: "JMV-CABO-MICRO-1M-BK",
+    name: "Cabo Micro USB 1m",
+    category: "Cabos",
+    brand: "Inova",
+    model: "Fast Sync",
+    color: "Preto",
+    connectorType: "Micro USB",
+    basePrice: 15.9,
+    costPrice: 8.4
+  },
+  {
+    sku: "JMV-CARREG-33W-USBC",
+    name: "Carregador Turbo 33W",
+    category: "Carregadores",
+    brand: "Xtrad",
+    model: "PD 33W",
+    color: "Branco",
+    voltage: "Bivolt",
+    connectorType: "USB-C",
+    basePrice: 54.9,
+    costPrice: 31.5
+  },
+  {
+    sku: "JMV-FONE-BT-TWS-BK",
+    name: "Fone Bluetooth TWS",
+    category: "Áudio",
+    brand: "H'Maston",
+    model: "TW-12",
+    color: "Preto",
+    connectorType: "Bluetooth",
+    basePrice: 64.9,
+    costPrice: 37.8
+  },
+  {
+    sku: "JMV-SUPORTE-VEIC-MAG",
+    name: "Suporte Veicular Magnético",
+    category: "Suportes",
+    brand: "Exbom",
+    model: "SP-MAG",
+    color: "Preto",
+    basePrice: 32.9,
+    costPrice: 18.6
+  },
+  {
+    sku: "JMV-PEL-3D-IP13",
+    name: "Película 3D iPhone 13",
+    category: "Películas",
+    brand: "HPrime",
+    model: "3D",
+    color: "Transparente",
+    basePrice: 19.9,
+    costPrice: 7.2
+  },
+  {
+    sku: "JMV-CAIXA-BT-MINI",
+    name: "Caixa de Som Bluetooth Mini",
+    category: "Áudio",
+    brand: "Altomex",
+    model: "AL-203",
+    color: "Azul",
+    connectorType: "Bluetooth",
+    basePrice: 69.9,
+    costPrice: 41.9
+  },
+  {
+    sku: "JMV-ADAPT-OTG-USBC",
+    name: "Adaptador OTG USB-C",
+    category: "Adaptadores",
+    brand: "Basike",
+    model: "OTG-C",
+    color: "Prata",
+    connectorType: "USB-C",
+    basePrice: 17.9,
+    costPrice: 9.4
+  },
+  {
+    sku: "JMV-LUMINARIA-USB",
+    name: "Luminária LED USB",
+    category: "Utilidades",
+    brand: "Kapbom",
+    model: "KA-601",
+    color: "Branco",
+    connectorType: "USB-A",
+    basePrice: 24.9,
+    costPrice: 13.2
+  },
+  {
+    sku: "JMV-CARREG-VEIC-PD",
+    name: "Carregador Veicular PD 30W",
+    category: "Carregadores",
+    brand: "Kaidi",
+    model: "KD-511",
+    color: "Preto",
+    voltage: "12V/24V",
+    connectorType: "USB-C",
+    basePrice: 39.9,
+    costPrice: 22.8
   }
 ];
 
@@ -237,6 +364,34 @@ const clientSeeds: ClientSeed[] = [
     requiresInvoice: true
   }
 ];
+
+const additionalClientRows: Array<[string, string, string, number, boolean]> = [
+    ["farmacia-bom-preco", "Farmácia Bom Preço", "Recife", 10, true],
+    ["banca-do-centro", "Banca do Centro", "Caruaru", 7, false],
+    ["mercadinho-sao-joao", "Mercadinho São João", "Toritama", 14, false],
+    ["tech-point-acessorios", "Tech Point Acessórios", "Recife", 7, true],
+    ["posto-estrada-real", "Posto Estrada Real", "Gravatá", 10, false],
+    ["variedades-martins", "Variedades Martins", "Bezerros", 15, false],
+    ["conveniencia-boa-viagem", "Conveniência Boa Viagem", "Recife", 7, true]
+];
+
+clientSeeds.push(
+  ...additionalClientRows.map(([key, tradeName, city, visitCycleDays, requiresInvoice], index) => ({
+    key,
+    tradeName,
+    legalName: `${tradeName} Comércio Ltda`,
+    documentNumber: `90.123.45${index}/0001-${String(index + 10).padStart(2, "0")}`,
+    contactName: ["Aline", "Rogério", "Joana", "Diego", "Fernanda", "Carlos", "Patrícia"][index],
+    phone: `(81) 99${810 + index}-${2200 + index}`,
+    addressLine: `Rua Comercial, ${50 + index * 17}`,
+    addressCity: city,
+    addressState: "PE",
+    addressZipcode: `50${100 + index}-000`,
+    notes: "Cliente fictício criado para demonstração do sistema.",
+    visitCycleDays,
+    requiresInvoice
+  }))
+);
 
 const clientCatalogSeeds: Record<string, ClientCatalogSeed[]> = {
   "mercado-nova-esperanca": [
@@ -386,14 +541,100 @@ const visitSeeds: VisitSeed[] = [
   }
 ];
 
+const completedVisitSeeds: CompletedVisitSeed[] = [
+  ["mercado-nova-esperanca", "JMV-CABO-USBC-1M-BK", "CONSIGNMENT", 10, 3, 7, 43.8, "PIX"],
+  ["loja-conecta-cell", "JMV-CABO-LIGHT-1M-WH", "CONSIGNMENT", 15, 6, 9, 0, "PIX"],
+  ["conveniencia-ponto-24h", "JMV-CARREG-VEIC-2USB", "CONSIGNMENT", 8, 4, 5, 26.9, "CASH"],
+  ["lanchonete-sabor-praca", "JMV-FONE-P2-ESTEREO", "CONSIGNMENT", 6, 2, 4, 18.5, "CARD"],
+  ["papelaria-central-mix", "JMV-ADAPT-USBC-P2", "CONSIGNMENT", 7, 3, 4, 0, "BANK_TRANSFER"],
+  ["farmacia-bom-preco", "JMV-CABO-USBC-1M-BK", "CONSIGNMENT", 9, 5, 5, 45.8, "PIX"],
+  ["banca-do-centro", "JMV-CARREG-20W-USBC", "CONSIGNMENT", 6, 2, 4, 79.8, "CASH"],
+  ["mercadinho-sao-joao", "JMV-FONE-BT-TWS-BK", "CONSIGNMENT", 4, 1, 3, 74.9, "PIX"],
+  ["tech-point-acessorios", "JMV-CABO-USBC-1M-BK", "SALE", 7, 0, 0, 120, "CARD"],
+  ["posto-estrada-real", "JMV-CARREG-VEIC-PD", "SALE", 5, 0, 0, 89.8, "PIX"],
+  ["variedades-martins", "JMV-PEL-3D-IP13", "CONSIGNMENT", 12, 7, 5, 22.9, "CASH"],
+  ["conveniencia-boa-viagem", "JMV-SUPORTE-VEIC-MAG", "CONSIGNMENT", 8, 2, 6, 73.8, "PIX"],
+  ["mercado-nova-esperanca", "JMV-CARREG-20W-USBC", "CONSIGNMENT", 8, 3, 5, 39.9, "PIX"],
+  ["loja-conecta-cell", "JMV-POWERBANK-10K", "CONSIGNMENT", 6, 3, 3, 0, "BANK_TRANSFER"]
+].map(([clientKey, sku, visitType, quantityPrevious, quantityGoodRemaining, restockedQuantity, payment, method], index) => {
+  const sold = visitType === "SALE" ? quantityPrevious : quantityPrevious - quantityGoodRemaining;
+  const partialPayment = index % 4 === 0 ? Math.min(payment, 20) : payment;
+  const visitedAt = daysAgo(42 - index * 3);
+
+  return {
+    visitCode: `SEED-VIS-HIST-${String(index + 1).padStart(3, "0")}`,
+    clientKey,
+    visitType,
+    visitedAt,
+    receivedAmountOnVisit: partialPayment,
+    dueDate: dateOnly(daysAgo(8 - index)),
+    notes: `Visita fictícia de demonstração #${index + 1}, com ${sold} unidade(s) vendida(s).`,
+    items: [
+      {
+        sku,
+        quantityPrevious,
+        quantityGoodRemaining: visitType === "SALE" ? 0 : quantityGoodRemaining,
+        quantityDefectiveReturn: index === 2 ? 1 : 0,
+        quantityLoss: index === 5 ? 1 : 0,
+        suggestedRestockQuantity: restockedQuantity,
+        restockedQuantity,
+        notes: index === 2 ? "Devolução de item com defeito registrada para demonstração." : undefined
+      }
+    ],
+    payments:
+      partialPayment > 0
+        ? [{ amount: partialPayment, method, paidAt: visitedAt, reference: `SEED-PG-${index + 1}` }]
+        : []
+  };
+});
+
 async function main(): Promise<void> {
+  await removePreviousSeedData();
   const productsBySku = await seedProducts();
   const clientsByKey = await seedClients();
   const clientProductsByKey = await seedClientCatalogs(productsBySku, clientsByKey);
 
+  await seedCentralStock(productsBySku);
+  await seedCompletedVisits(productsBySku, clientsByKey, clientProductsByKey);
   await seedDraftVisits(productsBySku, clientsByKey, clientProductsByKey);
 
-  console.log(`Seed concluído: ${productsBySku.size} produtos, ${clientsByKey.size} clientes, ${visitSeeds.length} visitas draft.`);
+  console.log(
+    `Seed concluído: ${productsBySku.size} produtos, ${clientsByKey.size} clientes, ${completedVisitSeeds.length} visitas concluídas e ${visitSeeds.length} rascunhos.`
+  );
+}
+
+async function removePreviousSeedData(): Promise<void> {
+  const visits = await prisma.visit.findMany({
+    where: { visitCode: { startsWith: "SEED-VIS-" } },
+    select: { id: true }
+  });
+  const visitIds = visits.map((visit) => visit.id);
+
+  if (visitIds.length > 0) {
+    await prisma.$transaction([
+      prisma.payment.deleteMany({ where: { receivable: { visitId: { in: visitIds } } } }),
+      prisma.receiptDocument.deleteMany({ where: { visitId: { in: visitIds } } }),
+      prisma.receivable.deleteMany({ where: { visitId: { in: visitIds } } }),
+      prisma.consignedStockMovement.deleteMany({ where: { referenceType: "VISIT", referenceId: { in: visitIds } } }),
+      prisma.centralStockMovement.deleteMany({ where: { referenceType: "VISIT", referenceId: { in: visitIds } } }),
+      prisma.visitItem.deleteMany({ where: { visitId: { in: visitIds } } }),
+      prisma.visit.deleteMany({ where: { id: { in: visitIds } } })
+    ]);
+  }
+
+  const seededProducts = await prisma.product.findMany({
+    where: { sku: { in: productSeeds.map((product) => product.sku) } },
+    select: { id: true }
+  });
+  const productIds = seededProducts.map((product) => product.id);
+
+  if (productIds.length > 0) {
+    await prisma.$transaction([
+      prisma.centralStockMovement.deleteMany({ where: { productId: { in: productIds }, note: { contains: SEED_TAG } } }),
+      prisma.centralStockBalance.deleteMany({ where: { productId: { in: productIds } } }),
+      prisma.consignedStockBalance.deleteMany({ where: { productId: { in: productIds } } })
+    ]);
+  }
 }
 
 async function seedProducts(): Promise<Map<string, Product>> {
@@ -498,7 +739,8 @@ async function seedClientCatalogs(
 ): Promise<Map<string, Map<string, ClientProduct>>> {
   const clientProductsByKey = new Map<string, Map<string, ClientProduct>>();
 
-  for (const [clientKey, catalogItems] of Object.entries(clientCatalogSeeds)) {
+  for (const clientKey of clientsByKey.keys()) {
+    const catalogItems = clientCatalogSeeds[clientKey] ?? createDefaultCatalog(clientKey);
     const client = requireClient(clientsByKey, clientKey);
     const itemEntries = await Promise.all(
       catalogItems.map(async (item) => {
@@ -534,6 +776,161 @@ async function seedClientCatalogs(
   }
 
   return clientProductsByKey;
+}
+
+async function seedCentralStock(productsBySku: Map<string, Product>): Promise<void> {
+  const referenceId = crypto.randomUUID();
+
+  for (const [index, product] of [...productsBySku.values()].entries()) {
+    const quantity = 120 + (index % 5) * 35;
+    const unitCost = Number(product.costPrice ?? product.basePrice);
+
+    await prisma.centralStockBalance.upsert({
+      where: { productId: product.id },
+      update: { currentQuantity: quantity },
+      create: { productId: product.id, currentQuantity: quantity }
+    });
+    await prisma.centralStockMovement.create({
+      data: {
+        productId: product.id,
+        movementType: CentralStockMovementType.MANUAL_ENTRY,
+        quantity,
+        unitCost,
+        totalCost: Number((quantity * unitCost).toFixed(2)),
+        referenceType: StockReferenceType.MANUAL,
+        referenceId,
+        note: `${SEED_TAG} Entrada inicial fictícia para demonstração.`,
+        createdAt: daysAgo(50)
+      }
+    });
+  }
+}
+
+async function seedCompletedVisits(
+  productsBySku: Map<string, Product>,
+  clientsByKey: Map<string, Client>,
+  clientProductsByKey: Map<string, Map<string, ClientProduct>>
+): Promise<void> {
+  for (const seed of completedVisitSeeds) {
+    const client = requireClient(clientsByKey, seed.clientKey);
+    const clientProducts = clientProductsByKey.get(seed.clientKey);
+
+    if (!clientProducts) {
+      throw new Error(`Catálogo não encontrado para o cliente ${seed.clientKey}.`);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const visitedAt = new Date(seed.visitedAt);
+      let totalAmount = 0;
+      const preparedItems = seed.items.map((item) => {
+        const product = requireProduct(productsBySku, item.sku);
+        const clientProduct = clientProducts.get(item.sku) ?? null;
+        const unitPrice = clientProduct ? Number(clientProduct.currentUnitPrice) : Number(product.basePrice);
+        const computed = computeDraftVisitItem({
+          product,
+          clientProduct,
+          clientProductId: clientProduct?.id ?? null,
+          quantityPrevious: item.quantityPrevious,
+          quantityGoodRemaining: seed.visitType === "SALE" ? 0 : item.quantityGoodRemaining,
+          quantityDefectiveReturn: item.quantityDefectiveReturn,
+          quantityLoss: item.quantityLoss,
+          unitPrice,
+          suggestedRestockQuantity: item.suggestedRestockQuantity,
+          restockedQuantity: item.restockedQuantity,
+          notes: item.notes
+        });
+        totalAmount += computed.subtotalAmount;
+        return { product, computed };
+      });
+      const roundedTotal = Number(totalAmount.toFixed(2));
+      const received = seed.payments.reduce((sum, payment) => sum + payment.amount, 0);
+      ensureReceivedAmountWithinTotal(received, roundedTotal);
+
+      const visit = await tx.visit.create({
+        data: {
+          visitCode: seed.visitCode,
+          clientId: client.id,
+          visitType: seed.visitType,
+          status: VisitStatus.COMPLETED,
+          visitedAt,
+          notes: `${SEED_TAG} ${seed.notes}`,
+          totalAmount: roundedTotal,
+          receivedAmountOnVisit: received,
+          dueDate: seed.dueDate ? new Date(`${seed.dueDate}T00:00:00.000Z`) : null,
+          completedAt: visitedAt,
+          signatureStatus: "SIGNED",
+          signatureName: client.contactName ?? "Responsável do cliente",
+          signatureImageKey: `seed-signatures/${seed.visitCode}.png`,
+          signedAt: visitedAt
+        }
+      });
+
+      for (const { product, computed } of preparedItems) {
+        await tx.visitItem.create({
+          data: { visitId: visit.id, ...computed, costPriceSnapshot: product.costPrice }
+        });
+
+        if (seed.visitType === "SALE") {
+          await tx.centralStockBalance.update({ where: { productId: product.id }, data: { currentQuantity: { decrement: computed.quantitySold } } });
+          await tx.centralStockMovement.create({
+            data: { productId: product.id, movementType: CentralStockMovementType.DIRECT_SALE_OUT, quantity: computed.quantitySold, referenceType: StockReferenceType.VISIT, referenceId: visit.id, note: `${SEED_TAG} Venda direta ${seed.visitCode}`, createdAt: visitedAt }
+          });
+          continue;
+        }
+
+        await tx.consignedStockBalance.upsert({
+          where: { clientId_productId: { clientId: client.id, productId: product.id } },
+          update: { currentQuantity: computed.resultingClientQuantity },
+          create: { clientId: client.id, productId: product.id, currentQuantity: computed.resultingClientQuantity }
+        });
+        for (const [movementType, quantity] of [
+          [ConsignedStockMovementType.SALE_OUT, computed.quantitySold],
+          [ConsignedStockMovementType.DEFECTIVE_RETURN_OUT, computed.quantityDefectiveReturn],
+          [ConsignedStockMovementType.LOSS_OUT, computed.quantityLoss],
+          [ConsignedStockMovementType.RESTOCK_IN, computed.restockedQuantity]
+        ] as const) {
+          if (quantity > 0) {
+            await tx.consignedStockMovement.create({ data: { clientId: client.id, productId: product.id, movementType, quantity, referenceType: StockReferenceType.VISIT, referenceId: visit.id, note: `${SEED_TAG} Visita ${seed.visitCode}`, createdAt: visitedAt } });
+          }
+        }
+        if (computed.restockedQuantity > 0) {
+          await tx.centralStockBalance.update({ where: { productId: product.id }, data: { currentQuantity: { decrement: computed.restockedQuantity } } });
+          await tx.centralStockMovement.create({ data: { productId: product.id, movementType: CentralStockMovementType.RESTOCK_TO_CLIENT, quantity: computed.restockedQuantity, referenceType: StockReferenceType.VISIT, referenceId: visit.id, note: `${SEED_TAG} Reposição ${seed.visitCode}`, createdAt: visitedAt } });
+        }
+        if (computed.quantityDefectiveReturn > 0) {
+          await tx.centralStockMovement.create({ data: { productId: product.id, movementType: CentralStockMovementType.DEFECTIVE_RETURN_LOG, quantity: computed.quantityDefectiveReturn, referenceType: StockReferenceType.VISIT, referenceId: visit.id, note: `${SEED_TAG} Defeito ${seed.visitCode}`, createdAt: visitedAt } });
+        }
+      }
+
+      const outstanding = Number((roundedTotal - received).toFixed(2));
+      const status = outstanding === 0 ? ReceivableStatus.PAID : received > 0 ? ReceivableStatus.PARTIAL : ReceivableStatus.PENDING;
+      const receivable = await tx.receivable.create({
+        data: { visitId: visit.id, clientId: client.id, originalAmount: roundedTotal, amountReceived: received, amountOutstanding: outstanding, status, dueDate: seed.dueDate ? new Date(`${seed.dueDate}T00:00:00.000Z`) : null, issuedAt: visitedAt, settledAt: outstanding === 0 ? visitedAt : null }
+      });
+      for (const payment of seed.payments) {
+        await tx.payment.create({ data: { receivableId: receivable.id, amount: payment.amount, paymentMethod: payment.method, reference: payment.reference, notes: `${SEED_TAG} Pagamento fictício.`, paidAt: new Date(payment.paidAt) } });
+      }
+    });
+  }
+}
+
+function createDefaultCatalog(clientKey: string): ClientCatalogSeed[] {
+  const offset = Array.from(clientKey).reduce((sum, character) => sum + character.charCodeAt(0), 0) % 4;
+  const products = [
+    ["JMV-CABO-USBC-1M-BK", 22.9],
+    ["JMV-CARREG-20W-USBC", 39.9],
+    ["JMV-FONE-BT-TWS-BK", 74.9],
+    ["JMV-SUPORTE-VEIC-MAG", 36.9],
+    ["JMV-CARREG-VEIC-PD", 44.9],
+    ["JMV-PEL-3D-IP13", 22.9]
+  ] as const;
+
+  return products.slice(offset, offset + 4).map(([sku, currentUnitPrice], index) => ({
+    sku,
+    currentUnitPrice,
+    idealQuantity: 5 + index * 3,
+    displayOrder: index + 1
+  }));
 }
 
 async function seedDraftVisits(
@@ -644,6 +1041,17 @@ function requireProduct(productsBySku: Map<string, Product>, sku: string): Produ
   }
 
   return product;
+}
+
+function daysAgo(days: number): string {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - days);
+  date.setUTCHours(14, 0, 0, 0);
+  return date.toISOString();
+}
+
+function dateOnly(value: string): string {
+  return value.slice(0, 10);
 }
 
 function requireClient(clientsByKey: Map<string, Client>, key: string): Client {

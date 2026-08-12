@@ -8,9 +8,9 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-COPY BACKEND/package.json BACKEND/package.json
-COPY FRONTEND/package.json FRONTEND/package.json
-COPY BACKEND/prisma/schema.prisma BACKEND/prisma/schema.prisma
+COPY backend/package.json backend/package.json
+COPY frontend/package.json frontend/package.json
+COPY backend/prisma/schema.prisma backend/prisma/schema.prisma
 
 RUN npm ci
 

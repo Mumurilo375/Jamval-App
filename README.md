@@ -209,8 +209,8 @@ Na raiz do projeto:
 
 ```bash
 npm install
-cp BACKEND/.env.example BACKEND/.env
-cp FRONTEND/.env.example FRONTEND/.env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
 npm run prisma:generate
 npm run dev
 ```
@@ -219,7 +219,17 @@ Para aplicar migrations e popular dados de desenvolvimento:
 
 ```bash
 npm run prisma:migrate:dev --workspace backend
-npm run prisma:seed --workspace backend
+npm run prisma:seed
+```
+
+O seeder cria uma base fictícia completa, com produtos, clientes, catálogo por cliente, estoque e movimentações, visitas de consignação e venda direta, pagamentos e contas a receber. Ele pode ser executado novamente para restaurar esses dados de demonstração.
+
+> Use o seed somente no banco local/de desenvolvimento. Ele recria os registros de demonstração e os saldos dos produtos usados por eles. Veja [a documentação detalhada do seed](backend/prisma/seed.md).
+
+Se estiver usando Docker Compose, com o serviço `backend` iniciado, use este comando para executar o seed dentro do container e aproveitar a conexão configurada pelo Compose:
+
+```bash
+npm run prisma:seed:docker
 ```
 
 Para criar ou atualizar um usuário administrador:

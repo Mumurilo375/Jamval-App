@@ -1,4 +1,4 @@
-import { api, downloadApiFile } from "../../lib/api";
+import { api, downloadApiFile, previewApiPdf } from "../../lib/api";
 import type { OperationalVisitQueue, Visit, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
 
 export type VisitListFilters = {
@@ -156,6 +156,10 @@ export function generateVisitReceipt(visitId: string) {
 
 export function downloadVisitReceipt(receipt: VisitReceiptSummary) {
   return downloadApiFile(receipt.downloadUrl, receipt.fileName);
+}
+
+export function previewVisitReceipt(receipt: VisitReceiptSummary, previewWindow: Window | null) {
+  return previewApiPdf(receipt.downloadUrl, previewWindow);
 }
 
 export function listCentralBalances(productIds: string[]) {

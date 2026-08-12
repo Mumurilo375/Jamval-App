@@ -91,7 +91,7 @@ function resolveStorageRoot(): string {
     return path.resolve(configuredStorageRoot);
   }
 
-  // Preserve access to files created before the repo was split into BACKEND/FRONTEND.
+  // Preserve access to files created before the repo was split into backend/frontend.
   const workspaceStorageRoot = path.resolve(__dirname, "../../../../storage");
   const backendStorageRoot = path.resolve(__dirname, "../../../storage");
 
