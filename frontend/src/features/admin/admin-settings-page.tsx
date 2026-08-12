@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import {
   Button,
-  Card,
+  ConfirmDialog,
   DrawerPanel,
   ErrorBanner,
   Field,
@@ -20,6 +20,7 @@ import { toOptionalString } from "../../lib/forms";
 import { useLogout, useSessionUser } from "../auth/auth";
 import { getAdminCompanyProfile, updateAdminCompanyProfile } from "./admin-api";
 import { AdminInfoPanel, AdminQueryErrorState, AdminSectionCard } from "./admin-ui";
+import { getAdminErrorMessage } from "./admin-error-copy";
 
 const adminCompanyProfileSchema = z.object({
   companyName: z.string().trim().min(1, "Informe o nome da empresa").max(200, "Use até 200 caracteres"),
@@ -49,6 +50,7 @@ export function AdminSettingsPage() {
   const logoutMutation = useLogout();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [discardAction, setDiscardAction] = useState<"close" | "reset" | null>(null);
   const companyProfileQuery = useQuery({
     queryKey: ["admin", "company-profile"],
     queryFn: () => getAdminCompanyProfile()
@@ -117,6 +119,53 @@ export function AdminSettingsPage() {
   const documentRegistration = register("document");
   const phoneRegistration = register("phone");
 
+  const resetToSavedProfile = () => {
+    if (!companyProfileQuery.data) {
+      return;
+    }
+
+    reset({
+      companyName: companyProfileQuery.data.companyName,
+      document: companyProfileQuery.data.document ? formatCnpjInput(companyProfileQuery.data.document) : "",
+      phone: companyProfileQuery.data.phone ? formatPhoneInput(companyProfileQuery.data.phone) : "",
+      address: companyProfileQuery.data.address ?? "",
+      email: companyProfileQuery.data.email ?? "",
+      contactName: companyProfileQuery.data.contactName ?? ""
+    });
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+    setSuccessMessage(null);
+    resetToSavedProfile();
+  };
+
+  const requestDrawerClose = () => {
+    if (isDirty && !mutation.isPending) {
+      setDiscardAction("close");
+      return;
+    }
+
+    closeDrawer();
+  };
+
+  const requestDiscardChanges = () => {
+    if (isDirty && !mutation.isPending) {
+      setDiscardAction("reset");
+    }
+  };
+
+  const confirmDiscardChanges = () => {
+    const action = discardAction;
+    setDiscardAction(null);
+    resetToSavedProfile();
+
+    if (action === "close") {
+      setIsDrawerOpen(false);
+      setSuccessMessage(null);
+    }
+  };
+
   if (companyProfileQuery.isPending) {
     return <PageLoader label="Carregando configurações..." />;
   }
@@ -164,35 +213,15 @@ export function AdminSettingsPage() {
           <SummaryRow label="Telefone" value={companyProfileQuery.data.phone} />
           <SummaryRow label="Endereço" value={companyProfileQuery.data.address} />
           <SummaryRow label="Email" value={companyProfileQuery.data.email} />
-          <SummaryRow label="Responsavel" value={companyProfileQuery.data.contactName} />
+          <SummaryRow label="Responsável" value={companyProfileQuery.data.contactName} />
         </div>
       </AdminSectionCard>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <AdminSectionCard
-          eyebrow="Comprovantes"
-          title="Comprovantes"
-          description="Espaço reservado para futuras configurações de layout e emissão."
-        >
-          <PlaceholderCopy text="Padrão visual, dados complementares e preferências de geração vão entrar aqui em rodadas futuras." />
-        </AdminSectionCard>
-
-        <AdminSectionCard
-          eyebrow="Operação"
-          title="Parâmetros operacionais"
-          description="Centralização futura de ajustes que impactam a rotina."
-        >
-          <PlaceholderCopy text="Regras de visita, catálogo e estoque poderão ser configuradas aqui quando essa frente entrar no escopo." />
-        </AdminSectionCard>
-
-        <AdminSectionCard
-          eyebrow="Preferências"
-          title="Preferências futuras"
-          description="Espaço reservado para ajustes pessoais e preferenciais."
-        >
-          <PlaceholderCopy text="Preferências pessoais, automações e detalhes de uso ainda não estão disponíveis nesta versão." />
-        </AdminSectionCard>
-      </div>
+      <AdminInfoPanel title="Outras configurações">
+        <p><strong className="font-semibold text-[var(--jam-ink)]">Comprovantes:</strong> layout e preferências de emissão serão adicionados em uma próxima etapa.</p>
+        <p><strong className="font-semibold text-[var(--jam-ink)]">Operação:</strong> regras de visita, catálogo e estoque ainda não são configuráveis aqui.</p>
+        <p><strong className="font-semibold text-[var(--jam-ink)]">Preferências:</strong> automações e preferências pessoais ainda não estão disponíveis.</p>
+      </AdminInfoPanel>
 
       <AdminSectionCard
         eyebrow="Segurança"
@@ -222,23 +251,12 @@ export function AdminSettingsPage() {
 
       <DrawerPanel
         open={isDrawerOpen}
-        onClose={() => {
-          setIsDrawerOpen(false);
-          setSuccessMessage(null);
-          reset({
-            companyName: companyProfileQuery.data.companyName,
-            document: companyProfileQuery.data.document ? formatCnpjInput(companyProfileQuery.data.document) : "",
-            phone: companyProfileQuery.data.phone ? formatPhoneInput(companyProfileQuery.data.phone) : "",
-            address: companyProfileQuery.data.address ?? "",
-            email: companyProfileQuery.data.email ?? "",
-            contactName: companyProfileQuery.data.contactName ?? ""
-          });
-        }}
+        onClose={requestDrawerClose}
         title="Editar dados da empresa"
         description="Esses dados aparecem nos comprovantes emitidos pelo Jamval."
       >
         <form className="space-y-4" onSubmit={onSubmit}>
-          {mutation.error instanceof Error ? <ErrorBanner message={mutation.error.message} /> : null}
+          {mutation.error ? <ErrorBanner message={getAdminErrorMessage(mutation.error)} /> : null}
 
           <Field label="Nome da empresa" error={errors.companyName?.message}>
             <Input placeholder="Jamval Eletronicos" maxLength={200} {...register("companyName")} />
@@ -291,16 +309,7 @@ export function AdminSettingsPage() {
               type="button"
               variant="secondary"
               className="w-full sm:w-auto"
-              onClick={() =>
-                reset({
-                  companyName: companyProfileQuery.data.companyName,
-                  document: companyProfileQuery.data.document ? formatCnpjInput(companyProfileQuery.data.document) : "",
-                  phone: companyProfileQuery.data.phone ? formatPhoneInput(companyProfileQuery.data.phone) : "",
-                  address: companyProfileQuery.data.address ?? "",
-                  email: companyProfileQuery.data.email ?? "",
-                  contactName: companyProfileQuery.data.contactName ?? ""
-                })
-              }
+              onClick={requestDiscardChanges}
               disabled={!isDirty || mutation.isPending}
             >
               Descartar alterações
@@ -311,19 +320,24 @@ export function AdminSettingsPage() {
           </div>
         </form>
       </DrawerPanel>
+
+      <ConfirmDialog
+        open={discardAction !== null}
+        title="Descartar alterações?"
+        message="Os dados preenchidos ainda não foram salvos e serão perdidos se você sair agora."
+        confirmLabel="Descartar alterações"
+        onCancel={() => setDiscardAction(null)}
+        onConfirm={confirmDiscardChanges}
+      />
     </div>
   );
 }
 
 function SummaryRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
-    <Card className="space-y-1.5 p-3">
+    <div className="min-w-0 border-b border-[var(--jam-border)] py-2.5 last:border-b-0 sm:py-3">
       <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
-      <p className="text-sm font-semibold text-[var(--jam-ink)]">{value && value.trim().length > 0 ? value : "-"}</p>
-    </Card>
+      <p className="mt-1 break-words text-sm font-semibold text-[var(--jam-ink)]">{value && value.trim().length > 0 ? value : "-"}</p>
+    </div>
   );
-}
-
-function PlaceholderCopy({ text }: { text: string }) {
-  return <p className="text-sm text-[var(--jam-subtle)]">{text}</p>;
 }

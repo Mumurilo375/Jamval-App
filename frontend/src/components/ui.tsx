@@ -191,6 +191,110 @@ export function DrawerPanel({
   );
 }
 
+export function ConfirmDialog({
+  open,
+  title,
+  message,
+  confirmLabel,
+  onCancel,
+  onConfirm
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const titleId = useId();
+  const messageId = useId();
+  const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCancel();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.requestAnimationFrame(() => confirmButtonRef.current?.focus());
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      previousActiveElement?.focus();
+    };
+  }, [onCancel, open]);
+
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-[rgba(15,23,42,0.52)] backdrop-blur-[2px]"
+        onClick={onCancel}
+        aria-label="Cancelar confirmação"
+      />
+      <section
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
+        onKeyDown={(event) => {
+          if (event.key !== "Tab") {
+            return;
+          }
+
+          event.stopPropagation();
+          const focusableElements = event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          );
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+
+          if (!firstElement || !lastElement) {
+            event.preventDefault();
+            return;
+          }
+
+          if (event.shiftKey && document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          } else if (!event.shiftKey && document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }}
+        className="relative w-full max-w-[420px] rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-4 shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:p-5"
+      >
+        <h2 id={titleId} className="text-base font-semibold text-[var(--jam-ink)]">{title}</h2>
+        <p id={messageId} className="mt-2 text-[13px] leading-5 text-[var(--jam-subtle)]">{message}</p>
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={onCancel}>
+            Continuar editando
+          </Button>
+          <button
+            ref={confirmButtonRef}
+            type="button"
+            className="inline-flex min-h-9 w-full items-center justify-center rounded-xl bg-[rgba(180,35,24,0.08)] px-3 text-[12px] font-semibold text-[var(--jam-danger)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 sm:w-auto sm:px-3.5 sm:text-sm"
+            onClick={onConfirm}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function Button({
   className,
   variant = "primary",
