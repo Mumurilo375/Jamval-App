@@ -6,3 +6,4 @@ storage
 package-lock.json
 QA_FIXES.md
 DOCKER.md
+.impeccable/critique/

@@ -1,0 +1,2 @@
+ALTER TABLE "VisitItem"
+ADD COLUMN "quantityExchangeOnVisit" INTEGER NOT NULL DEFAULT 0;

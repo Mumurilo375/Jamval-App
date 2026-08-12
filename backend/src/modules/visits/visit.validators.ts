@@ -93,6 +93,7 @@ export function computeDraftVisitItem(
     | "quantityPrevious"
     | "quantityGoodRemaining"
     | "quantityDefectiveReturn"
+    | "quantityExchangeOnVisit"
     | "quantityLoss"
     | "suggestedRestockQuantity"
     | "restockedQuantity"
@@ -102,6 +103,7 @@ export function computeDraftVisitItem(
   assertNonNegative("quantityPrevious", input.quantityPrevious);
   assertNonNegative("quantityGoodRemaining", input.quantityGoodRemaining);
   assertNonNegative("quantityDefectiveReturn", input.quantityDefectiveReturn);
+  assertNonNegative("quantityExchangeOnVisit", input.quantityExchangeOnVisit);
   assertNonNegative("quantityLoss", input.quantityLoss);
   assertNonNegative("suggestedRestockQuantity", input.suggestedRestockQuantity);
   assertNonNegative("restockedQuantity", input.restockedQuantity);
@@ -131,6 +133,7 @@ export function computeDraftVisitItem(
     quantityPrevious: input.quantityPrevious,
     quantityGoodRemaining: input.quantityGoodRemaining,
     quantityDefectiveReturn: input.quantityDefectiveReturn,
+    quantityExchangeOnVisit: input.quantityExchangeOnVisit,
     quantityLoss: input.quantityLoss,
     quantitySold,
     unitPrice: toMoney(input.unitPrice),
@@ -151,6 +154,7 @@ export function mergeEditableVisitItemFields(
     quantityPrevious: patch.quantityPrevious ?? existing.quantityPrevious,
     quantityGoodRemaining: patch.quantityGoodRemaining ?? existing.quantityGoodRemaining,
     quantityDefectiveReturn: patch.quantityDefectiveReturn ?? existing.quantityDefectiveReturn,
+    quantityExchangeOnVisit: patch.quantityExchangeOnVisit ?? existing.quantityExchangeOnVisit,
     quantityLoss: patch.quantityLoss ?? existing.quantityLoss,
     unitPrice: patch.unitPrice ?? existing.unitPrice,
     suggestedRestockQuantity: patch.suggestedRestockQuantity ?? existing.suggestedRestockQuantity,
@@ -210,6 +214,7 @@ export function recomputeVisitItemForCompletion(
     | "quantityPrevious"
     | "quantityGoodRemaining"
     | "quantityDefectiveReturn"
+    | "quantityExchangeOnVisit"
     | "quantityLoss"
     | "restockedQuantity"
     | "unitPrice"
@@ -222,6 +227,7 @@ export function recomputeVisitItemForCompletion(
   assertNonNegative("quantityPrevious", item.quantityPrevious);
   assertNonNegative("quantityGoodRemaining", item.quantityGoodRemaining);
   assertNonNegative("quantityDefectiveReturn", item.quantityDefectiveReturn);
+  assertNonNegative("quantityExchangeOnVisit", item.quantityExchangeOnVisit);
   assertNonNegative("quantityLoss", item.quantityLoss);
   assertNonNegative("restockedQuantity", item.restockedQuantity);
 

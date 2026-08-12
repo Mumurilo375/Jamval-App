@@ -328,6 +328,45 @@ export class VisitCompletionService {
       );
     }
 
+    if (item.item.quantityExchangeOnVisit > 0) {
+      await this.stockRepository.createConsignedMovement(
+        {
+          clientId: visit.clientId,
+          productId: item.item.productId,
+          movementType: "DEFECTIVE_RETURN_OUT",
+          quantity: item.item.quantityExchangeOnVisit,
+          referenceType: VISIT_REFERENCE_TYPE,
+          referenceId,
+          note: `${movementNote} · troca feita na visita`
+        },
+        tx
+      );
+      await this.stockRepository.decreaseCentralBalance(item.item.productId, item.item.quantityExchangeOnVisit, tx);
+      await this.stockRepository.createCentralMovement(
+        {
+          productId: item.item.productId,
+          movementType: "RESTOCK_TO_CLIENT",
+          quantity: item.item.quantityExchangeOnVisit,
+          referenceType: VISIT_REFERENCE_TYPE,
+          referenceId,
+          note: `${movementNote} · reposição de troca`
+        },
+        tx
+      );
+      await this.stockRepository.createConsignedMovement(
+        {
+          clientId: visit.clientId,
+          productId: item.item.productId,
+          movementType: "RESTOCK_IN",
+          quantity: item.item.quantityExchangeOnVisit,
+          referenceType: VISIT_REFERENCE_TYPE,
+          referenceId,
+          note: `${movementNote} · reposição de troca`
+        },
+        tx
+      );
+    }
+
     if (item.item.quantityLoss > 0) {
       await this.stockRepository.createConsignedMovement(
         {
@@ -423,7 +462,8 @@ function aggregateRequiredCentralStock(
   const quantitiesByProduct = new Map<string, number>();
 
   for (const item of items) {
-    const requiredQuantity = visitType === "SALE" ? item.quantitySold : item.item.restockedQuantity;
+    const requiredQuantity =
+      visitType === "SALE" ? item.quantitySold : item.item.restockedQuantity + item.item.quantityExchangeOnVisit;
 
     if (requiredQuantity <= 0) {
       continue;
