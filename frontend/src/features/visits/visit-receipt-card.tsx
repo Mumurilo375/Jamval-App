@@ -4,7 +4,13 @@ import { Button, Card, ErrorBanner } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { formatDateTime } from "../../lib/format";
 import type { VisitDetail } from "../../types/domain";
-import { downloadVisitReceipt, generateVisitReceipt, getVisitReceipt, type VisitReceiptSummary } from "./visits-api";
+import {
+  downloadVisitReceipt,
+  generateVisitReceipt,
+  getVisitReceipt,
+  previewVisitReceipt,
+  type VisitReceiptSummary
+} from "./visits-api";
 
 type VisitReceiptCardProps = {
   visit: VisitDetail;
@@ -39,14 +45,18 @@ export function VisitReceiptCard({ visit }: VisitReceiptCardProps) {
   const downloadMutation = useMutation({
     mutationFn: (receipt: VisitReceiptSummary) => downloadVisitReceipt(receipt)
   });
+  const previewMutation = useMutation({
+    mutationFn: ({ receipt, previewWindow }: { receipt: VisitReceiptSummary; previewWindow: Window | null }) =>
+      previewVisitReceipt(receipt, previewWindow)
+  });
 
   if (visit.status !== "COMPLETED") {
     return null;
   }
 
-  const activeError = receiptQuery.error ?? generateMutation.error ?? downloadMutation.error;
+  const activeError = receiptQuery.error ?? generateMutation.error ?? downloadMutation.error ?? previewMutation.error;
   const receipt = receiptQuery.data;
-  const isBusy = generateMutation.isPending || downloadMutation.isPending;
+  const isBusy = generateMutation.isPending || downloadMutation.isPending || previewMutation.isPending;
   const title = visit.visitType === "SALE" ? "Comprovante de venda direta" : "Comprovante de acerto e reposição";
   const description =
     visit.visitType === "SALE"
@@ -72,7 +82,23 @@ export function VisitReceiptCard({ visit }: VisitReceiptCardProps) {
             <p className="mt-1 text-sm font-medium text-[var(--jam-ink)]">{formatDateTime(receipt.generatedAt)}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Button
+              variant="secondary"
+              disabled={isBusy}
+              onClick={() => {
+                const previewWindow = window.open("", "_blank");
+
+                if (previewWindow) {
+                  previewWindow.opener = null;
+                  previewWindow.document.title = "Carregando comprovante";
+                }
+
+                void previewMutation.mutateAsync({ receipt, previewWindow });
+              }}
+            >
+              {previewMutation.isPending ? "Abrindo..." : "Visualizar comprovante"}
+            </Button>
             <Button
               variant="secondary"
               disabled={isBusy}

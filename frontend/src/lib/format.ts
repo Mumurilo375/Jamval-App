@@ -26,7 +26,8 @@ export function formatDate(value: string | null | undefined): string {
     return "-";
   }
 
-  return shortDate.format(new Date(value));
+  const date = parseDateValue(value);
+  return Number.isNaN(date.getTime()) ? "-" : shortDate.format(date);
 }
 
 export function formatDateTime(value: string | null | undefined): string {
@@ -34,7 +35,19 @@ export function formatDateTime(value: string | null | undefined): string {
     return "-";
   }
 
-  return shortDateTime.format(new Date(value));
+  const date = parseDateValue(value);
+  return Number.isNaN(date.getTime()) ? "-" : shortDateTime.format(date);
+}
+
+function parseDateValue(value: string): Date {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
+  return new Date(value);
 }
 
 export function formatCount(value: number, singular: string, plural = `${singular}s`): string {
