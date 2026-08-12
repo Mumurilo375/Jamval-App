@@ -1,0 +1,76 @@
+name: ${COMPOSE_PROJECT_NAME:?COMPOSE_PROJECT_NAME is required}
+
+services:
+  db:
+    image: ${POSTGRES_IMAGE:?POSTGRES_IMAGE is required}
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - "${POSTGRES_PORT:?POSTGRES_PORT is required}:5432"
+    volumes:
+      - jamval_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -p ${DB_PORT:?DB_PORT is required}"]
+      interval: ${DB_HEALTHCHECK_INTERVAL:?DB_HEALTHCHECK_INTERVAL is required}
+      timeout: ${DB_HEALTHCHECK_TIMEOUT:?DB_HEALTHCHECK_TIMEOUT is required}
+      retries: ${DB_HEALTHCHECK_RETRIES:?DB_HEALTHCHECK_RETRIES is required}
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:?NODE_IMAGE is required}
+    working_dir: /workspace
+    command: >-
+      sh -c "npm run prisma:migrate:deploy --workspace backend &&
+      npm run dev --workspace backend"
+    ports:
+      - "${BACKEND_PORT:?BACKEND_PORT is required}:${BACKEND_PORT:?BACKEND_PORT is required}"
+    environment:
+      NODE_ENV: ${NODE_ENV:?NODE_ENV is required}
+      HOST: ${BACKEND_HOST:?BACKEND_HOST is required}
+      PORT: ${BACKEND_PORT:?BACKEND_PORT is required}
+      LOG_LEVEL: ${LOG_LEVEL:?LOG_LEVEL is required}
+      AUTH_SESSION_TTL_HOURS: ${AUTH_SESSION_TTL_HOURS:?AUTH_SESSION_TTL_HOURS is required}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:?AUTH_COOKIE_NAME is required}
+      CORS_ORIGIN: ${CORS_ORIGIN-}
+      DB_NAME: ${DB_NAME:?DB_NAME is required}
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      DB_HOST: ${DB_HOST:?DB_HOST is required}
+      DB_PORT: ${DB_PORT:?DB_PORT is required}
+      DB_LOGGING: ${DB_LOGGING:?DB_LOGGING is required}
+      STORAGE_ROOT: ${STORAGE_ROOT-}
+    volumes:
+      - ./:/workspace
+      - jamval_node_modules:/workspace/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:?NODE_IMAGE is required}
+    working_dir: /workspace
+    command: npm run dev --workspace frontend -- --host ${FRONTEND_HOST:?FRONTEND_HOST is required} --port ${FRONTEND_PORT:?FRONTEND_PORT is required}
+    ports:
+      - "${FRONTEND_PORT:?FRONTEND_PORT is required}:${FRONTEND_PORT:?FRONTEND_PORT is required}"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}
+      VITE_API_PROXY_TARGET: ${VITE_API_PROXY_TARGET:?VITE_API_PROXY_TARGET is required}
+    volumes:
+      - ./:/workspace
+      - jamval_node_modules:/workspace/node_modules
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  jamval_db_data:
+  jamval_node_modules:

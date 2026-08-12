@@ -166,7 +166,7 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 - Frontend e backend com deploy na Vercel
 - Banco PostgreSQL no Supabase
 - Migrations e seed com Prisma
-- Ambiente local com Docker Compose opcional
+- Ambiente local com Docker Compose
 - Coleção Postman para testar API
 
 ## Competências Demonstradas
@@ -184,6 +184,26 @@ Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento 
 - Deploy full stack com banco remoto.
 
 ## Como Rodar Localmente
+
+### Com Docker Compose (recomendado)
+
+Na raiz, configure o `.env` a partir do exemplo e altere a senha do banco:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+O comando aplica as migrations e inicia banco, backend e frontend. Para iniciar apenas uma parte:
+
+```bash
+docker compose up backend   # backend + banco
+docker compose up frontend  # frontend + backend + banco
+```
+
+URLs: `http://localhost:5173` (frontend) e `http://localhost:3333` (backend).
+
+### Sem Docker
 
 Na raiz do projeto:
 
