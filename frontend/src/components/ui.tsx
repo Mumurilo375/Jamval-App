@@ -284,7 +284,7 @@ export function ConfirmDialog({
           <button
             ref={confirmButtonRef}
             type="button"
-            className="inline-flex min-h-9 w-full items-center justify-center rounded-xl bg-[rgba(180,35,24,0.08)] px-3 text-[12px] font-semibold text-[var(--jam-danger)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 sm:w-auto sm:px-3.5 sm:text-sm"
+            className="inline-flex min-h-9 w-full items-center justify-center rounded-xl bg-[var(--jam-danger-soft)] px-3 text-[12px] font-semibold text-[var(--jam-danger)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 sm:w-auto sm:px-3.5 sm:text-sm"
             onClick={onConfirm}
           >
             {confirmLabel}
@@ -308,13 +308,13 @@ export function Button({
       : variant === "secondary"
         ? "border border-[var(--jam-border)] bg-white text-[var(--jam-ink)]"
         : variant === "danger"
-          ? "bg-[rgba(180,35,24,0.08)] text-[var(--jam-danger)]"
+          ? "bg-[var(--jam-danger-soft)] text-[var(--jam-danger)]"
         : "bg-transparent text-[var(--jam-subtle)]";
 
   return (
     <button
       className={cx(
-        "inline-flex min-h-9 items-center justify-center rounded-xl px-3 text-[12px] font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 sm:px-3.5 sm:text-sm",
+        "inline-flex min-h-9 items-center justify-center rounded-xl px-3 text-[12px] font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--jam-focus-ring)] sm:min-h-10 sm:px-3.5 sm:text-sm",
         variantClassName,
         className
       )}
@@ -377,7 +377,7 @@ export function Input({ onBeforeInput, onChange, ...props }: InputHTMLAttributes
         onChange?.(event);
       }}
       className={cx(
-        "min-h-10 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-[13px] text-[var(--jam-ink)] outline-none transition placeholder:text-slate-400 focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] sm:min-h-11 sm:px-3.5 sm:text-sm",
+        "min-h-10 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] px-3 py-2 text-base text-[var(--jam-ink)] outline-none transition placeholder:text-[var(--jam-placeholder)] focus:border-[var(--jam-focus-border)] focus:ring-4 focus:ring-[var(--jam-focus-ring)] aria-invalid:border-[var(--jam-danger)] sm:min-h-11 sm:px-3.5 sm:text-sm",
         props.className
       )}
     />
@@ -480,6 +480,7 @@ function DateValuePicker({
   );
 
   const [isOpen, setIsOpen] = useState(false);
+  const calendarId = useId();
   const [viewDate, setViewDate] = useState<Date>(() => {
     const base = selectedDate ?? new Date();
     return new Date(base.getFullYear(), base.getMonth(), 1);
@@ -587,8 +588,11 @@ function DateValuePicker({
           setIsOpen((current) => !current);
         }}
         disabled={disabled}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-controls={calendarId}
         className={cx(
-          "inline-flex min-h-10 w-full min-w-0 items-center justify-between rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-left text-base text-[var(--jam-ink)] outline-none transition focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-11 sm:px-3.5 sm:text-sm",
+          "inline-flex min-h-10 w-full min-w-0 items-center justify-between rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] px-3 py-2 text-left text-base text-[var(--jam-ink)] outline-none transition focus:border-[var(--jam-focus-border)] focus:ring-4 focus:ring-[var(--jam-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-11 sm:px-3.5 sm:text-sm",
           className
         )}
       >
@@ -599,7 +603,7 @@ function DateValuePicker({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 z-50 mt-2 w-[min(92vw,360px)] max-w-[calc(100vw-1rem)] rounded-2xl border border-[var(--jam-border)] bg-white p-3 shadow-[0_18px_42px_rgba(15,23,42,0.2)]">
+        <div id={calendarId} role="dialog" aria-label="Selecionar data" className="absolute left-0 z-50 mt-2 w-[min(92vw,360px)] max-w-[calc(100vw-1rem)] rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-3 shadow-[0_18px_42px_rgba(15,23,42,0.2)]">
           <div className="mb-3 flex items-center justify-between gap-2">
             <button
               type="button"
@@ -741,7 +745,7 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
     <select
       {...props}
       className={cx(
-        "min-h-10 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2 text-[13px] text-[var(--jam-ink)] outline-none transition focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] sm:min-h-11 sm:px-3.5 sm:text-sm",
+        "min-h-10 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] px-3 py-2 text-base text-[var(--jam-ink)] outline-none transition focus:border-[var(--jam-focus-border)] focus:ring-4 focus:ring-[var(--jam-focus-ring)] sm:min-h-11 sm:px-3.5 sm:text-sm",
         props.className
       )}
     />
@@ -753,7 +757,7 @@ export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
     <textarea
       {...props}
       className={cx(
-        "min-h-24 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2.5 text-[13px] text-[var(--jam-ink)] outline-none transition placeholder:text-slate-400 focus:border-[rgba(29,78,216,0.45)] focus:ring-4 focus:ring-[rgba(29,78,216,0.12)] sm:px-3.5 sm:py-3 sm:text-sm",
+        "min-h-24 w-full min-w-0 rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] px-3 py-2.5 text-base text-[var(--jam-ink)] outline-none transition placeholder:text-[var(--jam-placeholder)] focus:border-[var(--jam-focus-border)] focus:ring-4 focus:ring-[var(--jam-focus-ring)] sm:px-3.5 sm:py-3 sm:text-sm",
         props.className
       )}
     />
@@ -802,12 +806,16 @@ export function Field({
 }
 
 export function ErrorBanner({ message }: { message: string }) {
-  return <p className="rounded-xl border border-[rgba(180,35,24,0.14)] bg-[rgba(180,35,24,0.06)] px-3.5 py-3 text-sm font-medium text-[var(--jam-danger)]">{message}</p>;
+  return (
+    <p role="alert" aria-live="polite" className="rounded-xl border border-[var(--jam-danger-soft)] bg-[var(--jam-danger-soft)] px-3.5 py-3 text-sm font-medium text-[var(--jam-danger)]">
+      {message}
+    </p>
+  );
 }
 
 export function WarningBanner({ message }: { message: string }) {
   return (
-    <p className="rounded-xl border border-[rgba(180,83,9,0.18)] bg-[rgba(180,83,9,0.08)] px-3.5 py-3 text-sm font-medium text-[var(--jam-warning)]">
+    <p className="rounded-xl border border-[var(--jam-warning-soft)] bg-[var(--jam-warning-soft)] px-3.5 py-3 text-sm font-medium text-[var(--jam-warning)]">
       {message}
     </p>
   );
@@ -815,7 +823,7 @@ export function WarningBanner({ message }: { message: string }) {
 
 export function SuccessBanner({ message }: { message: string }) {
   return (
-    <p className="rounded-xl border border-[rgba(15,118,110,0.18)] bg-[rgba(15,118,110,0.08)] px-3.5 py-3 text-sm font-medium text-[var(--jam-success)]">
+    <p className="rounded-xl border border-[var(--jam-success-soft)] bg-[var(--jam-success-soft)] px-3.5 py-3 text-sm font-medium text-[var(--jam-success)]">
       {message}
     </p>
   );
@@ -826,7 +834,7 @@ export function StatusBadge({ active }: { active: boolean }) {
     <span
       className={cx(
         "rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]",
-        active ? "bg-[rgba(15,118,110,0.1)] text-[var(--jam-success)]" : "bg-slate-100 text-slate-600"
+        active ? "bg-[var(--jam-success-soft)] text-[var(--jam-success)]" : "bg-[var(--jam-neutral-soft)] text-[var(--jam-subtle)]"
       )}
     >
       {active ? "Ativo" : "Inativo"}
@@ -843,12 +851,12 @@ export function ToneBadge({
 }) {
   const toneClassName =
     tone === "success"
-      ? "bg-[rgba(15,118,110,0.1)] text-[var(--jam-success)]"
+      ? "bg-[var(--jam-success-soft)] text-[var(--jam-success)]"
       : tone === "warning"
-        ? "bg-[rgba(180,83,9,0.08)] text-[var(--jam-warning)]"
+        ? "bg-[var(--jam-warning-soft)] text-[var(--jam-warning)]"
         : tone === "danger"
-          ? "bg-[rgba(180,35,24,0.08)] text-[var(--jam-danger)]"
-          : "bg-slate-100 text-slate-700";
+          ? "bg-[var(--jam-danger-soft)] text-[var(--jam-danger)]"
+          : "bg-[var(--jam-neutral-soft)] text-[var(--jam-subtle)]";
 
   return <span className={cx("rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]", toneClassName)}>{label}</span>;
 }
@@ -933,19 +941,21 @@ export function PaginationControls({
 export function RetryableErrorState({
   title,
   message,
-  onRetry
+  onRetry,
+  isRetrying = false
 }: {
   title: string;
   message: string;
   onRetry: () => void;
+  isRetrying?: boolean;
 }) {
   return (
     <EmptyState
       title={title}
       message={message}
       action={
-        <Button type="button" variant="secondary" onClick={onRetry}>
-          Tentar novamente
+        <Button type="button" variant="secondary" onClick={onRetry} disabled={isRetrying} aria-busy={isRetrying}>
+          {isRetrying ? "Tentando..." : "Tentar novamente"}
         </Button>
       }
     />
@@ -960,7 +970,7 @@ export function ListSkeleton({
   className?: string;
 }) {
   return (
-    <Card className={cx("space-y-3", className)}>
+    <Card className={cx("space-y-3", className)} role="status" aria-live="polite" aria-label="Carregando dados">
       {Array.from({ length: rows }).map((_, index) => (
         <div key={index} className="animate-pulse rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] p-3">
           <div className="h-3 w-2/5 rounded-full bg-[rgba(100,116,139,0.22)]" />
@@ -1027,7 +1037,7 @@ export function EmptyState({
 
 export function PageLoader({ label = "Carregando..." }: { label?: string }) {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center">
+    <div className="flex min-h-[40vh] items-center justify-center" role="status" aria-live="polite">
       <div className="rounded-full border border-[var(--jam-border)] bg-white px-4 py-3 text-sm font-medium text-[var(--jam-subtle)] shadow-sm">
         {label}
       </div>

@@ -20,9 +20,18 @@
   --jam-subtle: #5b6472;
   --jam-accent: #1d4ed8;
   --jam-accent-soft: #dbeafe;
+  --jam-accent-wash: rgba(29, 78, 216, 0.06);
+  --jam-accent-border: rgba(29, 78, 216, 0.18);
+  --jam-focus-border: rgba(29, 78, 216, 0.45);
+  --jam-focus-ring: rgba(29, 78, 216, 0.12);
   --jam-success: #0f766e;
+  --jam-success-soft: rgba(15, 118, 110, 0.1);
   --jam-danger: #b42318;
+  --jam-danger-soft: rgba(180, 35, 24, 0.08);
   --jam-warning: #b45309;
+  --jam-warning-soft: rgba(180, 83, 9, 0.08);
+  --jam-neutral-soft: rgba(15, 23, 42, 0.05);
+  --jam-placeholder: #64748b;
   --jam-header-bg: rgba(243, 246, 249, 0.94);
 }
 
@@ -38,9 +47,18 @@
   --jam-subtle: #a7b2c2;
   --jam-accent: #60a5fa;
   --jam-accent-soft: rgba(96, 165, 250, 0.16);
+  --jam-accent-wash: rgba(96, 165, 250, 0.1);
+  --jam-accent-border: rgba(96, 165, 250, 0.3);
+  --jam-focus-border: rgba(96, 165, 250, 0.62);
+  --jam-focus-ring: rgba(96, 165, 250, 0.2);
   --jam-success: #5eead4;
+  --jam-success-soft: rgba(94, 234, 212, 0.14);
   --jam-danger: #f87171;
+  --jam-danger-soft: rgba(248, 113, 113, 0.14);
   --jam-warning: #fbbf24;
+  --jam-warning-soft: rgba(251, 191, 36, 0.14);
+  --jam-neutral-soft: rgba(148, 163, 184, 0.14);
+  --jam-placeholder: #a7b2c2;
   --jam-header-bg: rgba(15, 23, 42, 0.94);
 }
 
@@ -70,7 +88,7 @@ body {
 }
 
 :root[data-theme="dark"] .placeholder\:text-slate-400::placeholder {
-  color: #94a3b8;
+  color: var(--jam-placeholder);
 }
 
 #root {
@@ -90,6 +108,18 @@ textarea {
   font-family: inherit;
 }
 
+:focus-visible {
+  outline: 3px solid var(--jam-focus-border);
+  outline-offset: 2px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -101,6 +131,17 @@ a {
 
 .page-fade {
   animation: page-fade 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @keyframes page-fade {

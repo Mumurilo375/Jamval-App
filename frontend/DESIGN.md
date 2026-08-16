@@ -10,9 +10,18 @@ colors:
   subtle: "#5b6472"
   technical-blue: "#1d4ed8"
   blue-soft: "#dbeafe"
+  accent-wash: "rgba(29, 78, 216, 0.06)"
+  accent-border: "rgba(29, 78, 216, 0.18)"
+  focus-border: "rgba(29, 78, 216, 0.45)"
+  focus-ring: "rgba(29, 78, 216, 0.12)"
   success-teal: "#0f766e"
+  success-soft: "rgba(15, 118, 110, 0.1)"
   danger-red: "#b42318"
+  danger-soft: "rgba(180, 35, 24, 0.08)"
   warning-amber: "#b45309"
+  warning-soft: "rgba(180, 83, 9, 0.08)"
+  neutral-soft: "rgba(15, 23, 42, 0.05)"
+  placeholder: "#64748b"
   dark-canvas: "#0f172a"
   dark-panel: "#172033"
   dark-panel-strong: "#202b3d"
@@ -115,6 +124,17 @@ The palette is a cool neutral field with a restrained technical blue for action 
 - **Borda azul-cinza** (`#d9e2ec`): Quiet separation between controls and regions.
 - **Tinta** (`#111827`): Primary text.
 - **Subtle** (`#5b6472`): Supporting text, metadata, and eyebrow labels.
+- **Placeholder** (`#64748b`): Placeholder and empty-input guidance; use the theme override in dark mode rather than a literal gray.
+
+### Operational State Tokens
+
+- **Accent wash / border** (`--jam-accent-wash`, `--jam-accent-border`): Focused work areas and the current step.
+- **Success soft** (`--jam-success-soft`): Completed, paid, and healthy states.
+- **Warning soft** (`--jam-warning-soft`): Return queues, pending work, and review-needed states.
+- **Danger soft** (`--jam-danger-soft`): Validation failures and destructive actions.
+- **Neutral soft** (`--jam-neutral-soft`): Quiet secondary counts and inactive controls.
+
+Every state token has light and dark theme values in `src/index.css`. Components should consume these semantic variables instead of embedding rgba or slate literals.
 
 ### Named Rules
 
@@ -190,7 +210,11 @@ Inputs use a white background, cool border, 0.75rem radius, minimum 40px height,
 
 ### Navigation
 
-Desktop navigation is grouped into “Operação” and “Apoio”, with active states carried by the technical blue. Mobile navigation collapses into a drawer opened by a clearly visible menu button. The fixed header identifies the current area and keeps the shell context available while scrolling.
+Desktop navigation is grouped into “Operação”, “Cadastros”, and “Administração”. The first group contains the daily workflow; the latter two separate support records from higher-risk configuration. Active states use the technical blue and semantic accent tokens. Mobile navigation collapses into a drawer opened by a clearly visible menu button. The fixed header identifies the current area and keeps the shell context available while scrolling.
+
+### Complex Operational Flows
+
+Consignment visits use a persistent five-step progress control: Produtos, Conferência e trocas, Recebimento, Reposição, and Revisão. Only the active stage is visible in the main work area; the summary remains available above it. The final review keeps financial and inventory consequences together immediately before completion.
 
 ### Operational Summary
 

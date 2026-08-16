@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-import { PageLoader } from "../../components/ui";
+import { PageLoader, RetryableErrorState } from "../../components/ui";
 import { AppShell } from "../../components/shell";
 import { useAuthSession } from "./auth";
 
@@ -13,7 +13,13 @@ export function ProtectedApp() {
   }
 
   if (sessionQuery.error) {
-    return <PageLoader label="Não foi possível validar a sessão." />;
+    return (
+      <RetryableErrorState
+        title="Não foi possível validar a sessão"
+        message="Confira sua conexão e tente novamente para abrir a operação."
+        onRetry={() => void sessionQuery.refetch()}
+      />
+    );
   }
 
   if (!sessionQuery.data) {

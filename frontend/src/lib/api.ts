@@ -16,6 +16,8 @@ type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
 };
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly code: string;
@@ -42,13 +44,17 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   let response: Response;
 
   try {
-    response = await fetch(`${env.apiBaseUrl}${path}`, {
+    response = await fetchWithTimeout(`${env.apiBaseUrl}${path}`, {
       ...options,
       headers,
       body: body as BodyInit | null | undefined,
       credentials: "include"
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
     throw new ApiError(0, "NETWORK_ERROR", "Não foi possível conectar ao backend.", null);
   }
 
@@ -59,7 +65,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiError(
       response.status,
       payload?.error?.code ?? "HTTP_ERROR",
-      payload?.error?.message ?? getFallbackErrorMessage(response, text),
+      payload?.error?.message ?? getFallbackErrorMessage(response),
       payload?.error?.details ?? null
     );
   }
@@ -75,7 +81,7 @@ export async function downloadApiFile(path: string, fallbackFileName: string): P
   let response: Response;
 
   try {
-    response = await fetch(`${env.apiBaseUrl}${path}`, {
+    response = await fetchWithTimeout(`${env.apiBaseUrl}${path}`, {
       credentials: "include"
     });
   } catch {
@@ -89,7 +95,7 @@ export async function downloadApiFile(path: string, fallbackFileName: string): P
     throw new ApiError(
       response.status,
       payload?.error?.code ?? "HTTP_ERROR",
-      payload?.error?.message ?? getFallbackErrorMessage(response, text),
+      payload?.error?.message ?? getFallbackErrorMessage(response),
       payload?.error?.details ?? null
     );
   }
@@ -116,7 +122,7 @@ export async function previewApiPdf(path: string, previewWindow: Window | null):
   }
 
   try {
-    const response = await fetch(`${env.apiBaseUrl}${path}`, {
+    const response = await fetchWithTimeout(`${env.apiBaseUrl}${path}`, {
       credentials: "include"
     });
 
@@ -127,7 +133,7 @@ export async function previewApiPdf(path: string, previewWindow: Window | null):
       throw new ApiError(
         response.status,
         payload?.error?.code ?? "HTTP_ERROR",
-        payload?.error?.message ?? getFallbackErrorMessage(response, text),
+        payload?.error?.message ?? getFallbackErrorMessage(response),
         payload?.error?.details ?? null
       );
     }
@@ -180,14 +186,28 @@ function parseResponsePayload<T>(response: Response, text: string): (ApiEnvelope
   }
 }
 
-function getFallbackErrorMessage(response: Response, text: string): string {
-  const trimmed = text.trim();
-
-  if (trimmed.length > 0) {
-    return trimmed;
+function getFallbackErrorMessage(response: Response): string {
+  switch (response.status) {
+    case 400:
+      return "Confira os dados informados e tente novamente.";
+    case 401:
+      return "Sua sessão expirou. Entre novamente para continuar.";
+    case 403:
+      return "Você não tem permissão para realizar esta ação.";
+    case 404:
+      return "O registro solicitado não foi encontrado.";
+    case 409:
+      return "Esta alteração entrou em conflito com outra atualização.";
+    case 429:
+      return "Muitas tentativas em sequência. Aguarde um pouco e tente novamente.";
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return "O backend está indisponível no momento. Tente novamente em instantes.";
+    default:
+      return response.statusText || "Falha na requisição.";
   }
-
-  return response.statusText || "Falha na requisicao.";
 }
 
 function parseContentDisposition(contentDisposition: string | null): string | null {
@@ -198,9 +218,38 @@ function parseContentDisposition(contentDisposition: string | null): string | nu
   const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
 
   if (utf8Match?.[1]) {
-    return decodeURIComponent(utf8Match[1]);
+    try {
+      return decodeURIComponent(utf8Match[1]);
+    } catch {
+      return fallbackFileNameFromHeader(contentDisposition);
+    }
   }
 
-  const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
-  return fileNameMatch?.[1] ?? null;
+  return fallbackFileNameFromHeader(contentDisposition);
+}
+
+function fallbackFileNameFromHeader(contentDisposition: string): string | null {
+  const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+  return fileNameMatch?.[1]?.trim() || null;
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (init?.signal) {
+    return fetch(input, init);
+  }
+
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError(0, "TIMEOUT", "A conexão demorou demais. Confira sua rede e tente novamente.", null);
+    }
+
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 }
