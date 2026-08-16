@@ -78,6 +78,16 @@ type PendingConsignmentAction =
   | { type: "CANCEL" }
   | null;
 
+type ConsignmentStep = "items" | "adjustments" | "payment" | "restock" | "review";
+
+const consignmentSteps: Array<{ id: ConsignmentStep; label: string; shortLabel: string }> = [
+  { id: "items", label: "Produtos", shortLabel: "Itens" },
+  { id: "adjustments", label: "Conferência e trocas", shortLabel: "Ajustes" },
+  { id: "payment", label: "Recebimento", shortLabel: "Receber" },
+  { id: "restock", label: "Reposição", shortLabel: "Repor" },
+  { id: "review", label: "Revisão", shortLabel: "Revisar" }
+];
+
 type RowViewModel = {
   item: VisitItem;
   draft: ItemDraftState;
@@ -106,6 +116,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
   const autoPopulateAttemptedRef = useRef<string | null>(null);
   const isDraft = visit.status === "DRAFT";
   const isReadOnly = !isDraft;
+  const [activeStep, setActiveStep] = useState<ConsignmentStep>(isDraft ? "items" : "review");
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [itemDrafts, setItemDrafts] = useState<Record<string, ItemDraftState>>(() => buildItemDraftMap(visit.items));
   const [receivedAmountInput, setReceivedAmountInput] = useState(String(visitNumber(visit.receivedAmountOnVisit)));
@@ -320,12 +331,18 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
     cancelMutation.isPending ||
     completeMutation.isPending;
   const canConclude = rowViewModels.length > 0;
+  const activeStepIndex = consignmentSteps.findIndex((step) => step.id === activeStep);
 
   const updateItemDraft = (itemId: string, changes: Partial<ItemDraftState>) => {
-    setItemDrafts((current) => ({
-      ...current,
-      [itemId]: { ...current[itemId], ...changes }
-    }));
+    setItemDrafts((current) => {
+      const item = visit.items.find((candidate) => candidate.id === itemId);
+      const fallback = item ? createItemDraft(item) : undefined;
+
+      return {
+        ...current,
+        [itemId]: { ...fallback, ...current[itemId], ...changes }
+      };
+    });
   };
 
   const setExchangeType = (itemId: string, type: "later" | "now") => {
@@ -430,6 +447,36 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
     setPendingAction({ type: "CONCLUDE" });
   };
 
+  const goToNextStep = () => {
+    if (activeStep === "items" && !canConclude) {
+      setDraftValidationError("Adicione pelo menos um produto antes de seguir para a conferência.");
+      return;
+    }
+
+    if (activeStep === "adjustments" && rowValidationErrors.length > 0) {
+      setDraftValidationError("Revise a conferência antes de seguir. Existem produtos com saldo negativo ou campos inválidos.");
+      return;
+    }
+
+    if (activeStep === "payment" && receivedAmountError) {
+      setDraftValidationError(receivedAmountError);
+      return;
+    }
+
+    setDraftValidationError(null);
+    const nextStep = consignmentSteps[activeStepIndex + 1];
+    if (nextStep) {
+      setActiveStep(nextStep.id);
+    }
+  };
+
+  const goToPreviousStep = () => {
+    const previousStep = consignmentSteps[activeStepIndex - 1];
+    if (previousStep) {
+      setActiveStep(previousStep.id);
+    }
+  };
+
   const onConfirmPaymentAndConclude = async () => {
     if (!paymentMethods.some((method) => method === paymentMethod)) {
       return;
@@ -508,11 +555,13 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         }
       />
 
+      <VisitStepProgress activeStep={activeStep} onChange={setActiveStep} readOnly={isReadOnly} />
+
       <Card className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <MetricCell label="Data da visita" value={formatDate(visit.visitedAt)} />
-          <MetricCell label="Produtos" value={String(visit.items.length)} />
-          <MetricCell label="Recebido" value={formatCurrency(visitNumber(visit.receivedAmountOnVisit))} />
+          <MetricCell label="Produtos" value={String(totals.itemCount)} />
+          <MetricCell label="Recebido" value={formatCurrency(safeReceivedAmount)} />
         </div>
 
         {isDraft ? (
@@ -529,11 +578,12 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         ) : null}
       </Card>
 
+      <section hidden={activeStep !== "items" && activeStep !== "adjustments"}>
       <Card className="space-y-4">
         <StepHeader
-          step="Etapa 1"
-          title="Conferir venda do período"
-          subtitle="Preencha vendida; trocas e perdas ficam em ajustes."
+          step={activeStep === "items" ? "Etapa 1 de 5" : "Etapa 2 de 5"}
+          title={activeStep === "items" ? "Produtos da visita" : "Conferência e trocas"}
+          subtitle={activeStep === "items" ? "Confira os produtos da base anterior e informe o que foi vendido." : "Registre trocas, perdas e o restante de cada produto."}
           action={
             isDraft ? (
               <Button className="w-full sm:w-auto" onClick={() => setIsAddProductOpen(true)}>
@@ -544,7 +594,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         />
 
         {autoPopulateCount > 0 ? (
-          <div className="rounded-xl border border-[rgba(29,78,216,0.16)] bg-[rgba(29,78,216,0.05)] px-3.5 py-3 text-sm text-[var(--jam-ink)]">
+          <div className="rounded-xl border border-[var(--jam-accent-border)] bg-[var(--jam-accent-wash)] px-3.5 py-3 text-sm text-[var(--jam-ink)]">
             A base anterior do cliente foi carregada automaticamente a partir do histórico recente.
           </div>
         ) : null}
@@ -581,7 +631,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
             </div>
 
             {rowViewModels.map((row) => {
-              const isExpanded = expandedRows[row.item.id] ?? false;
+              const isExpanded = activeStep === "adjustments" || (expandedRows[row.item.id] ?? false);
 
               return (
                 <div key={row.item.id} className="rounded-2xl border border-[var(--jam-border)] bg-white p-3">
@@ -774,12 +824,24 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
             })}
           </div>
         )}
+        {isDraft ? (
+          <FlowStepFooter
+            backLabel={activeStep === "adjustments" ? "Voltar aos produtos" : undefined}
+            nextLabel={activeStep === "items" ? "Continuar para conferência" : "Continuar para recebimento"}
+            onBack={activeStep === "adjustments" ? goToPreviousStep : undefined}
+            onNext={goToNextStep}
+            disabled={isBusy}
+          />
+        ) : null}
       </Card>
+      </section>
 
+      <section hidden={activeStep !== "payment"}>
       <Card className="space-y-4">
         <StepHeader
-          step="Etapa 2"
-          title="Receber"
+          step="Etapa 3 de 5"
+          title="Recebimento"
+          subtitle="Registre o valor pago agora; o saldo pendente fica calculado automaticamente."
         />
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -800,11 +862,16 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         ) : (
           <p className="text-sm text-[var(--jam-subtle)]">O valor recebido ficou registrado junto com esta visita.</p>
         )}
+        {isDraft ? (
+          <FlowStepFooter backLabel="Voltar para conferência" onBack={goToPreviousStep} nextLabel="Continuar para reposição" onNext={goToNextStep} disabled={isBusy} />
+        ) : null}
       </Card>
+      </section>
 
+      <section hidden={activeStep !== "restock"}>
       <Card className="space-y-4">
         <StepHeader
-          step="Etapa 3"
+          step="Etapa 4 de 5"
           title="Repor e gerar nova base"
           subtitle="Informe apenas o que vai hoje. A nova base sai automaticamente."
         />
@@ -891,14 +958,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         {activeCompletionError ? <ErrorBanner message={activeCompletionError} /> : null}
 
         {isDraft ? (
-          <StickyActionBar>
-            <Button variant="secondary" disabled={isBusy} onClick={() => void saveDraft()}>
-              {saveBusy ? "Salvando..." : "Salvar rascunho"}
-            </Button>
-            <Button disabled={isBusy || !canConclude} onClick={() => void onConclude()}>
-              {saveBusy ? "Salvando..." : completeMutation.isPending ? "Concluindo..." : "Concluir visita"}
-            </Button>
-          </StickyActionBar>
+          <FlowStepFooter backLabel="Voltar para recebimento" onBack={goToPreviousStep} nextLabel="Revisar antes de concluir" onNext={goToNextStep} disabled={isBusy} />
         ) : (
           <p className="text-sm text-[var(--jam-subtle)]">
             {visit.status === "COMPLETED"
@@ -907,9 +967,46 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
           </p>
         )}
       </Card>
+      </section>
+
+      <section hidden={activeStep !== "review"} className="space-y-4">
+        <Card className="space-y-4 border-[var(--jam-accent-border)] bg-[var(--jam-accent-wash)]">
+          <StepHeader
+            step="Etapa 5 de 5"
+            title="Revisar e concluir"
+            subtitle="Confira os números antes de registrar a visita. Depois disso, ela ficará somente para leitura."
+          />
+          <div className="grid gap-2 sm:grid-cols-4">
+            <MetricCell label="Produtos" value={String(totals.itemCount)} />
+            <MetricCell label="Vendida" value={String(totals.quantitySold)} />
+            <MetricCell label="Recebido" value={formatCurrency(safeReceivedAmount)} />
+            <MetricCell label="Saldo pendente" value={formatCurrency(pendingAmount)} emphasize />
+          </div>
+          <div className="grid gap-2 text-sm text-[var(--jam-subtle)] sm:grid-cols-2">
+            <p>Reposição hoje: <span className="font-semibold text-[var(--jam-ink)]">{totals.restockedQuantity}</span></p>
+            <p>Nova base: <span className="font-semibold text-[var(--jam-ink)]">{totals.nextBaseQuantity}</span></p>
+          </div>
+          {draftValidationError ? <ErrorBanner message={draftValidationError} /> : null}
+          {activeDraftError ? <ErrorBanner message={activeDraftError} /> : null}
+          {activeCompletionError ? <ErrorBanner message={activeCompletionError} /> : null}
+          {isDraft ? (
+            <StickyActionBar>
+              <Button variant="secondary" disabled={isBusy} onClick={() => void saveDraft()}>
+                {saveBusy ? "Salvando..." : "Salvar rascunho"}
+              </Button>
+              <Button disabled={isBusy || !canConclude} onClick={() => void onConclude()}>
+                {saveBusy ? "Salvando..." : completeMutation.isPending ? "Concluindo..." : "Concluir visita"}
+              </Button>
+            </StickyActionBar>
+          ) : (
+            <p className="text-sm text-[var(--jam-subtle)]">{visit.status === "COMPLETED" ? "Visita concluída e conferência preservada para consulta." : "Visita cancelada e disponível apenas para consulta."}</p>
+          )}
+        </Card>
+      </section>
 
       {visit.status === "COMPLETED" ? <VisitReceiptCard visit={visit} /> : null}
 
+      <section hidden={activeStep !== "review"} className="space-y-4">
       <Card className="space-y-4">
         <StepHeader step="Observações" title="Observações da visita" />
         {isDraft ? (
@@ -940,6 +1037,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
           </Button>
         </Card>
       ) : null}
+      </section>
 
       <DrawerPanel
         open={pendingAction !== null}
@@ -1209,10 +1307,10 @@ function ExchangeOption({
         }
       }}
       className={cx(
-        "rounded-xl border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--jam-blue)]",
+        "rounded-xl border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--jam-accent)]",
         checked
-          ? "border-[var(--jam-blue)] bg-[rgba(29,78,216,0.07)]"
-          : "border-[var(--jam-border)] bg-white",
+          ? "border-[var(--jam-accent)] bg-[var(--jam-accent-wash)]"
+          : "border-[var(--jam-border)] bg-[var(--jam-panel)]",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
       )}
     >
@@ -1221,10 +1319,10 @@ function ExchangeOption({
           aria-hidden="true"
           className={cx(
             "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-            checked ? "border-[var(--jam-blue)]" : "border-[var(--jam-border)]"
+            checked ? "border-[var(--jam-accent)]" : "border-[var(--jam-border)]"
           )}
         >
-          {checked ? <span className="h-2.5 w-2.5 rounded-full bg-[var(--jam-blue)]" /> : null}
+          {checked ? <span className="h-2.5 w-2.5 rounded-full bg-[var(--jam-accent)]" /> : null}
         </span>
         <span className="min-w-0">
           <span className="block text-sm font-semibold text-[var(--jam-ink)]">{title}</span>
@@ -1247,12 +1345,25 @@ function buildRowViewModel({
   availableCentralQuantity: number;
   validateCentralStock: boolean;
 }): RowViewModel {
-  const quantitySoldInput = parseCountInput(draft.quantitySold);
-  const quantityDefectiveReturnInput = parseCountInput(draft.quantityDefectiveReturn);
-  const quantityExchangeOnVisitInput = parseCountInput(draft.quantityExchangeOnVisit);
-  const quantityLossInput = parseCountInput(draft.quantityLoss);
-  const unitPriceInput = parseMoneyInput(draft.unitPrice);
-  const restockedQuantityInput = parseCountInput(draft.restockedQuantity);
+  // Drafts can briefly be partial when a new item arrives from the API and a
+  // user edits another field in the same render. Keep the view model total.
+  const safeDraft: ItemDraftState = {
+    ...createItemDraft(item),
+    ...draft,
+    quantitySold: draft.quantitySold ?? createItemDraft(item).quantitySold,
+    quantityDefectiveReturn: draft.quantityDefectiveReturn ?? createItemDraft(item).quantityDefectiveReturn,
+    quantityExchangeOnVisit: draft.quantityExchangeOnVisit ?? createItemDraft(item).quantityExchangeOnVisit,
+    quantityLoss: draft.quantityLoss ?? createItemDraft(item).quantityLoss,
+    unitPrice: draft.unitPrice ?? createItemDraft(item).unitPrice,
+    restockedQuantity: draft.restockedQuantity ?? createItemDraft(item).restockedQuantity,
+    notes: draft.notes ?? createItemDraft(item).notes
+  };
+  const quantitySoldInput = parseCountInput(safeDraft.quantitySold);
+  const quantityDefectiveReturnInput = parseCountInput(safeDraft.quantityDefectiveReturn);
+  const quantityExchangeOnVisitInput = parseCountInput(safeDraft.quantityExchangeOnVisit);
+  const quantityLossInput = parseCountInput(safeDraft.quantityLoss);
+  const unitPriceInput = parseMoneyInput(safeDraft.unitPrice);
+  const restockedQuantityInput = parseCountInput(safeDraft.restockedQuantity);
 
   const quantitySold = Number.isNaN(quantitySoldInput) ? 0 : quantitySoldInput;
   const quantityDefectiveReturn = Number.isNaN(quantityDefectiveReturnInput) ? 0 : quantityDefectiveReturnInput;
@@ -1295,7 +1406,7 @@ function buildRowViewModel({
 
   return {
     item,
-    draft,
+    draft: safeDraft,
     quantitySold,
     quantityDefectiveReturn,
     quantityExchangeOnVisit,
@@ -1319,8 +1430,8 @@ function buildRowViewModel({
   };
 }
 
-function parseCountInput(value: string): number {
-  const trimmed = value.trim();
+function parseCountInput(value: unknown): number {
+  const trimmed = typeof value === "string" ? value.trim() : "";
 
   if (trimmed === "") {
     return 0;
@@ -1333,8 +1444,8 @@ function parseCountInput(value: string): number {
   return Number(trimmed);
 }
 
-function parseMoneyInput(value: string): number {
-  if (value.trim() === "") {
+function parseMoneyInput(value: unknown): number {
+  if (typeof value !== "string" || value.trim() === "") {
     return 0;
   }
 
@@ -1426,6 +1537,90 @@ function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
   }
 
   return "Outro";
+}
+
+function VisitStepProgress({
+  activeStep,
+  onChange,
+  readOnly
+}: {
+  activeStep: ConsignmentStep;
+  onChange: (step: ConsignmentStep) => void;
+  readOnly: boolean;
+}) {
+  const activeIndex = consignmentSteps.findIndex((step) => step.id === activeStep);
+
+  return (
+    <nav aria-label="Etapas da visita" className="rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-2">
+      <ol className="grid gap-1 sm:grid-cols-5">
+        {consignmentSteps.map((step, index) => {
+          const isActive = step.id === activeStep;
+          const isComplete = index < activeIndex;
+
+          return (
+            <li key={step.id}>
+              <button
+                type="button"
+                onClick={() => onChange(step.id)}
+                aria-current={isActive ? "step" : undefined}
+                className={cx(
+                  "flex min-h-12 w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition sm:flex-col sm:items-start sm:gap-1 sm:px-3",
+                  isActive
+                    ? "bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
+                    : "text-[var(--jam-subtle)] hover:bg-[var(--jam-panel-strong)] hover:text-[var(--jam-ink)]"
+                )}
+              >
+                <span
+                  className={cx(
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                    isActive
+                      ? "bg-[var(--jam-accent)] text-white"
+                      : isComplete
+                        ? "bg-[var(--jam-success-soft)] text-[var(--jam-success)]"
+                        : "bg-[var(--jam-neutral-soft)] text-[var(--jam-subtle)]"
+                  )}
+                >
+                  {index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="hidden text-[11px] font-semibold sm:block">{step.label}</span>
+                  <span className="block truncate text-xs font-semibold sm:hidden">{step.shortLabel}</span>
+                  <span className="hidden text-[10px] text-[var(--jam-subtle)] sm:block">{isActive ? "Em foco" : isComplete ? "Conferida" : readOnly ? "Consultar" : "Pendente"}</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+function FlowStepFooter({
+  backLabel,
+  nextLabel,
+  onBack,
+  onNext,
+  disabled
+}: {
+  backLabel?: string;
+  nextLabel: string;
+  onBack?: () => void;
+  onNext: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-2 border-t border-[var(--jam-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+      {backLabel && onBack ? (
+        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={onBack} disabled={disabled}>
+          {backLabel}
+        </Button>
+      ) : <span aria-hidden="true" />}
+      <Button type="button" className="w-full sm:w-auto" onClick={onNext} disabled={disabled}>
+        {nextLabel}
+      </Button>
+    </div>
+  );
 }
 
 function StepHeader({

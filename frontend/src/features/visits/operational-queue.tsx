@@ -56,7 +56,7 @@ export function ReturnQueueList({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[rgba(29,78,216,0.08)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-accent)]">
+                <span className="rounded-full bg-[var(--jam-accent-wash)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-accent)]">
                   Fila de retorno
                 </span>
                 <p className="text-sm text-[var(--jam-subtle)]">{formatReturnQueueSummary(item)}</p>
@@ -217,7 +217,7 @@ export function QueueSegmentControl({
           className={cx(
             "rounded-xl border px-3 py-3 text-left transition",
             value === option.value
-              ? "border-[var(--jam-accent)] bg-[rgba(29,78,216,0.08)]"
+              ? "border-[var(--jam-accent)] bg-[var(--jam-accent-wash)]"
               : "border-[var(--jam-border)] bg-white"
           )}
         >
@@ -246,8 +246,8 @@ function VisitTypeBadge({ visitType }: { visitType: VisitType }) {
       className={cx(
         "rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]",
         visitType === "SALE"
-          ? "bg-[rgba(15,118,110,0.1)] text-[var(--jam-success)]"
-          : "bg-[rgba(29,78,216,0.08)] text-[var(--jam-accent)]"
+          ? "bg-[var(--jam-success-soft)] text-[var(--jam-success)]"
+          : "bg-[var(--jam-accent-wash)] text-[var(--jam-accent)]"
       )}
     >
       {visitTypeLabel(visitType)}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode, type RefObject } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 import { useLogout, useSessionUser } from "../features/auth/auth";
@@ -38,7 +38,7 @@ const navigationSections: NavigationSection[] = [
       },
       {
         to: "/financeiro",
-        label: "Receber",
+        label: "Financeiro",
         icon: <FinanceIcon />,
         isActive: (pathname) => pathname.startsWith("/financeiro") || pathname.startsWith("/pendencias")
       },
@@ -51,7 +51,7 @@ const navigationSections: NavigationSection[] = [
     ]
   },
   {
-    title: "Apoio",
+    title: "Cadastros",
     variant: "secondary",
     items: [
       {
@@ -76,9 +76,15 @@ const navigationSections: NavigationSection[] = [
         icon: <ReceiptIcon />,
         isActive: (pathname) => pathname.startsWith("/receipts")
       },
+    ]
+  },
+  {
+    title: "Administração",
+    variant: "secondary",
+    items: [
       {
         to: "/admin/dashboard",
-        label: "Administração",
+        label: "Painel administrativo",
         icon: <SettingsIcon />,
         isActive: (pathname) => pathname.startsWith("/admin")
       }
@@ -92,6 +98,8 @@ export function AppShell() {
   const logoutMutation = useLogout();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(() => getInitialTheme());
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const mobileCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const firstName = user?.name.split(" ")[0] ?? "Admin";
   const isDarkTheme = theme === "dark";
   const activeNavigationItem = useMemo(
@@ -125,6 +133,20 @@ export function AppShell() {
       return;
     }
 
+    const previousFocusTarget = menuButtonRef.current;
+    const animationFrameId = window.requestAnimationFrame(() => mobileCloseButtonRef.current?.focus());
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      previousFocusTarget?.focus();
+    };
+  }, [isDrawerOpen]);
+
+  useEffect(() => {
+    if (!isDrawerOpen) {
+      return;
+    }
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsDrawerOpen(false);
@@ -141,6 +163,7 @@ export function AppShell() {
         <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center justify-between gap-2.5 px-2.5 sm:h-14 sm:px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
+              ref={menuButtonRef}
               type="button"
               className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-ink)] transition hover:bg-[var(--jam-panel-strong)] sm:h-9 sm:w-9 md:hidden"
               onClick={() => setIsDrawerOpen(true)}
@@ -178,33 +201,35 @@ export function AppShell() {
       </header>
 
       <div className="md:hidden">
-        <div
-          className={cx(
-            "fixed inset-0 z-50 bg-[rgba(15,23,42,0.36)] transition-opacity duration-200",
-            isDrawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-          )}
-          onClick={() => setIsDrawerOpen(false)}
-        />
-        <aside
-          id="mobile-navigation"
-          className={cx(
-            "fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[300px] flex-col border-r border-[var(--jam-border)] bg-[var(--jam-panel)] shadow-[0_24px_48px_rgba(15,23,42,0.18)] transition-transform duration-200",
-            isDrawerOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-          aria-hidden={!isDrawerOpen}
-        >
-          <NavigationPanel
-            firstName={firstName}
-            pathname={location.pathname}
-            onNavigate={() => setIsDrawerOpen(false)}
-            onClose={() => setIsDrawerOpen(false)}
-            onLogout={() => {
-              setIsDrawerOpen(false);
-              void logoutMutation.mutateAsync();
-            }}
-            isLoggingOut={logoutMutation.isPending}
-          />
-        </aside>
+        {isDrawerOpen ? (
+          <>
+            <button
+              type="button"
+              aria-label="Fechar menu"
+              className="fixed inset-0 z-50 bg-[rgba(15,23,42,0.36)]"
+              onClick={() => setIsDrawerOpen(false)}
+            />
+            <aside
+              id="mobile-navigation"
+              role="dialog"
+              aria-label="Menu principal"
+              className="fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[300px] flex-col border-r border-[var(--jam-border)] bg-[var(--jam-panel)] shadow-[0_24px_48px_rgba(15,23,42,0.18)]"
+            >
+              <NavigationPanel
+                firstName={firstName}
+                pathname={location.pathname}
+                onNavigate={() => setIsDrawerOpen(false)}
+                onClose={() => setIsDrawerOpen(false)}
+                closeButtonRef={mobileCloseButtonRef}
+                onLogout={() => {
+                  setIsDrawerOpen(false);
+                  void logoutMutation.mutateAsync();
+                }}
+                isLoggingOut={logoutMutation.isPending}
+              />
+            </aside>
+          </>
+        ) : null}
       </div>
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-[var(--jam-border)] bg-[var(--jam-panel)] md:flex md:flex-col">
@@ -220,7 +245,7 @@ export function AppShell() {
       </aside>
 
       <div className="pt-[52px] sm:pt-14 md:pl-72">
-        <main className="page-fade mx-auto w-full max-w-6xl px-2.5 py-3.5 sm:px-4 sm:py-5 md:px-6 md:py-6">
+        <main className="page-fade min-w-0 break-words mx-auto w-full max-w-6xl px-2.5 py-3.5 sm:px-4 sm:py-5 md:px-6 md:py-6">
           <Outlet />
         </main>
       </div>
@@ -233,6 +258,7 @@ function NavigationPanel({
   firstName,
   onNavigate,
   onClose,
+  closeButtonRef,
   onLogout,
   isLoggingOut
 }: {
@@ -240,6 +266,7 @@ function NavigationPanel({
   firstName: string;
   onNavigate?: () => void;
   onClose?: () => void;
+  closeButtonRef?: RefObject<HTMLButtonElement | null>;
   onLogout: () => void;
   isLoggingOut: boolean;
 }) {
@@ -258,6 +285,7 @@ function NavigationPanel({
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
           {onClose ? (
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={onClose}
               className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] text-[var(--jam-subtle)] transition hover:text-[var(--jam-ink)] md:hidden"
@@ -304,7 +332,7 @@ function NavigationPanel({
                         : "group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition",
                       active
                         ? section.variant === "primary"
-                          ? "border-[rgba(29,78,216,0.16)] bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
+                          ? "border-[var(--jam-accent-border)] bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
                           : "bg-[var(--jam-accent-soft)] text-[var(--jam-accent)]"
                         : section.variant === "primary"
                           ? "border-transparent text-[var(--jam-subtle)] hover:border-[var(--jam-border)] hover:bg-[var(--jam-panel)] hover:text-[var(--jam-ink)]"
