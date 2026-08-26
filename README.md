@@ -1,224 +1,280 @@
-# Demo: https://jamval-frontend.vercel.app/
-
-> Nota: este sistema foi desenvolvido para um único usuário (foi feito para meu pai) e não possui cadastro público. Para testar o site use o login: `teste@gmail.com` / senha: `#Borabill67`.
+<div align="center">
 
 # Jamval App
 
-Sistema web para controle de vendas em consignação, visitas, recebimentos, comprovantes e estoque de uma pequena operação familiar de acessórios eletrônicos.
+### Da conferência em papel ao controle completo da operação de consignação
 
-Este é um projeto individual desenvolvido por **Murilo Pereira Macedo**, estudante do **3/5 semestre do Tecnólogo em Análise e Desenvolvimento de Sistemas**. A ideia nasceu de um problema real da empresa do meu pai, a Jamval, que vende cabos, carregadores, fones e outros acessórios principalmente por consignação.
+Sistema full stack para gerenciar visitas, vendas, recebimentos, comprovantes e estoque
+de uma pequena distribuidora familiar de acessórios eletrônicos.
 
-> Status: em desenvolvimento avançado. A aplicação ainda passa por ajustes finais antes de entrar no uso diário real.
+<p>
+  <img alt="React" src="https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react&logoColor=0B1020" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/Linguagem-TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img alt="Fastify" src="https://img.shields.io/badge/API-Fastify_5-000000?style=for-the-badge&logo=fastify&logoColor=white" />
+  <img alt="Prisma" src="https://img.shields.io/badge/ORM-Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/Dados-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
+  <img alt="Vercel" src="https://img.shields.io/badge/Deploy-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
+</p>
 
-## Por Que Esse Projeto Existe
+</div>
 
-Na rotina atual, meu pai deixa produtos em lojas parceiras e volta depois para conferir o que foi vendido. Esse processo era feito com papel impresso, comparação manual com a lista anterior e cálculo na calculadora na frente do cliente.
+## Demonstração online
 
-O Jamval App foi criado para transformar esse fluxo em uma experiência mais rápida e confiável:
+| | |
+| --- | --- |
+| **Aplicação** | [Acessar a demo do Jamval App](https://jamval-frontend.vercel.app/) |
+| **E-mail** | `teste@gmail.com` |
+| **Senha** | `#Borabill67` |
 
-- saber o que ficou em cada cliente;
-- calcular automaticamente o que foi vendido;
-- registrar pagamento total, parcial ou pendente;
-- controlar o que precisa receber depois;
-- atualizar a nova base de produtos para a próxima visita;
-- gerar um comprovante em PDF para conferência e envio ao cliente;
-- acompanhar estoque, lucro, visitas e indicadores financeiros.
+> O sistema foi projetado para uma operação de usuário único e não possui cadastro
+> público. As credenciais acima pertencem exclusivamente ao ambiente de demonstração.
 
-Usei apoio de ferramentas de inteligência artificial durante o desenvolvimento para estudar alternativas, acelerar partes da implementação e revisar decisões técnicas, mas a modelagem do problema, o fluxo do produto e a evolução da aplicação foram conduzidos por mim.
+<img width="100%" alt="Dashboard operacional do Jamval App" src="https://github.com/user-attachments/assets/35c5cc5d-a82c-4bbb-8619-6c918111627b" />
 
-## Demonstração Do Fluxo
+> **Status:** desenvolvimento avançado. O fluxo principal está disponível na demo e
+> passa por ajustes finais de usabilidade antes da adoção diária na operação real.
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/35c5cc5d-a82c-4bbb-8619-6c918111627b" />
+## Visão geral
 
-1. O usuário cadastra produtos, clientes e o catálogo de produtos por cliente.
-2. O estoque central recebe entradas manuais com quantidade e custo de compra.
-3. Uma visita é aberta como **consignação** ou **venda direta**.
-4. Na consignação, a tela carrega a base anterior do cliente e permite informar o que foi vendido, trocado, perdido e o que sobrou.
-5. O sistema calcula o total do acerto e registra quanto foi pago na hora.
-6. Depois vem a reposição: o usuário informa o que vai deixar no cliente e o sistema calcula a nova base.
-7. Ao concluir, a visita movimenta estoque, cria o financeiro e fica disponível para geração de comprovante.
-8. Se o cliente não pagou tudo, o valor restante aparece na área **Receber**.
-9. A fila de retorno ajuda a lembrar quais clientes precisam ser visitados novamente.
+O **Jamval App** nasceu de um problema real da empresa do meu pai. A Jamval distribui
+cabos, carregadores, fones e outros acessórios para lojas parceiras, principalmente por
+consignação. A conferência era feita com folhas impressas, comparação manual com a
+visita anterior e cálculos na frente do cliente.
 
-<img width="1370" height="802" alt="image" src="https://github.com/user-attachments/assets/611e8c64-8fc2-4248-82a0-0d8685cb7588" />
+A aplicação digitaliza esse processo de ponta a ponta: mantém a base de produtos em
+cada loja, calcula o que foi vendido, registra pagamentos totais ou parciais, atualiza
+o estoque, gera comprovantes em PDF e organiza as próximas visitas.
 
-<img width="1370" height="973" alt="image" src="https://github.com/user-attachments/assets/937efdc5-0a45-423d-9c67-5d949614b5e9" />
+<table>
+  <tr>
+    <td align="center"><strong>🏪 Consignação</strong><br />Base anterior e reposição</td>
+    <td align="center"><strong>💰 Financeiro</strong><br />Pagamentos e recebíveis</td>
+    <td align="center"><strong>📦 Estoque</strong><br />Custos e movimentações</td>
+    <td align="center"><strong>🧾 Comprovantes</strong><br />PDF e assinatura</td>
+  </tr>
+</table>
 
-## Funcionalidades
+## Problema e solução
 
-### Operação e Visitas
+| Antes | Com o Jamval App |
+| --- | --- |
+| Conferência produto a produto em papel | Base anterior do cliente carregada automaticamente |
+| Cálculo manual das unidades vendidas | Venda calculada a partir de saldo, trocas, perdas e reposição |
+| Pagamentos pendentes anotados separadamente | Contas a receber com saldo e histórico de pagamentos |
+| Estoque atualizado depois da visita | Movimentações geradas ao concluir o atendimento |
+| Comprovante preenchido manualmente | PDF gerado com dados da visita, valores e assinatura |
+| Retornos dependentes de memória ou agenda informal | Fila operacional com clientes a visitar novamente |
 
-- Dashboard inicial com fila de retorno, visitas abertas e histórico recente.
-- Criação de visita por cliente, com tipo **Consignação** ou **Venda direta**.
-- Bloqueio para evitar mais de uma visita em aberto para o mesmo cliente.
-- Fluxo de consignação com:
-  - base anterior do cliente;
-  - unidades vendidas;
-  - trocas/devoluções com defeito;
-  - perdas;
-  - restante no cliente;
-  - preço por item;
-  - total automático;
-  - reposição do dia;
-  - nova base para a próxima visita.
-- Fluxo de venda direta com busca rápida de produtos, quantidade, preço e subtotal.
-- Visitas concluídas ficam somente para leitura, preservando o histórico.
+## Produto em ação
+
+### Visitas e consignação
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img width="100%" alt="Fluxo de visita em consignação no Jamval App" src="https://github.com/user-attachments/assets/611e8c64-8fc2-4248-82a0-0d8685cb7588" />
+      <br /><strong>Conferência da base anterior</strong>
+    </td>
+    <td width="50%" align="center">
+      <img width="100%" alt="Reposição de produtos em uma visita do Jamval App" src="https://github.com/user-attachments/assets/937efdc5-0a45-423d-9c67-5d949614b5e9" />
+      <br /><strong>Reposição e nova base do cliente</strong>
+    </td>
+  </tr>
+</table>
 
 ### Financeiro
 
-- Registro de valor recebido no fechamento da visita.
-- Criação automática de contas a receber quando existe saldo pendente.
-- Página **Receber** com filtros por pendente, parcial e quitado.
-- Registro de novos pagamentos com forma de pagamento, referência e observações.
-- Proteção para impedir pagamento maior que o saldo atual.
-
-<img width="1212" height="359" alt="image" src="https://github.com/user-attachments/assets/490e3240-79a8-4af8-88fb-3e8f7fd1ca4c" />
-<img width="1223" height="347" alt="image" src="https://github.com/user-attachments/assets/c337e5db-57a2-46bd-a355-6169ad3eb4e3" />
-
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img width="100%" alt="Lista de contas a receber no Jamval App" src="https://github.com/user-attachments/assets/490e3240-79a8-4af8-88fb-3e8f7fd1ca4c" />
+      <br /><strong>Carteira de recebíveis</strong>
+    </td>
+    <td width="50%" align="center">
+      <img width="100%" alt="Histórico de pagamentos no Jamval App" src="https://github.com/user-attachments/assets/c337e5db-57a2-46bd-a355-6169ad3eb4e3" />
+      <br /><strong>Pagamentos e saldo restante</strong>
+    </td>
+  </tr>
+</table>
 
 ### Estoque
 
-- Controle de estoque central por produto.
-- Carga inicial para começar a operação.
-- Entrada manual de mercadoria com custo unitário real.
-- Ajuste manual positivo ou negativo para correções.
-- Histórico de movimentações com filtros por tipo e período.
-- Saídas automáticas por reposição de consignação e por venda direta.
-- Alertas de produtos sem saldo ou com baixa quantidade.
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img width="100%" alt="Estoque central no Jamval App" src="https://github.com/user-attachments/assets/e9363f46-c9d4-4b38-a2a9-f7728b12d884" />
+      <br /><strong>Saldos e alertas de estoque</strong>
+    </td>
+    <td width="50%" align="center">
+      <img width="100%" alt="Histórico de movimentações de estoque no Jamval App" src="https://github.com/user-attachments/assets/dea67c6d-a2d2-470c-9315-72e90f832ede" />
+      <br /><strong>Movimentações e custo de entrada</strong>
+    </td>
+  </tr>
+</table>
 
-<img width="1223" height="844" alt="image" src="https://github.com/user-attachments/assets/e9363f46-c9d4-4b38-a2a9-f7728b12d884" />
-<img width="1223" height="836" alt="image" src="https://github.com/user-attachments/assets/dea67c6d-a2d2-470c-9315-72e90f832ede" />
+### Comprovantes e gestão
 
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img width="100%" alt="Localizador de comprovantes no Jamval App" src="https://github.com/user-attachments/assets/ad357883-3741-442b-a8eb-3abb22984f40" />
+      <br /><strong>Histórico de comprovantes</strong>
+    </td>
+    <td width="50%" align="center">
+      <img width="100%" alt="Comprovante PDF gerado pelo Jamval App" src="https://github.com/user-attachments/assets/97d0cdd7-c543-4ca7-a46c-1fe53714aef9" />
+      <br /><strong>Documento em PDF</strong>
+    </td>
+  </tr>
+</table>
 
+<img width="100%" alt="Dashboard administrativo com indicadores do Jamval App" src="https://github.com/user-attachments/assets/226ff721-bf22-4aaf-8cc9-39d3192f055f" />
 
+## Fluxo operacional
 
-### Comprovantes
+1. Produtos, clientes e o catálogo específico de cada cliente são cadastrados.
+2. O estoque central recebe a carga inicial e novas entradas com custo de compra.
+3. Uma visita é aberta como **consignação** ou **venda direta**.
+4. Na consignação, o sistema carrega a base anterior e registra vendas, trocas, perdas
+   e unidades restantes.
+5. O valor do acerto é calculado e o pagamento recebido na hora é informado.
+6. A reposição define a nova base que ficará no cliente para a próxima visita.
+7. A conclusão atualiza estoque e financeiro dentro do mesmo fluxo de negócio.
+8. Eventuais saldos viram contas a receber e o comprovante fica disponível em PDF.
+9. A fila operacional destaca os clientes que precisam de um novo atendimento.
 
-- Geração de comprovante em PDF para visitas concluídas.
-- Comprovante de venda direta.
-- Comprovante de acerto e reposição para consignação.
-- Dados da empresa, cliente, visita, produtos, valores, pagamento e assinatura manual.
-- Página para localizar visitas concluídas e abrir o comprovante.
+## Arquitetura
 
-<img width="1219" height="285" alt="image" src="https://github.com/user-attachments/assets/ad357883-3741-442b-a8eb-3abb22984f40" />
-<img width="788" height="958" alt="image" src="https://github.com/user-attachments/assets/97d0cdd7-c543-4ca7-a46c-1fe53714aef9" />
+```mermaid
+flowchart LR
+    WEB["React + Vite<br/>SPA responsiva"] -->|/api + cookie de sessão| API["Fastify<br/>API modular"]
+    API --> SERVICES["Services<br/>regras e transações"]
+    SERVICES --> PRISMA["Prisma ORM"]
+    PRISMA --> DB[(PostgreSQL)]
+    SERVICES --> FILES["Storage<br/>PDFs e assinaturas"]
+    WEB --> CHARTS["Recharts<br/>indicadores"]
+```
 
+O backend organiza cada área em rotas, controller, service, repository, schemas e
+tipos. Essa separação mantém as validações HTTP próximas da entrada e concentra regras
+como conclusão de visita, movimentação de estoque e criação de recebíveis nos services.
 
-### Administração
+```text
+route → controller → service → repository → Prisma → PostgreSQL
+```
 
-- Dashboard financeiro com filtro de data.
-- Comparativo **vendido x recebido**.
-- Ritmo de visitas por período.
-- Situação da carteira: pendente, parcial e quitado.
-- Visão de lucro bruto quando há custo de compra disponível.
-- Ranking de produtos por resultado e giro.
-- Indicadores de produtos sem custo, sem estoque e clientes com maior pendência.
-- Configuração dos dados da empresa usados nos comprovantes.
+## Funcionalidades
 
-<img width="1609" height="1021" alt="image" src="https://github.com/user-attachments/assets/226ff721-bf22-4aaf-8cc9-39d3192f055f" />
+### Operação e visitas
 
-## Rotas Principais
+- Dashboard inicial com fila de retorno, visitas abertas e histórico recente.
+- Visitas de consignação e venda direta.
+- Bloqueio de mais de uma visita aberta para o mesmo cliente.
+- Cálculo automático de vendidos, trocas, perdas, restante e reposição.
+- Busca rápida e subtotal por item na venda direta.
+- Histórico concluído somente para leitura.
 
-| Rota | Função |
-| --- | --- |
-| `/login` | Acesso do usuário administrador |
-| `/` | Fila do dia e atalhos operacionais |
-| `/visits` | Organizador de visitas |
-| `/visits/new` | Abertura de visita |
-| `/visits/:id` | Fluxo completo da visita |
-| `/financeiro` | Contas a receber |
-| `/stock` | Estoque central |
-| `/products` | Cadastro de produtos |
-| `/clients` | Cadastro de clientes |
-| `/clients/:id/catalog` | Produtos, preços e quantidade ideal por cliente |
-| `/receipts` | Localizador de comprovantes |
-| `/admin/dashboard` | Dashboard administrativo |
+### Financeiro
+
+- Registro do valor recebido no fechamento da visita.
+- Criação automática de recebível quando existe saldo pendente.
+- Filtros por situação pendente, parcial ou quitada.
+- Histórico de pagamentos com forma, referência e observações.
+- Validação para impedir pagamentos acima do saldo atual.
+
+### Estoque
+
+- Estoque central por produto e carga inicial da operação.
+- Entradas com quantidade e custo unitário real.
+- Ajustes positivos ou negativos para correções.
+- Histórico filtrável de movimentações.
+- Saídas automáticas por reposição e venda direta.
+- Alertas de saldo baixo ou zerado.
+
+### Comprovantes e administração
+
+- PDFs específicos para venda direta e acerto de consignação.
+- Dados de empresa, cliente, itens, valores, pagamento e assinatura.
+- Dashboard financeiro com filtro de período e comparativo vendido x recebido.
+- Ritmo de visitas, carteira por situação e visão de lucro bruto.
+- Ranking de produtos, alertas de custo/estoque e maiores pendências.
+- Configuração dos dados da empresa utilizados nos documentos.
+
+## Decisões técnicas
+
+- **Transações no fechamento:** os efeitos em visita, estoque, pagamentos e recebíveis
+  são coordenados pelo backend para evitar atualizações parciais.
+- **Dinheiro e histórico:** o domínio preserva valores, custos e movimentações para
+  permitir conferência posterior e cálculo de indicadores.
+- **Autenticação:** acesso protegido por sessão em cookie e senha com hash Bcrypt.
+- **Validação em duas pontas:** React Hook Form e Zod no frontend; schemas Zod na API.
+- **Comprovantes reproduzíveis:** PDFs são gerados no backend e o conteúdo final pode
+  ser armazenado junto ao registro da operação.
+- **Deploy same-origin:** o frontend encaminha `/api` ao backend, mantendo o fluxo de
+  sessão transparente tanto localmente quanto na Vercel.
 
 ## Stack
 
-**Frontend**
+| Camada | Tecnologias |
+| --- | --- |
+| **Frontend** | React 19, TypeScript, Vite 7, Tailwind CSS 4, React Router 7, TanStack Query, React Hook Form, Zod, Recharts |
+| **Backend** | Node.js, Fastify 5, TypeScript, Prisma ORM 6, Zod, PDFKit, Bcrypt |
+| **Dados** | PostgreSQL, migrations e seed Prisma |
+| **Infraestrutura** | npm workspaces, Docker Compose, Supabase e Vercel |
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
-- TanStack React Query
-- React Hook Form
-- Zod
-- Recharts
+## Rotas principais
 
-**Backend**
+| Área | Rotas |
+| --- | --- |
+| Acesso e operação | `/login`, `/`, `/visits`, `/visits/new`, `/visits/:visitId` |
+| Financeiro | `/financeiro`, `/financeiro/:receivableId` |
+| Estoque | `/stock`, `/stock/initial-load`, `/stock/manual-entry`, `/stock/manual-adjustment` |
+| Cadastros | `/products`, `/clients`, `/clients/:clientId/catalog` |
+| Comprovantes | `/receipts` |
+| Administração | `/admin/dashboard`, `/admin/indicadores`, `/admin/lucro`, `/admin/configuracoes` |
 
-- Node.js
-- Fastify
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- Zod
-- PDFKit
-- Bcrypt
-- Autenticação por sessão em cookie
+## Estrutura do projeto
 
-**Infra e desenvolvimento**
+```text
+.
+├── backend/
+│   ├── prisma/          # Schema, migrations e seed
+│   └── src/modules/     # Auth, clientes, visitas, estoque, financeiro e recibos
+├── frontend/
+│   ├── api/             # Proxy serverless para o backend
+│   └── src/features/    # Telas organizadas por domínio
+├── storage/             # Comprovantes e assinaturas no ambiente local
+├── docker-compose.yml   # Ambiente principal
+└── package.json         # Scripts e npm workspaces
+```
 
-- Monorepo com npm workspaces
-- Frontend e backend com deploy na Vercel
-- Banco PostgreSQL no Supabase
-- Migrations e seed com Prisma
-- Ambiente local com Docker Compose
-- Coleção Postman para testar API
+## Como executar localmente
 
-## Competências Demonstradas
-
-- Levantamento de problema real e transformação em produto.
-- Modelagem de domínio com clientes, produtos, visitas, estoque, pagamentos e recebíveis.
-- CRUDs completos com validação no frontend e backend.
-- Fluxos guiados para reduzir erro operacional.
-- Cálculo financeiro, saldo pendente e histórico de pagamentos.
-- Controle de estoque central e estoque consignado por cliente.
-- Transações no backend para concluir visitas com efeitos em estoque e financeiro.
-- Geração de PDF com dados operacionais.
-- Dashboards com indicadores e gráficos.
-- Organização de código por módulos e features.
-- Deploy full stack com banco remoto.
-
-## Como Rodar Localmente
-
-### Com Docker Compose (recomendado)
-
-Na raiz, configure o `.env` a partir do exemplo e altere a senha do banco:
+### Com Docker Compose
 
 ```bash
+# Na raiz do projeto
 cp .env.example .env
 docker compose up --build
 ```
 
-O comando aplica as migrations e inicia banco, backend e frontend. Para iniciar apenas uma parte:
+O Compose aplica as migrations e inicia PostgreSQL, backend e frontend.
+
+| Serviço | Endereço |
+| --- | --- |
+| Frontend | `http://localhost:5173` |
+| Backend | `http://localhost:3333` |
+| PostgreSQL | `localhost:5432` |
+
+Para carregar uma base fictícia completa:
 
 ```bash
-docker compose up backend   # backend + banco
-docker compose up frontend  # frontend + backend + banco
+npm run prisma:seed:docker
 ```
 
-URLs: `http://localhost:5173` (frontend) e `http://localhost:3333` (backend).
-
-### Compartilhar temporariamente com Cloudflare Tunnel
-
-Com a aplicação local em execução, abra outro terminal na raiz do projeto e execute:
-
-```bash
-npm run tunnel:temp
-```
-
-O Cloudflare exibirá uma URL pública temporária `https://<nome-aleatorio>.trycloudflare.com`.
-Compartilhe essa URL para acessar o frontend; as requisições para `/api` continuam sendo encaminhadas pelo Vite para o backend local. O endereço deixa de funcionar ao encerrar o comando. Não há token ou credencial do Cloudflare salvo no projeto.
-
-Caso o `cloudflared` ainda não esteja instalado, instale-o primeiro conforme o seu sistema operacional: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+O seed recria produtos, clientes, catálogos, estoque, movimentações, visitas, pagamentos
+e contas a receber. Use esse comando somente em ambiente local ou de desenvolvimento.
 
 ### Sem Docker
-
-Na raiz do projeto:
 
 ```bash
 npm install
@@ -228,41 +284,62 @@ npm run prisma:generate
 npm run dev
 ```
 
-Para aplicar migrations e popular dados de desenvolvimento:
+Para aplicar as migrations e carregar os dados de desenvolvimento:
 
 ```bash
 npm run prisma:migrate:dev --workspace backend
 npm run prisma:seed
 ```
 
-O seeder cria uma base fictícia completa, com produtos, clientes, catálogo por cliente, estoque e movimentações, visitas de consignação e venda direta, pagamentos e contas a receber. Ele pode ser executado novamente para restaurar esses dados de demonstração.
-
-> Use o seed somente no banco local/de desenvolvimento. Ele recria os registros de demonstração e os saldos dos produtos usados por eles. Veja [a documentação detalhada do seed](backend/prisma/seed.md).
-
-Se estiver usando Docker Compose, com o serviço `backend` iniciado, use este comando para executar o seed dentro do container e aproveitar a conexão configurada pelo Compose:
-
-```bash
-npm run prisma:seed:docker
-```
-
-Para criar ou atualizar um usuário administrador:
+Para criar ou atualizar um administrador:
 
 ```bash
 npm run admin:create -- --name "Murilo Pereira" --email "admin@jamval.local" --password "sua-senha"
 ```
 
-O frontend roda com Vite e usa `/api` como proxy para o backend em desenvolvimento.
+<details>
+<summary><strong>Compartilhar o ambiente local temporariamente</strong></summary>
 
-## Próximos Ajustes
+Com a aplicação em execução, abra outro terminal e rode:
 
-- Finalizar pequenos ajustes de usabilidade antes do uso real diário.
-- Polir o fluxo de comprovantes e compartilhamento.
-- Revisar detalhes de responsividade no celular durante visitas reais.
-- Evoluir futuras preferências operacionais na área administrativa.
+```bash
+npm run tunnel:temp
+```
+
+O Cloudflare Tunnel exibirá uma URL temporária `https://<nome>.trycloudflare.com` e
+encaminhará as requisições de `/api` para o backend local. A URL deixa de funcionar ao
+encerrar o comando. O `cloudflared` precisa estar instalado no sistema.
+
+</details>
+
+## Validação do projeto
+
+```bash
+# Compila backend e frontend
+npm run build
+
+# Verifica o frontend com ESLint
+npm run lint:frontend
+```
+
+## Competências demonstradas
+
+- Levantamento de uma necessidade real e transformação em produto digital.
+- Modelagem de clientes, catálogos, visitas, estoque, pagamentos e recebíveis.
+- Desenvolvimento full stack com TypeScript no frontend e backend.
+- Fluxos guiados para reduzir erros durante o atendimento em campo.
+- Regras transacionais com efeitos coordenados em estoque e financeiro.
+- Geração e persistência de documentos PDF.
+- Dashboards financeiros e operacionais com filtros e indicadores.
+- Deploy full stack com banco gerenciado e proxy serverless.
+- Organização modular por domínio e ambiente reproduzível com Docker.
 
 ## Autor
 
-**Murilo Pereira Macedo**  
-Tecnólogo em Análise e Desenvolvimento de Sistemas, 3/5 semestre.
+Desenvolvido por **Murilo Pereira Macedo**, estudante de Análise e Desenvolvimento de
+Sistemas.
 
-Projeto criado para resolver uma necessidade real da Jamval e servir como principal case prático no meu portfólio.
+O projeto foi criado para resolver uma necessidade real da Jamval e servir como case
+prático de produto e engenharia no meu portfólio. Ferramentas de inteligência artificial
+foram utilizadas como apoio para estudo, experimentação e revisão; a modelagem do
+problema, o fluxo do produto e as decisões de implementação foram conduzidos por mim.
