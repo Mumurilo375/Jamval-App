@@ -22,7 +22,7 @@ de uma pequena distribuidora familiar de acessórios eletrônicos.
 
 | | |
 | --- | --- |
-| **Aplicação** | [Acessar a demo do Jamval App](https://jamval-frontend.vercel.app/) |
+| **Aplicação** | <a href="https://jamval-frontend.vercel.app/" target="_blank" rel="noopener noreferrer">Acessar a demo do Jamval App</a> |
 | **E-mail** | `teste@gmail.com` |
 | **Senha** | `#Borabill67` |
 
