@@ -32,14 +32,5 @@ export function toNullableNumber(value: string): number | null {
   return parseDecimalInput(trimmed);
 }
 
-export function isIntegerInput(value: string): boolean {
-  return /^\d+$/.test(value.trim());
-}
-
-export function isNonNegativeIntegerInput(value: string): boolean {
-  return isIntegerInput(value);
-}
-
-export function isPositiveIntegerInput(value: string): boolean {
-  return isIntegerInput(value) && Number(value) > 0;
-}
+export const isNonNegativeIntegerInput = (value: string) => /^\d+$/.test(value.trim());
+export const isPositiveIntegerInput = (value: string) => /^\d+$/.test(value.trim()) && Number(value) > 0;

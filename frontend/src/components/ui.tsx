@@ -43,6 +43,15 @@ export function PageHeader({
   );
 }
 
+export function FormPage({
+  title, backTo, backLabel, subtitle, children
+}: PropsWithChildren<{ title: string; backTo: string; backLabel: string; subtitle?: string }>) {
+  return <div className="space-y-4">
+    <PageHeader title={title} backTo={backTo} backLabel={backLabel} subtitle={subtitle} />
+    {children}
+  </div>;
+}
+
 function BackArrowIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

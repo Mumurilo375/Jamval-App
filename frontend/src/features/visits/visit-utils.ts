@@ -1,37 +1,13 @@
 import type { ClientProduct, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
+export { normalizeDecimalInput, parseDecimalInput } from "../../lib/forms";
 import type { VisitItemDraftPayload } from "./visits-api";
 
-export function visitStatusLabel(status: VisitStatus): string {
-  if (status === "DRAFT") {
-    return "Não finalizada";
-  }
+const visitLabels: Record<VisitStatus, string> = { DRAFT: "Não finalizada", COMPLETED: "Concluída", CANCELLED: "Cancelada" };
+const visitTones: Record<VisitStatus, "warning" | "success" | "danger"> = { DRAFT: "warning", COMPLETED: "success", CANCELLED: "danger" };
 
-  if (status === "COMPLETED") {
-    return "Concluída";
-  }
-
-  return "Cancelada";
-}
-
-export function visitStatusTone(status: VisitStatus): "warning" | "success" | "danger" {
-  if (status === "DRAFT") {
-    return "warning";
-  }
-
-  if (status === "COMPLETED") {
-    return "success";
-  }
-
-  return "danger";
-}
-
-export function visitTypeLabel(type: VisitType): string {
-  if (type === "SALE") {
-    return "Venda";
-  }
-
-  return "Consignação";
-}
+export const visitStatusLabel = (status: VisitStatus) => visitLabels[status];
+export const visitStatusTone = (status: VisitStatus) => visitTones[status];
+export const visitTypeLabel = (type: VisitType) => type === "SALE" ? "Venda" : "Consignação";
 
 export function computeVisitItemPreview(input: {
   quantityPrevious: number;
@@ -56,17 +32,6 @@ export function computeVisitItemPreview(input: {
 export function visitNumber(value: number | string | null | undefined): number {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-export function normalizeDecimalInput(value: string): string {
-  return value.trim().replace(",", ".");
-}
-
-export function parseDecimalInput(value: string): number {
-  const normalized = normalizeDecimalInput(value);
-  const parsed = Number(normalized);
-
-  return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
 export function computeVisitPendingAmount(totalAmount: number | string, receivedAmountOnVisit: number | string): number {

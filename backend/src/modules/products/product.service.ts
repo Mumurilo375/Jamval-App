@@ -1,18 +1,25 @@
-import type { Product } from "@prisma/client";
+import type { Prisma, Product } from "@prisma/client";
 
+import { prisma } from "../../db/prisma";
 import { NotFoundError } from "../../shared/errors/not-found-error";
 import type { CreateProductInput, ProductListQuery, UpdateProductInput } from "./product.types";
-import { ProductRepository } from "./product.repository";
 
 export class ProductService {
-  constructor(private readonly repository = new ProductRepository()) {}
-
   list(filters: ProductListQuery): Promise<Product[]> {
-    return this.repository.list(filters);
+    const where: Prisma.ProductWhereInput = {
+      ...(filters.isActive !== undefined && { isActive: filters.isActive }),
+      ...(filters.search && {
+        OR: [
+          { name: { contains: filters.search, mode: "insensitive" } },
+          { sku: { contains: filters.search, mode: "insensitive" } }
+        ]
+      })
+    };
+    return prisma.product.findMany({ where, orderBy: [{ name: "asc" }] });
   }
 
   async getById(id: string): Promise<Product> {
-    const product = await this.repository.findById(id);
+    const product = await prisma.product.findUnique({ where: { id } });
 
     if (!product) {
       throw new NotFoundError("Product not found", { id });
@@ -22,12 +29,12 @@ export class ProductService {
   }
 
   create(data: CreateProductInput): Promise<Product> {
-    return this.repository.create(data);
+    return prisma.product.create({ data });
   }
 
   async update(id: string, data: UpdateProductInput): Promise<Product> {
     await this.getById(id);
-    return this.repository.update(id, data);
+    return prisma.product.update({ where: { id }, data });
   }
 
   activate(id: string): Promise<Product> {

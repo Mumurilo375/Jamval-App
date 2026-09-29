@@ -784,25 +784,9 @@ function ensurePageSpace(doc: PdfDocument, y: number, neededHeight: number): num
 
 function saleColumns(): TableColumn<ReceiptItem>[] {
   return [
-    {
-      header: "Produto",
-      width: 260,
-      font: "Helvetica-Bold",
-      size: 10.3,
-      value: (item) => item.productSnapshotName
-    },
-    {
-      header: "Quantidade",
-      width: 75,
-      align: "right",
-      value: (item) => String(item.quantitySold > 0 ? item.quantitySold : item.quantityPrevious)
-    },
-    {
-      header: "Preço unitário",
-      width: 85,
-      align: "right",
-      value: (item) => formatCurrency(item.unitPrice)
-    },
+    { header: "Produto", width: 260, font: "Helvetica-Bold", size: 10.3, value: (item) => item.productSnapshotName },
+    { header: "Quantidade", width: 75, align: "right", value: (item) => String(saleQuantity(item)) },
+    { header: "Preço unitário", width: 85, align: "right", value: (item) => formatCurrency(item.unitPrice) },
     {
       header: "Subtotal",
       width: 95,
@@ -816,65 +800,19 @@ function saleColumns(): TableColumn<ReceiptItem>[] {
 
 function consignmentSettlementColumns(): TableColumn<ReceiptItem>[] {
   return [
-    {
-      header: "Descrição",
-      width: 225,
-      font: "Helvetica-Bold",
-      size: 10.2,
-      value: (item) => item.productSnapshotName
-    },
-    {
-      header: "Qtd. anterior",
-      width: 75,
-      align: "right",
-      value: (item) => String(item.quantityPrevious)
-    },
-    {
-      header: "Qtd. vendida",
-      width: 75,
-      align: "right",
-      value: (item) => String(item.quantitySold)
-    },
-    {
-      header: "Preço unitário",
-      width: 70,
-      align: "right",
-      value: (item) => formatCurrency(item.unitPrice)
-    },
-    {
-      header: "Total",
-      width: 70,
-      align: "right",
-      font: "Helvetica-Bold",
-      size: 10.3,
-      value: (item) => formatCurrency(item.subtotalAmount)
-    }
+    { header: "Descrição", width: 225, font: "Helvetica-Bold", size: 10.2, value: (item) => item.productSnapshotName },
+    { header: "Qtd. anterior", width: 75, align: "right", value: (item) => String(item.quantityPrevious) },
+    { header: "Qtd. vendida", width: 75, align: "right", value: (item) => String(item.quantitySold) },
+    { header: "Preço unitário", width: 70, align: "right", value: (item) => formatCurrency(item.unitPrice) },
+    { header: "Total", width: 70, align: "right", font: "Helvetica-Bold", size: 10.3, value: (item) => formatCurrency(item.subtotalAmount) }
   ];
 }
 
 function consignmentBaseColumns(): TableColumn<ReceiptItem>[] {
   return [
-    {
-      header: "Produto",
-      width: 305,
-      font: "Helvetica-Bold",
-      size: 10.2,
-      value: (item) => item.productSnapshotName
-    },
-    {
-      header: "Qtd. que ficará",
-      width: 110,
-      align: "right",
-      value: (item) => String(item.resultingClientQuantity)
-    },
-    {
-      header: "Preço unitário",
-      width: 100,
-      align: "right",
-      font: "Helvetica-Bold",
-      size: 10.2,
-      value: (item) => formatCurrency(item.unitPrice)
-    }
+    { header: "Produto", width: 305, font: "Helvetica-Bold", size: 10.2, value: (item) => item.productSnapshotName },
+    { header: "Qtd. que ficará", width: 110, align: "right", value: (item) => String(item.resultingClientQuantity) },
+    { header: "Preço unitário", width: 100, align: "right", font: "Helvetica-Bold", size: 10.2, value: (item) => formatCurrency(item.unitPrice) }
   ];
 }
 

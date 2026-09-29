@@ -1,7 +1,8 @@
-import { CentralStockMovementType, Prisma, ReceivableStatus, VisitType } from "@prisma/client";
+import { Prisma, ReceivableStatus, VisitType } from "@prisma/client";
 
 import { resolveReceiptCompanyProfile } from "../receipts/receipt-company-profile";
 import { StockRepository } from "../stock/stock.repository";
+import { toMovementSnapshot } from "../stock/stock-movement";
 import type { AdminDashboardQuery, AdminProfitQuery } from "./admin.types";
 import { AdminRepository } from "./admin.repository";
 
@@ -45,12 +46,6 @@ type DashboardPeriod = {
   label: string;
   dateFrom: Date;
   dateTo: Date;
-};
-
-type DashboardMovementSnapshot = {
-  label: string;
-  balanceEffect: "IN" | "OUT" | "NEUTRAL";
-  createdAt: Date;
 };
 
 export class AdminService {
@@ -312,18 +307,7 @@ export class AdminService {
     };
   }
 
-  private async buildDashboardStockAlerts(): Promise<{
-    zeroStockProducts: number;
-    lowStockProducts: number;
-    lastMovement: DashboardMovementSnapshot | null;
-    topLowStock: Array<{
-      productId: string;
-      sku: string;
-      name: string;
-      currentQuantity: number;
-      lastMovement: DashboardMovementSnapshot | null;
-    }>;
-  }> {
+  private async buildDashboardStockAlerts() {
     const [products, latestMovement] = await Promise.all([
       this.stockRepository.listProductsForOverview(),
       this.stockRepository.findLatestCentralMovement()
@@ -338,7 +322,7 @@ export class AdminService {
         sku: product.sku,
         name: product.name,
         currentQuantity: product.centralStockBalance?.currentQuantity ?? 0,
-        lastMovement: toDashboardMovementSnapshot(product.centralStockMovement[0] ?? null)
+        lastMovement: toMovementSnapshot(product.centralStockMovement[0] ?? null)
       }))
       .filter((product) => product.currentQuantity > 0 && product.currentQuantity <= LOW_STOCK_THRESHOLD)
       .sort((left, right) => {
@@ -352,7 +336,7 @@ export class AdminService {
     return {
       zeroStockProducts,
       lowStockProducts: lowStockEntries.length,
-      lastMovement: toDashboardMovementSnapshot(latestMovement),
+      lastMovement: toMovementSnapshot(latestMovement),
       topLowStock: lowStockEntries.slice(0, LIST_LIMIT)
     };
   }
@@ -702,69 +686,6 @@ function mapReceivablesStatusSummary(
       amount: moneyToNumber(byStatus.get(ReceivableStatus.PAID)?.amount ?? new Prisma.Decimal(0))
     }
   };
-}
-
-function toDashboardMovementSnapshot(
-  movement:
-    | {
-        movementType: CentralStockMovementType;
-        createdAt: Date;
-      }
-    | null
-): DashboardMovementSnapshot | null {
-  if (!movement) {
-    return null;
-  }
-
-  return {
-    label: formatDashboardMovementLabel(movement.movementType),
-    balanceEffect: getDashboardBalanceEffect(movement.movementType),
-    createdAt: movement.createdAt
-  };
-}
-
-function formatDashboardMovementLabel(movementType: CentralStockMovementType): string {
-  if (movementType === CentralStockMovementType.INITIAL_LOAD) {
-    return "Carga inicial";
-  }
-
-  if (movementType === CentralStockMovementType.MANUAL_ENTRY) {
-    return "Entrada manual";
-  }
-
-  if (movementType === CentralStockMovementType.MANUAL_ADJUSTMENT_IN) {
-    return "Ajuste +";
-  }
-
-  if (movementType === CentralStockMovementType.MANUAL_ADJUSTMENT_OUT) {
-    return "Ajuste -";
-  }
-
-  if (movementType === CentralStockMovementType.DIRECT_SALE_OUT) {
-    return "Saida por venda";
-  }
-
-  if (movementType === CentralStockMovementType.DEFECTIVE_RETURN_LOG) {
-    return "Retorno com defeito";
-  }
-
-  return "Saida para cliente";
-}
-
-function getDashboardBalanceEffect(movementType: CentralStockMovementType): "IN" | "OUT" | "NEUTRAL" {
-  if (
-    movementType === CentralStockMovementType.INITIAL_LOAD ||
-    movementType === CentralStockMovementType.MANUAL_ENTRY ||
-    movementType === CentralStockMovementType.MANUAL_ADJUSTMENT_IN
-  ) {
-    return "IN";
-  }
-
-  if (movementType === CentralStockMovementType.DEFECTIVE_RETURN_LOG) {
-    return "NEUTRAL";
-  }
-
-  return "OUT";
 }
 
 function toUtcDateKey(date: Date): string {

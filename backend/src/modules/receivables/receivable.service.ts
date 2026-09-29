@@ -2,7 +2,7 @@ import { ReceivableStatus } from "@prisma/client";
 
 import { ClientRepository } from "../clients/client.repository";
 import { NotFoundError } from "../../shared/errors/not-found-error";
-import type { ReceivableDetailItem, ReceivableListItem, ReceivableListQuery } from "./receivable.types";
+import type { ReceivableListQuery } from "./receivable.types";
 import { ReceivableRepository } from "./receivable.repository";
 
 export class ReceivableService {
@@ -13,7 +13,7 @@ export class ReceivableService {
 
   async list(filters: ReceivableListQuery) {
     const receivables = await this.repository.list(filters);
-    return receivables.map((receivable) => mapReceivableForRead(receivable));
+    return receivables.map(mapReceivableForRead);
   }
 
   async getById(id: string) {
@@ -23,13 +23,13 @@ export class ReceivableService {
       throw new NotFoundError("Receivable not found", { id });
     }
 
-    return mapReceivableDetailForRead(receivable);
+    return mapReceivableForRead(receivable);
   }
 
   async listByClient(clientId: string) {
     await this.ensureClientExists(clientId);
     const receivables = await this.repository.list({ clientId });
-    return receivables.map((receivable) => mapReceivableForRead(receivable));
+    return receivables.map(mapReceivableForRead);
   }
 
   private async ensureClientExists(clientId: string): Promise<void> {
@@ -41,17 +41,7 @@ export class ReceivableService {
   }
 }
 
-function mapReceivableForRead(receivable: ReceivableListItem) {
-  const isOverdue = computeIsOverdue(receivable.status, receivable.dueDate);
-
-  return {
-    ...receivable,
-    isOverdue,
-    displayStatus: isOverdue ? "OVERDUE" : receivable.status
-  };
-}
-
-function mapReceivableDetailForRead(receivable: ReceivableDetailItem) {
+function mapReceivableForRead<T extends { status: ReceivableStatus; dueDate: Date | null }>(receivable: T) {
   const isOverdue = computeIsOverdue(receivable.status, receivable.dueDate);
 
   return {

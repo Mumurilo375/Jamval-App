@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
-import { EmptyState, PageHeader, PageLoader } from "../../components/ui";
+import { EmptyState, FormPage, PageLoader } from "../../components/ui";
 import { getProduct } from "./products-api";
 import { ProductForm } from "./product-form";
 
@@ -25,15 +25,7 @@ export function ProductEditPage() {
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <PageHeader
-        backTo="/products"
-        backLabel="Produtos"
-        title="Editar produto"
-        subtitle={`${productQuery.data.sku} · preço base e custo de compra`}
-      />
-      <ProductForm mode="edit" product={productQuery.data} />
-    </div>
-  );
+  return <FormPage backTo="/products" backLabel="Produtos" title="Editar produto" subtitle={`${productQuery.data.sku} · preço base e custo de compra`}>
+    <ProductForm mode="edit" product={productQuery.data} />
+  </FormPage>;
 }

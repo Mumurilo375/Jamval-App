@@ -1,5 +1,5 @@
-import { type Dispatch, type ReactNode, type SetStateAction, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type Dispatch, type SetStateAction, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -24,10 +24,9 @@ import { formatCurrency, formatDate } from "../../lib/format";
 import type { Product, VisitDetail } from "../../types/domain";
 import { listProducts } from "../products/products-api";
 import { VisitReceiptCard } from "./visit-receipt-card";
+import { ColumnLabel, DataCell, formatPaymentMethod, handleVisitMutationSuccess, MetricCell, paymentMethods, ReadonlyValue, StepHeader } from "./visit-flow-ui";
 import { bulkUpsertVisitItems, cancelVisit, completeVisit, deleteVisitItem, updateVisit } from "./visits-api";
 import { parseDecimalInput, visitNumber, visitStatusLabel, visitStatusTone } from "./visit-utils";
-
-const paymentMethods = ["CASH", "PIX", "CARD", "BANK_TRANSFER", "OTHER"] as const;
 
 type DirectSaleVisitFlowProps = {
   visit: VisitDetail;
@@ -664,21 +663,9 @@ function stepQuantity(productId: string, delta: number, setRows: Dispatch<SetSta
   );
 }
 
-function handleVisitMutationSuccess(queryClient: QueryClient) {
-  return async (nextVisit: VisitDetail) => {
-    await queryClient.invalidateQueries({ queryKey: ["visits"] });
-    await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
-    queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
-  };
-}
 
-function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
-  if (method === "BANK_TRANSFER") return "Transferência";
-  if (method === "CASH") return "Dinheiro";
-  if (method === "CARD") return "Cartão";
-  if (method === "PIX") return "PIX";
-  return "Outro";
-}
+
+
 
 function formatApiErrorMessage(error: ApiError) {
   if (error.code !== "INTERNAL_SERVER_ERROR") {
@@ -710,26 +697,6 @@ function extractApiErrorDetail(details: unknown): string | null {
   }
 
   return null;
-}
-
-function StepHeader({ step, title, subtitle }: { step: string; title: string; subtitle?: string }) {
-  return <div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">{step}</p><h2 className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">{title}</h2>{subtitle ? <p className="mt-1 text-sm text-[var(--jam-subtle)]">{subtitle}</p> : null}</div>;
-}
-
-function MetricCell({ label, value, emphasize = false }: { label: string; value: string; emphasize?: boolean }) {
-  return <div className={cx("rounded-xl p-3", emphasize ? "bg-[rgba(29,78,216,0.08)]" : "bg-white")}><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p><p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{value}</p></div>;
-}
-
-function ColumnLabel({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cx("text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]", className)}>{children}</p>;
-}
-
-function DataCell({ label, children }: { label: string; children: ReactNode }) {
-  return <div className="space-y-1"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)] sm:hidden">{label}</p>{children}</div>;
-}
-
-function ReadonlyValue({ value, emphasize = false }: { value: string; emphasize?: boolean }) {
-  return <div className={cx("flex min-h-10 items-center rounded-xl border border-[var(--jam-border)] px-3 text-right text-sm font-medium text-[var(--jam-ink)]", emphasize ? "bg-[var(--jam-panel-strong)]" : "bg-white")}><span className="w-full truncate">{value}</span></div>;
 }
 
 function QuantityControl({

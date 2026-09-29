@@ -23,27 +23,18 @@ export class AdminRepository {
     },
     db: DbClient = prisma
   ) {
+    const data = {
+      companyName: input.companyName,
+      document: input.document ?? null,
+      phone: input.phone ?? null,
+      address: input.address ?? null,
+      email: input.email ?? null,
+      contactName: input.contactName ?? null
+    };
     return db.companyProfileSettings.upsert({
-      where: {
-        singletonKey: "default"
-      },
-      create: {
-        singletonKey: "default",
-        companyName: input.companyName,
-        document: input.document ?? null,
-        phone: input.phone ?? null,
-        address: input.address ?? null,
-        email: input.email ?? null,
-        contactName: input.contactName ?? null
-      },
-      update: {
-        companyName: input.companyName,
-        document: input.document ?? null,
-        phone: input.phone ?? null,
-        address: input.address ?? null,
-        email: input.email ?? null,
-        contactName: input.contactName ?? null
-      }
+      where: { singletonKey: "default" },
+      create: { singletonKey: "default", ...data },
+      update: data
     });
   }
 

@@ -4,6 +4,7 @@ import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
 import { AppError } from "../../shared/errors/app-error";
 import { StockRepository } from "./stock.repository";
+import { formatMovementLabel, getBalanceEffect, toMovementSnapshot } from "./stock-movement";
 import type {
   CentralInitialLoadInput,
   CentralManualAdjustmentInput,
@@ -15,13 +16,6 @@ import type {
 type CentralBalanceSummary = {
   productId: string;
   currentQuantity: number;
-};
-
-type BalanceEffect = "IN" | "OUT" | "NEUTRAL";
-type MovementSnapshot = {
-  label: string;
-  balanceEffect: BalanceEffect;
-  createdAt: Date;
 };
 
 const MOVEMENT_TYPES_BY_KIND: Record<
@@ -55,23 +49,7 @@ export class StockService {
     }));
   }
 
-  async getCentralOverview(): Promise<{
-    summary: {
-      productsWithStock: number;
-      totalUnits: number;
-      lastMovement: MovementSnapshot | null;
-      canUseInitialLoad: boolean;
-    };
-    items: Array<{
-      productId: string;
-      sku: string;
-      name: string;
-      category: string | null;
-      isActive: boolean;
-      currentQuantity: number;
-      lastMovement: MovementSnapshot | null;
-    }>;
-  }> {
+  async getCentralOverview() {
     const [products, latestMovement, movementCount] = await Promise.all([
       this.repository.listProductsForOverview(),
       this.repository.findLatestCentralMovement(),
@@ -99,25 +77,7 @@ export class StockService {
     };
   }
 
-  async listCentralMovements(filters: CentralMovementsQuery): Promise<
-    Array<{
-      id: string;
-      productId: string;
-      productName: string;
-      productCategory: string | null;
-      sku: string;
-      movementType: CentralStockMovementType;
-      movementLabel: string;
-      balanceEffect: BalanceEffect;
-      quantity: number;
-      unitCost: number | null;
-      totalCost: number | null;
-      referenceType: StockReferenceType;
-      referenceLabel: string;
-      note: string | null;
-      createdAt: Date;
-    }>
-  > {
+  async listCentralMovements(filters: CentralMovementsQuery) {
     const movements = await this.repository.listCentralMovements({
       movementTypes: filters.movementKind ? MOVEMENT_TYPES_BY_KIND[filters.movementKind] : undefined,
       dateFrom: filters.dateFrom,
@@ -176,22 +136,7 @@ export class StockService {
       });
   }
 
-  async listCentralVisitOutflows(filters: CentralVisitOutflowsQuery): Promise<
-    Array<{
-      visitId: string;
-      visitCode: string;
-      visitedAt: Date;
-      clientId: string;
-      clientTradeName: string;
-      totalUnits: number;
-      items: Array<{
-        productId: string;
-        productName: string;
-        sku: string;
-        quantity: number;
-      }>;
-    }>
-  > {
+  async listCentralVisitOutflows(filters: CentralVisitOutflowsQuery) {
     const movements = await this.repository.listCentralVisitOutflowMovements();
     const visitIds = Array.from(
       new Set(movements.map((movement) => movement.referenceId))
@@ -456,50 +401,6 @@ function buildReferenceLabel(
   return "Ajuste manual";
 }
 
-function formatMovementLabel(movementType: CentralStockMovementType): string {
-  if (movementType === CentralStockMovementType.INITIAL_LOAD) {
-    return "Carga inicial";
-  }
-
-  if (movementType === CentralStockMovementType.MANUAL_ENTRY) {
-    return "Entrada manual";
-  }
-
-  if (movementType === CentralStockMovementType.MANUAL_ADJUSTMENT_IN) {
-    return "Ajuste +";
-  }
-
-  if (movementType === CentralStockMovementType.MANUAL_ADJUSTMENT_OUT) {
-    return "Ajuste -";
-  }
-
-  if (movementType === CentralStockMovementType.DEFECTIVE_RETURN_LOG) {
-    return "Retorno com defeito";
-  }
-
-  if (movementType === CentralStockMovementType.DIRECT_SALE_OUT) {
-    return "Saida por venda";
-  }
-
-  return "Saida para cliente";
-}
-
-function getBalanceEffect(movementType: CentralStockMovementType): BalanceEffect {
-  if (
-    movementType === CentralStockMovementType.INITIAL_LOAD ||
-    movementType === CentralStockMovementType.MANUAL_ENTRY ||
-    movementType === CentralStockMovementType.MANUAL_ADJUSTMENT_IN
-  ) {
-    return "IN";
-  }
-
-  if (movementType === CentralStockMovementType.DEFECTIVE_RETURN_LOG) {
-    return "NEUTRAL";
-  }
-
-  return "OUT";
-}
-
 function isWithinDateRange(value: Date, dateFrom?: Date, dateTo?: Date): boolean {
   if (dateFrom && value.getTime() < startOfDay(dateFrom).getTime()) {
     return false;
@@ -518,25 +419,6 @@ function startOfDay(date: Date): Date {
 
 function endOfDay(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
-}
-
-function toMovementSnapshot(
-  movement:
-    | {
-        movementType: CentralStockMovementType;
-        createdAt: Date;
-      }
-    | null
-): MovementSnapshot | null {
-  if (!movement) {
-    return null;
-  }
-
-  return {
-    label: formatMovementLabel(movement.movementType),
-    balanceEffect: getBalanceEffect(movement.movementType),
-    createdAt: movement.createdAt
-  };
 }
 
 function moneyToNumber(value: Prisma.Decimal): number {

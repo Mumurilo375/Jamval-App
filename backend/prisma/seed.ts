@@ -83,286 +83,79 @@ type CompletedVisitSeed = VisitSeed & {
 };
 
 const productSeeds: ProductSeed[] = [
-  {
-    sku: "JMV-CABO-USBC-1M-BK",
-    name: "Cabo USB-C 1m",
-    category: "Cabos",
-    brand: "Inova",
-    model: "Fast Sync",
-    color: "Preto",
-    connectorType: "USB-C",
-    basePrice: 18.9,
-    costPrice: 10.4
-  },
-  {
-    sku: "JMV-CABO-LIGHT-1M-WH",
-    name: "Cabo Lightning 1m",
-    category: "Cabos",
-    brand: "Hrebos",
-    model: "Premium",
-    color: "Branco",
-    connectorType: "Lightning",
-    basePrice: 22.5,
-    costPrice: 12.9
-  },
-  {
-    sku: "JMV-CARREG-20W-USBC",
-    name: "Carregador Turbo 20W",
-    category: "Carregadores",
-    brand: "Kaidi",
-    model: "PD 20W",
-    color: "Branco",
-    voltage: "Bivolt",
-    connectorType: "USB-C",
-    basePrice: 34.9,
-    costPrice: 20.6
-  },
-  {
-    sku: "JMV-FONTE-12V-2A-P4",
-    name: "Fonte 12V 2A",
-    category: "Fontes",
-    brand: "Multcomercial",
-    model: "P4",
-    color: "Preto",
-    voltage: "12V",
-    connectorType: "P4",
-    basePrice: 27.4,
-    costPrice: 15.8
-  },
-  {
-    sku: "JMV-FONE-P2-ESTEREO",
-    name: "Fone Intra Auricular P2",
-    category: "Áudio",
-    brand: "Lehmox",
-    model: "LEF-102",
-    color: "Preto",
-    connectorType: "P2",
-    basePrice: 16.8
-  },
-  {
-    sku: "JMV-ADAPT-USBC-P2",
-    name: "Adaptador USB-C para P2",
-    category: "Adaptadores",
-    brand: "Exbom",
-    model: "UC-AUX",
-    color: "Cinza",
-    connectorType: "USB-C",
-    basePrice: 14.7,
-    costPrice: 8.1
-  },
-  {
-    sku: "JMV-CARREG-VEIC-2USB",
-    name: "Carregador Veicular Duplo USB",
-    category: "Carregadores",
-    brand: "It-Blue",
-    model: "CV-210",
-    color: "Preto",
-    voltage: "12V/24V",
-    connectorType: "USB-A",
-    basePrice: 21.3,
-    costPrice: 12.4
-  },
-  {
-    sku: "JMV-POWERBANK-10K",
-    name: "Power Bank 10000mAh",
-    category: "Baterias",
-    brand: "Pineng",
-    model: "PN-951",
-    color: "Preto",
-    connectorType: "USB-C",
-    basePrice: 79.9,
-    costPrice: 52.3
-  },
-  {
-    sku: "JMV-CABO-USBC-2M-RD",
-    name: "Cabo USB-C 2m Reforçado",
-    category: "Cabos",
-    brand: "Hrebos",
-    model: "Nylon 2m",
-    color: "Vermelho",
-    connectorType: "USB-C",
-    basePrice: 29.9,
-    costPrice: 16.7
-  },
-  {
-    sku: "JMV-CABO-MICRO-1M-BK",
-    name: "Cabo Micro USB 1m",
-    category: "Cabos",
-    brand: "Inova",
-    model: "Fast Sync",
-    color: "Preto",
-    connectorType: "Micro USB",
-    basePrice: 15.9,
-    costPrice: 8.4
-  },
-  {
-    sku: "JMV-CARREG-33W-USBC",
-    name: "Carregador Turbo 33W",
-    category: "Carregadores",
-    brand: "Xtrad",
-    model: "PD 33W",
-    color: "Branco",
-    voltage: "Bivolt",
-    connectorType: "USB-C",
-    basePrice: 54.9,
-    costPrice: 31.5
-  },
-  {
-    sku: "JMV-FONE-BT-TWS-BK",
-    name: "Fone Bluetooth TWS",
-    category: "Áudio",
-    brand: "H'Maston",
-    model: "TW-12",
-    color: "Preto",
-    connectorType: "Bluetooth",
-    basePrice: 64.9,
-    costPrice: 37.8
-  },
-  {
-    sku: "JMV-SUPORTE-VEIC-MAG",
-    name: "Suporte Veicular Magnético",
-    category: "Suportes",
-    brand: "Exbom",
-    model: "SP-MAG",
-    color: "Preto",
-    basePrice: 32.9,
-    costPrice: 18.6
-  },
-  {
-    sku: "JMV-PEL-3D-IP13",
-    name: "Película 3D iPhone 13",
-    category: "Películas",
-    brand: "HPrime",
-    model: "3D",
-    color: "Transparente",
-    basePrice: 19.9,
-    costPrice: 7.2
-  },
-  {
-    sku: "JMV-CAIXA-BT-MINI",
-    name: "Caixa de Som Bluetooth Mini",
-    category: "Áudio",
-    brand: "Altomex",
-    model: "AL-203",
-    color: "Azul",
-    connectorType: "Bluetooth",
-    basePrice: 69.9,
-    costPrice: 41.9
-  },
-  {
-    sku: "JMV-ADAPT-OTG-USBC",
-    name: "Adaptador OTG USB-C",
-    category: "Adaptadores",
-    brand: "Basike",
-    model: "OTG-C",
-    color: "Prata",
-    connectorType: "USB-C",
-    basePrice: 17.9,
-    costPrice: 9.4
-  },
-  {
-    sku: "JMV-LUMINARIA-USB",
-    name: "Luminária LED USB",
-    category: "Utilidades",
-    brand: "Kapbom",
-    model: "KA-601",
-    color: "Branco",
-    connectorType: "USB-A",
-    basePrice: 24.9,
-    costPrice: 13.2
-  },
-  {
-    sku: "JMV-CARREG-VEIC-PD",
-    name: "Carregador Veicular PD 30W",
-    category: "Carregadores",
-    brand: "Kaidi",
-    model: "KD-511",
-    color: "Preto",
-    voltage: "12V/24V",
-    connectorType: "USB-C",
-    basePrice: 39.9,
-    costPrice: 22.8
-  }
+  { sku: "JMV-CABO-USBC-1M-BK", name: "Cabo USB-C 1m", category: "Cabos", brand: "Inova", model: "Fast Sync",
+    color: "Preto", connectorType: "USB-C", basePrice: 18.9, costPrice: 10.4 },
+  { sku: "JMV-CABO-LIGHT-1M-WH", name: "Cabo Lightning 1m", category: "Cabos", brand: "Hrebos",
+    model: "Premium", color: "Branco", connectorType: "Lightning", basePrice: 22.5, costPrice: 12.9 },
+  { sku: "JMV-CARREG-20W-USBC", name: "Carregador Turbo 20W", category: "Carregadores", brand: "Kaidi",
+    model: "PD 20W", color: "Branco", voltage: "Bivolt", connectorType: "USB-C", basePrice: 34.9,
+    costPrice: 20.6 },
+  { sku: "JMV-FONTE-12V-2A-P4", name: "Fonte 12V 2A", category: "Fontes", brand: "Multcomercial", model: "P4",
+    color: "Preto", voltage: "12V", connectorType: "P4", basePrice: 27.4, costPrice: 15.8 },
+  { sku: "JMV-FONE-P2-ESTEREO", name: "Fone Intra Auricular P2", category: "Áudio", brand: "Lehmox",
+    model: "LEF-102", color: "Preto", connectorType: "P2", basePrice: 16.8 },
+  { sku: "JMV-ADAPT-USBC-P2", name: "Adaptador USB-C para P2", category: "Adaptadores", brand: "Exbom",
+    model: "UC-AUX", color: "Cinza", connectorType: "USB-C", basePrice: 14.7, costPrice: 8.1 },
+  { sku: "JMV-CARREG-VEIC-2USB", name: "Carregador Veicular Duplo USB", category: "Carregadores",
+    brand: "It-Blue", model: "CV-210", color: "Preto", voltage: "12V/24V", connectorType: "USB-A",
+    basePrice: 21.3, costPrice: 12.4 },
+  { sku: "JMV-POWERBANK-10K", name: "Power Bank 10000mAh", category: "Baterias", brand: "Pineng",
+    model: "PN-951", color: "Preto", connectorType: "USB-C", basePrice: 79.9, costPrice: 52.3 },
+  { sku: "JMV-CABO-USBC-2M-RD", name: "Cabo USB-C 2m Reforçado", category: "Cabos", brand: "Hrebos",
+    model: "Nylon 2m", color: "Vermelho", connectorType: "USB-C", basePrice: 29.9, costPrice: 16.7 },
+  { sku: "JMV-CABO-MICRO-1M-BK", name: "Cabo Micro USB 1m", category: "Cabos", brand: "Inova",
+    model: "Fast Sync", color: "Preto", connectorType: "Micro USB", basePrice: 15.9, costPrice: 8.4 },
+  { sku: "JMV-CARREG-33W-USBC", name: "Carregador Turbo 33W", category: "Carregadores", brand: "Xtrad",
+    model: "PD 33W", color: "Branco", voltage: "Bivolt", connectorType: "USB-C", basePrice: 54.9,
+    costPrice: 31.5 },
+  { sku: "JMV-FONE-BT-TWS-BK", name: "Fone Bluetooth TWS", category: "Áudio", brand: "H'Maston",
+    model: "TW-12", color: "Preto", connectorType: "Bluetooth", basePrice: 64.9, costPrice: 37.8 },
+  { sku: "JMV-SUPORTE-VEIC-MAG", name: "Suporte Veicular Magnético", category: "Suportes", brand: "Exbom",
+    model: "SP-MAG", color: "Preto", basePrice: 32.9, costPrice: 18.6 },
+  { sku: "JMV-PEL-3D-IP13", name: "Película 3D iPhone 13", category: "Películas", brand: "HPrime",
+    model: "3D", color: "Transparente", basePrice: 19.9, costPrice: 7.2 },
+  { sku: "JMV-CAIXA-BT-MINI", name: "Caixa de Som Bluetooth Mini", category: "Áudio", brand: "Altomex",
+    model: "AL-203", color: "Azul", connectorType: "Bluetooth", basePrice: 69.9, costPrice: 41.9 },
+  { sku: "JMV-ADAPT-OTG-USBC", name: "Adaptador OTG USB-C", category: "Adaptadores", brand: "Basike",
+    model: "OTG-C", color: "Prata", connectorType: "USB-C", basePrice: 17.9, costPrice: 9.4 },
+  { sku: "JMV-LUMINARIA-USB", name: "Luminária LED USB", category: "Utilidades", brand: "Kapbom",
+    model: "KA-601", color: "Branco", connectorType: "USB-A", basePrice: 24.9, costPrice: 13.2 },
+  { sku: "JMV-CARREG-VEIC-PD", name: "Carregador Veicular PD 30W", category: "Carregadores", brand: "Kaidi",
+    model: "KD-511", color: "Preto", voltage: "12V/24V", connectorType: "USB-C", basePrice: 39.9,
+    costPrice: 22.8 }
 ];
 
 const clientSeeds: ClientSeed[] = [
-  {
-    key: "mercado-nova-esperanca",
-    tradeName: "Mercado Nova Esperança",
-    legalName: "Mercado Nova Esperança Ltda",
-    documentNumber: "12.345.678/0001-01",
-    stateRegistration: "345667890",
-    contactName: "Paulo Roberto",
-    phone: "(81) 99811-2201",
-    addressLine: "Rua da Feira, 120",
-    addressCity: "Caruaru",
-    addressState: "PE",
-    addressZipcode: "55002-120",
-    notes: "Mercado de bairro com giro forte de cabos e carregadores de tomada.",
-    visitCycleDays: 7,
-    requiresInvoice: false
-  },
-  {
-    key: "loja-conecta-cell",
-    tradeName: "Conecta Cell Acessórios",
-    legalName: "Conecta Cell Comércio de Eletrônicos Ltda",
-    documentNumber: "22.456.789/0001-02",
-    stateRegistration: "456778901",
-    contactName: "Larissa Gomes",
-    phone: "(81) 99773-1144",
-    addressLine: "Av. Agamenon, 450",
-    addressCity: "Caruaru",
-    addressState: "PE",
-    addressZipcode: "55012-340",
-    notes: "Loja especializada em acessórios; aceita mix maior e reposição semanal.",
-    visitCycleDays: 7,
-    requiresInvoice: true
-  },
-  {
-    key: "lanchonete-sabor-praca",
-    tradeName: "Lanchonete Sabor da Praça",
-    legalName: "Sabor da Praça Alimentos Ltda",
-    documentNumber: "33.567.890/0001-03",
-    contactName: "Marcos Vinicius",
-    phone: "(81) 99121-8787",
-    addressLine: "Praça do Rosário, 18",
-    addressCity: "Bezerros",
-    addressState: "PE",
-    addressZipcode: "55660-000",
-    notes: "Ponto de alimentação com saída baixa de fones e carregadores veiculares.",
-    visitCycleDays: 14,
-    requiresInvoice: false
-  },
-  {
-    key: "conveniencia-ponto-24h",
-    tradeName: "Conveniência Ponto 24h",
-    legalName: "Ponto 24h Conveniência Ltda",
-    documentNumber: "44.678.901/0001-04",
-    contactName: "Camila Duarte",
-    phone: "(81) 98845-6622",
-    addressLine: "BR-232 Km 74, Posto Sol",
-    addressCity: "Gravatá",
-    addressState: "PE",
-    addressZipcode: "55645-000",
+  { key: "mercado-nova-esperanca", tradeName: "Mercado Nova Esperança",
+    legalName: "Mercado Nova Esperança Ltda", documentNumber: "12.345.678/0001-01",
+    stateRegistration: "345667890", contactName: "Paulo Roberto", phone: "(81) 99811-2201",
+    addressLine: "Rua da Feira, 120", addressCity: "Caruaru", addressState: "PE", addressZipcode: "55002-120",
+    notes: "Mercado de bairro com giro forte de cabos e carregadores de tomada.", visitCycleDays: 7,
+    requiresInvoice: false },
+  { key: "loja-conecta-cell", tradeName: "Conecta Cell Acessórios",
+    legalName: "Conecta Cell Comércio de Eletrônicos Ltda", documentNumber: "22.456.789/0001-02",
+    stateRegistration: "456778901", contactName: "Larissa Gomes", phone: "(81) 99773-1144",
+    addressLine: "Av. Agamenon, 450", addressCity: "Caruaru", addressState: "PE", addressZipcode: "55012-340",
+    notes: "Loja especializada em acessórios; aceita mix maior e reposição semanal.", visitCycleDays: 7,
+    requiresInvoice: true },
+  { key: "lanchonete-sabor-praca", tradeName: "Lanchonete Sabor da Praça",
+    legalName: "Sabor da Praça Alimentos Ltda", documentNumber: "33.567.890/0001-03",
+    contactName: "Marcos Vinicius", phone: "(81) 99121-8787", addressLine: "Praça do Rosário, 18",
+    addressCity: "Bezerros", addressState: "PE", addressZipcode: "55660-000",
+    notes: "Ponto de alimentação com saída baixa de fones e carregadores veiculares.", visitCycleDays: 14,
+    requiresInvoice: false },
+  { key: "conveniencia-ponto-24h", tradeName: "Conveniência Ponto 24h",
+    legalName: "Ponto 24h Conveniência Ltda", documentNumber: "44.678.901/0001-04",
+    contactName: "Camila Duarte", phone: "(81) 98845-6622", addressLine: "BR-232 Km 74, Posto Sol",
+    addressCity: "Gravatá", addressState: "PE", addressZipcode: "55645-000",
     notes: "Conveniência de posto com venda boa de cabos, power bank e carregador veicular.",
-    visitCycleDays: 10,
-    requiresInvoice: false
-  },
-  {
-    key: "papelaria-central-mix",
-    tradeName: "Papelaria Central Mix",
-    legalName: "Central Mix Papelaria e Utilidades Ltda",
-    documentNumber: "55.789.012/0001-05",
-    contactName: "Silvana Melo",
-    phone: "(81) 99652-4400",
-    addressLine: "Rua João Pessoa, 89",
-    addressCity: "Santa Cruz do Capibaribe",
-    addressState: "PE",
-    addressZipcode: "55190-000",
-    notes: "Ponto comercial diverso com mix menor e reposição conforme demanda local.",
-    visitCycleDays: 15,
-    requiresInvoice: true
-  }
+    visitCycleDays: 10, requiresInvoice: false },
+  { key: "papelaria-central-mix", tradeName: "Papelaria Central Mix",
+    legalName: "Central Mix Papelaria e Utilidades Ltda", documentNumber: "55.789.012/0001-05",
+    contactName: "Silvana Melo", phone: "(81) 99652-4400", addressLine: "Rua João Pessoa, 89",
+    addressCity: "Santa Cruz do Capibaribe", addressState: "PE", addressZipcode: "55190-000",
+    notes: "Ponto comercial diverso com mix menor e reposição conforme demanda local.", visitCycleDays: 15,
+    requiresInvoice: true }
 ];
 
 const additionalClientRows: Array<[string, string, string, number, boolean]> = [
@@ -435,34 +228,13 @@ const visitSeeds: VisitSeed[] = [
     dueDate: "2026-03-20",
     notes: "Conferência parcial de domingo com reposição de cabos e carregadores.",
     items: [
-      {
-        sku: "JMV-CABO-USBC-1M-BK",
-        quantityPrevious: 12,
-        quantityGoodRemaining: 4,
-        quantityDefectiveReturn: 1,
-        quantityLoss: 0,
-        suggestedRestockQuantity: 8,
-        restockedQuantity: 7,
-        notes: "Ponta do mostruário próxima ao caixa."
-      },
-      {
-        sku: "JMV-CARREG-20W-USBC",
-        quantityPrevious: 8,
-        quantityGoodRemaining: 3,
-        quantityDefectiveReturn: 0,
-        quantityLoss: 1,
-        suggestedRestockQuantity: 6,
-        restockedQuantity: 5
-      },
-      {
-        sku: "JMV-CARREG-VEIC-2USB",
-        quantityPrevious: 5,
-        quantityGoodRemaining: 2,
-        quantityDefectiveReturn: 0,
-        quantityLoss: 0,
-        suggestedRestockQuantity: 3,
-        restockedQuantity: 3
-      }
+      { sku: "JMV-CABO-USBC-1M-BK", quantityPrevious: 12, quantityGoodRemaining: 4,
+        quantityDefectiveReturn: 1, quantityLoss: 0, suggestedRestockQuantity: 8, restockedQuantity: 7,
+        notes: "Ponta do mostruário próxima ao caixa." },
+      { sku: "JMV-CARREG-20W-USBC", quantityPrevious: 8, quantityGoodRemaining: 3, quantityDefectiveReturn: 0,
+        quantityLoss: 1, suggestedRestockQuantity: 6, restockedQuantity: 5 },
+      { sku: "JMV-CARREG-VEIC-2USB", quantityPrevious: 5, quantityGoodRemaining: 2,
+        quantityDefectiveReturn: 0, quantityLoss: 0, suggestedRestockQuantity: 3, restockedQuantity: 3 }
     ]
   },
   {
@@ -473,34 +245,13 @@ const visitSeeds: VisitSeed[] = [
     dueDate: "2026-03-25",
     notes: "Loja pediu reforço em power bank e manteve Lightning com preço promocional da semana.",
     items: [
-      {
-        sku: "JMV-CABO-LIGHT-1M-WH",
-        quantityPrevious: 15,
-        quantityGoodRemaining: 6,
-        quantityDefectiveReturn: 1,
-        quantityLoss: 0,
-        suggestedRestockQuantity: 9,
-        restockedQuantity: 8
-      },
-      {
-        sku: "JMV-ADAPT-USBC-P2",
-        quantityPrevious: 10,
-        quantityGoodRemaining: 5,
-        quantityDefectiveReturn: 0,
-        quantityLoss: 0,
-        suggestedRestockQuantity: 5,
-        restockedQuantity: 5
-      },
-      {
-        sku: "JMV-POWERBANK-10K",
-        quantityPrevious: 6,
-        quantityGoodRemaining: 2,
-        quantityDefectiveReturn: 0,
-        quantityLoss: 0,
-        suggestedRestockQuantity: 4,
-        restockedQuantity: 3,
-        notes: "Cliente pediu reposição menor por causa do capital parado."
-      }
+      { sku: "JMV-CABO-LIGHT-1M-WH", quantityPrevious: 15, quantityGoodRemaining: 6,
+        quantityDefectiveReturn: 1, quantityLoss: 0, suggestedRestockQuantity: 9, restockedQuantity: 8 },
+      { sku: "JMV-ADAPT-USBC-P2", quantityPrevious: 10, quantityGoodRemaining: 5, quantityDefectiveReturn: 0,
+        quantityLoss: 0, suggestedRestockQuantity: 5, restockedQuantity: 5 },
+      { sku: "JMV-POWERBANK-10K", quantityPrevious: 6, quantityGoodRemaining: 2, quantityDefectiveReturn: 0,
+        quantityLoss: 0, suggestedRestockQuantity: 4, restockedQuantity: 3,
+        notes: "Cliente pediu reposição menor por causa do capital parado." }
     ]
   },
   {
@@ -510,33 +261,12 @@ const visitSeeds: VisitSeed[] = [
     receivedAmountOnVisit: 26.9,
     notes: "Visita no fim da tarde com ajuste por perda de uma peça no expositor.",
     items: [
-      {
-        sku: "JMV-CABO-USBC-1M-BK",
-        quantityPrevious: 10,
-        quantityGoodRemaining: 3,
-        quantityDefectiveReturn: 0,
-        quantityLoss: 1,
-        suggestedRestockQuantity: 7,
-        restockedQuantity: 6
-      },
-      {
-        sku: "JMV-CARREG-VEIC-2USB",
-        quantityPrevious: 8,
-        quantityGoodRemaining: 5,
-        quantityDefectiveReturn: 1,
-        quantityLoss: 0,
-        suggestedRestockQuantity: 4,
-        restockedQuantity: 4
-      },
-      {
-        sku: "JMV-POWERBANK-10K",
-        quantityPrevious: 4,
-        quantityGoodRemaining: 3,
-        quantityDefectiveReturn: 0,
-        quantityLoss: 0,
-        suggestedRestockQuantity: 1,
-        restockedQuantity: 1
-      }
+      { sku: "JMV-CABO-USBC-1M-BK", quantityPrevious: 10, quantityGoodRemaining: 3,
+        quantityDefectiveReturn: 0, quantityLoss: 1, suggestedRestockQuantity: 7, restockedQuantity: 6 },
+      { sku: "JMV-CARREG-VEIC-2USB", quantityPrevious: 8, quantityGoodRemaining: 5,
+        quantityDefectiveReturn: 1, quantityLoss: 0, suggestedRestockQuantity: 4, restockedQuantity: 4 },
+      { sku: "JMV-POWERBANK-10K", quantityPrevious: 4, quantityGoodRemaining: 3, quantityDefectiveReturn: 0,
+        quantityLoss: 0, suggestedRestockQuantity: 1, restockedQuantity: 1 }
     ]
   }
 ];
@@ -570,16 +300,10 @@ const completedVisitSeeds: CompletedVisitSeed[] = [
     dueDate: dateOnly(daysAgo(8 - index)),
     notes: `Visita fictícia de demonstração #${index + 1}, com ${sold} unidade(s) vendida(s).`,
     items: [
-      {
-        sku,
-        quantityPrevious,
-        quantityGoodRemaining: visitType === "SALE" ? 0 : quantityGoodRemaining,
-        quantityDefectiveReturn: index === 2 ? 1 : 0,
-        quantityLoss: index === 5 ? 1 : 0,
-        suggestedRestockQuantity: restockedQuantity,
-        restockedQuantity,
-        notes: index === 2 ? "Devolução de item com defeito registrada para demonstração." : undefined
-      }
+      { sku, quantityPrevious, quantityGoodRemaining: visitType === "SALE" ? 0 : quantityGoodRemaining,
+        quantityDefectiveReturn: index === 2 ? 1 : 0, quantityLoss: index === 5 ? 1 : 0,
+        suggestedRestockQuantity: restockedQuantity, restockedQuantity,
+        notes: index === 2 ? "Devolução de item com defeito registrada para demonstração." : undefined }
     ],
     payments:
       partialPayment > 0

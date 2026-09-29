@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -25,6 +25,7 @@ import type { VisitDetail, VisitItem } from "../../types/domain";
 import { listClientCatalog } from "../client-catalog/catalog-api";
 import { listProducts } from "../products/products-api";
 import { VisitReceiptCard } from "./visit-receipt-card";
+import { ColumnLabel, DataCell, formatPaymentMethod, handleVisitMutationSuccess, MetricCell, paymentMethods, ReadonlyValue, StepHeader } from "./visit-flow-ui";
 import {
   bulkUpsertVisitItems,
   cancelVisit,
@@ -43,8 +44,6 @@ import {
   visitStatusLabel,
   visitStatusTone
 } from "./visit-utils";
-
-const paymentMethods = ["CASH", "PIX", "CARD", "BANK_TRANSFER", "OTHER"] as const;
 
 type ConsignmentVisitFlowProps = {
   visit: VisitDetail;
@@ -1377,13 +1376,7 @@ function formatUnknownError(error: unknown): string | null {
   return null;
 }
 
-function handleVisitMutationSuccess(queryClient: QueryClient) {
-  return async (nextVisit: VisitDetail) => {
-    await queryClient.invalidateQueries({ queryKey: ["visits"] });
-    await queryClient.invalidateQueries({ queryKey: ["visits", "operational-queue"] });
-    queryClient.setQueryData(["visit", nextVisit.id], nextVisit);
-  };
-}
+
 
 function formatCompletionError(error: ApiError, visit: VisitDetail): string {
   if (error.code !== "INSUFFICIENT_CENTRAL_STOCK") {
@@ -1406,96 +1399,4 @@ function formatCompletionError(error: ApiError, visit: VisitDetail): string {
     .join(" | ");
 
   return `Estoque central insuficiente. ${formattedItems}`;
-}
-
-function formatPaymentMethod(method: (typeof paymentMethods)[number]) {
-  if (method === "BANK_TRANSFER") {
-    return "Transferência";
-  }
-
-  if (method === "CASH") {
-    return "Dinheiro";
-  }
-
-  if (method === "CARD") {
-    return "Cartão";
-  }
-
-  if (method === "PIX") {
-    return "PIX";
-  }
-
-  return "Outro";
-}
-
-function StepHeader({
-  step,
-  title,
-  subtitle,
-  action
-}: {
-  step: string;
-  title: string;
-  subtitle?: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">{step}</p>
-        <h2 className="mt-1 text-lg font-semibold text-[var(--jam-ink)]">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm text-[var(--jam-subtle)]">{subtitle}</p> : null}
-      </div>
-      {action ? <div className="w-full sm:w-auto sm:shrink-0">{action}</div> : null}
-    </div>
-  );
-}
-
-function MetricCell({
-  label,
-  value,
-  emphasize = false
-}: {
-  label: string;
-  value: string;
-  emphasize?: boolean;
-}) {
-  return (
-    <div className={cx("rounded-xl p-3", emphasize ? "bg-[rgba(29,78,216,0.08)]" : "bg-white")}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[var(--jam-ink)]">{value}</p>
-    </div>
-  );
-}
-
-function ColumnLabel({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cx("text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]", className)}>{children}</p>;
-}
-
-function DataCell({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)] sm:hidden">{label}</p>
-      {children}
-    </div>
-  );
-}
-
-function ReadonlyValue({
-  value,
-  emphasize = false
-}: {
-  value: string;
-  emphasize?: boolean;
-}) {
-  return (
-    <div
-      className={cx(
-        "flex min-h-10 items-center rounded-xl border border-[var(--jam-border)] px-3 text-right text-sm font-medium text-[var(--jam-ink)]",
-        emphasize ? "bg-[var(--jam-panel-strong)]" : "bg-white"
-      )}
-    >
-      <span className="w-full truncate">{value}</span>
-    </div>
-  );
 }

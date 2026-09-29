@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
-import { EmptyState, PageHeader, PageLoader } from "../../components/ui";
+import { EmptyState, FormPage, PageLoader } from "../../components/ui";
 import { getClient } from "../clients/clients-api";
 import { listClientCatalog } from "./catalog-api";
 import { CatalogForm } from "./catalog-form";
@@ -27,15 +27,7 @@ export function CatalogEditPage() {
     return <EmptyState title="Item não encontrado" message="Volte para o mix do cliente e tente novamente." />;
   }
 
-  return (
-    <div className="space-y-4">
-      <PageHeader
-        backTo={`/clients/${clientId}/catalog`}
-        backLabel="Mix"
-        title="Editar mix e preço"
-        subtitle={`${clientQuery.data.tradeName} · ${item.product.name}`}
-      />
-      <CatalogForm client={clientQuery.data} item={item} mode="edit" />
-    </div>
-  );
+  return <FormPage backTo={`/clients/${clientId}/catalog`} backLabel="Mix" title="Editar mix e preço" subtitle={`${clientQuery.data.tradeName} · ${item.product.name}`}>
+    <CatalogForm client={clientQuery.data} item={item} mode="edit" />
+  </FormPage>;
 }

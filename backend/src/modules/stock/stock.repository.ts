@@ -67,19 +67,7 @@ export class StockRepository {
     });
   }
 
-  async listProductsForOverview(
-    db: DbClient = prisma
-  ): Promise<
-    Array<{
-      id: string;
-      sku: string;
-      name: string;
-      category: string | null;
-      isActive: boolean;
-      centralStockBalance: Pick<CentralStockBalance, "currentQuantity"> | null;
-      centralStockMovement: Array<Pick<CentralStockMovement, "movementType" | "createdAt">>;
-    }>
-  > {
+  async listProductsForOverview(db: DbClient = prisma) {
     return db.product.findMany({
       select: {
         id: true,
@@ -170,15 +158,7 @@ export class StockRepository {
       dateTo?: Date;
     },
     db: DbClient = prisma
-  ): Promise<
-    Array<
-      Pick<CentralStockMovement, "id" | "productId" | "movementType" | "quantity" | "referenceType" | "referenceId" | "note" | "createdAt"> & {
-        unitCost: Prisma.Decimal | null;
-        totalCost: Prisma.Decimal | null;
-        product: Pick<Product, "name" | "sku" | "category">;
-      }
-    >
-  > {
+  ) {
     const where: Prisma.CentralStockMovementWhereInput = {
       ...(filters.movementTypes && filters.movementTypes.length > 0
         ? {
@@ -358,15 +338,7 @@ export class StockRepository {
       }));
   }
 
-  async listCentralVisitOutflowMovements(
-    db: DbClient = prisma
-  ): Promise<
-    Array<
-      Pick<CentralStockMovement, "id" | "productId" | "quantity" | "referenceId" | "createdAt"> & {
-        product: Pick<Product, "name" | "sku">;
-      }
-    >
-  > {
+  async listCentralVisitOutflowMovements(db: DbClient = prisma) {
     const supportsDirectSaleOut = await supportsDirectSaleOutMovementType();
 
     try {
@@ -423,20 +395,7 @@ export class StockRepository {
     }
   }
 
-  async findVisitsByIds(
-    visitIds: string[],
-    db: DbClient = prisma
-  ): Promise<
-    Array<{
-      id: string;
-      visitCode: string;
-      visitedAt: Date;
-      clientId: string;
-      client: {
-        tradeName: string;
-      };
-    }>
-  > {
+  async findVisitsByIds(visitIds: string[], db: DbClient = prisma) {
     if (visitIds.length === 0) {
       return [];
     }
@@ -638,18 +597,7 @@ function buildDirectSaleCompatibilityNote(note?: string): string {
   return `${prefix} · ${note}`;
 }
 
-async function listCentralMovementsWithoutCosts(
-  where: Prisma.CentralStockMovementWhereInput,
-  db: DbClient
-): Promise<
-  Array<
-    Pick<CentralStockMovement, "id" | "productId" | "movementType" | "quantity" | "referenceType" | "referenceId" | "note" | "createdAt"> & {
-      unitCost: Prisma.Decimal | null;
-      totalCost: Prisma.Decimal | null;
-      product: Pick<Product, "name" | "sku" | "category">;
-    }
-  >
-> {
+async function listCentralMovementsWithoutCosts(where: Prisma.CentralStockMovementWhereInput, db: DbClient) {
   const movements = await db.centralStockMovement.findMany({
     where,
     select: {
