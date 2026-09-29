@@ -15,7 +15,7 @@ import {
   Select,
   StickyActionBar,
   Textarea,
-  WarningBanner,
+  WarningBanner
 } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { normalizeDecimalInput } from "../../lib/forms";
@@ -44,12 +44,12 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
   const isInitialLoad = mode === "initial-load";
   const productsQuery = useQuery({
     queryKey: ["products", "stock-batch-options"],
-    queryFn: () => listProducts({}),
+    queryFn: () => listProducts({})
   });
   const overviewQuery = useQuery({
     queryKey: ["stock", "overview"],
     queryFn: getCentralOverview,
-    enabled: isInitialLoad,
+    enabled: isInitialLoad
   });
 
   const mutation = useMutation({
@@ -57,56 +57,41 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
       const items = buildBatchItems(rows);
 
       if (items.length === 0) {
-        throw new Error(
-          "Informe pelo menos um produto com quantidade maior que zero.",
-        );
+        throw new Error("Informe pelo menos um produto com quantidade maior que zero.");
       }
 
       return submitBatch({
         note: note.trim() || undefined,
-        items,
+        items
       });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["stock"] });
       navigate("/stock?tab=saldo", { replace: true });
-    },
+    }
   });
 
-  const selectedProductIds = useMemo(
-    () => rows.map((row) => row.productId).filter(Boolean),
-    [rows],
-  );
-  const productById = useMemo(
-    () =>
-      new Map(
-        productsQuery.data?.map((product) => [product.id, product]) ?? [],
-      ),
-    [productsQuery.data],
-  );
+  const selectedProductIds = useMemo(() => rows.map((row) => row.productId).filter(Boolean), [rows]);
+  const productById = useMemo(() => new Map(productsQuery.data?.map((product) => [product.id, product]) ?? []), [productsQuery.data]);
 
   const pageCopy = isInitialLoad
     ? {
         eyebrow: "Estoque central",
         title: "Carga inicial",
-        subtitle:
-          "Monte o estoque pela primeira vez com o custo real desta entrada inicial.",
-        bannerMessage:
-          "Use carga inicial apenas no começo. Informe aqui o custo real desta entrada; o cadastro do produto serve apenas como referência.",
+        subtitle: "Monte o estoque pela primeira vez com o custo real desta entrada inicial.",
+        bannerMessage: "Use carga inicial apenas no começo. Informe aqui o custo real desta entrada; o cadastro do produto serve apenas como referência.",
         noteLabel: "Observação da carga inicial",
         notePlaceholder: "Ex.: saldo contado no início da operação",
-        submitLabel: "Salvar carga inicial",
+        submitLabel: "Salvar carga inicial"
       }
     : {
         eyebrow: "Estoque central",
         title: "Entrada manual",
-        subtitle:
-          "Use quando novas mercadorias entrarem no estoque central, sempre com o custo real desta entrada.",
-        bannerMessage:
-          "Informe o custo real desta entrada. O custo do produto no cadastro serve apenas como referência inicial.",
+        subtitle: "Use quando novas mercadorias entrarem no estoque central, sempre com o custo real desta entrada.",
+        bannerMessage: "Informe o custo real desta entrada. O custo do produto no cadastro serve apenas como referência inicial.",
         noteLabel: "Observação da entrada",
         notePlaceholder: "Ex.: mercadoria recebida do fornecedor",
-        submitLabel: "Salvar entrada manual",
+        submitLabel: "Salvar entrada manual"
       };
 
   if (productsQuery.isPending || (isInitialLoad && overviewQuery.isPending)) {
@@ -114,28 +99,16 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
   }
 
   if (productsQuery.isError || (isInitialLoad && overviewQuery.isError)) {
-    return (
-      <EmptyState
-        title="Não foi possível abrir o lançamento"
-        message="Confira a conexão com o backend e tente novamente."
-      />
-    );
+    return <EmptyState title="Não foi possível abrir o lançamento" message="Confira a conexão com o backend e tente novamente." />;
   }
 
   const products = productsQuery.data ?? [];
-  const canUseInitialLoad =
-    overviewQuery.data?.summary.canUseInitialLoad ?? true;
+  const canUseInitialLoad = overviewQuery.data?.summary.canUseInitialLoad ?? true;
 
   if (products.length === 0) {
     return (
       <div className="space-y-4">
-        <PageHeader
-          backTo="/stock?tab=saldo"
-          backLabel="Estoque"
-          eyebrow={pageCopy.eyebrow}
-          title={pageCopy.title}
-          subtitle={pageCopy.subtitle}
-        />
+        <PageHeader backTo="/stock?tab=saldo" backLabel="Estoque" eyebrow={pageCopy.eyebrow} title={pageCopy.title} subtitle={pageCopy.subtitle} />
         <EmptyState
           title="Cadastre produtos primeiro"
           message="O estoque central depende da base de produtos. Depois do cadastro, volte aqui para lançar as quantidades."
@@ -176,54 +149,33 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
     );
   }
 
-  const mutationError =
-    mutation.error instanceof ApiError
-      ? mutation.error.message
-      : mutation.error instanceof Error
-        ? mutation.error.message
-        : null;
+  const mutationError = mutation.error instanceof ApiError ? mutation.error.message : mutation.error instanceof Error ? mutation.error.message : null;
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        backTo="/stock?tab=saldo"
-        backLabel="Estoque"
-        eyebrow={pageCopy.eyebrow}
-        title={pageCopy.title}
-        subtitle={pageCopy.subtitle}
-      />
+      <PageHeader backTo="/stock?tab=saldo" backLabel="Estoque" eyebrow={pageCopy.eyebrow} title={pageCopy.title} subtitle={pageCopy.subtitle} />
 
       <Card className="space-y-4">
         <WarningBanner message={pageCopy.bannerMessage} />
 
-        {mutationError || formError ? (
-          <ErrorBanner message={mutationError ?? formError ?? ""} />
-        ) : null}
+        {mutationError || formError ? <ErrorBanner message={mutationError ?? formError ?? ""} /> : null}
 
         <div className="space-y-3">
           {rows.map((row, index) => {
-            const blockedIds = selectedProductIds.filter(
-              (selectedId) => selectedId && selectedId !== row.productId,
-            );
-            const availableProducts = products.filter(
-              (product) => !blockedIds.includes(product.id),
-            );
+            const blockedIds = selectedProductIds.filter((selectedId) => selectedId && selectedId !== row.productId);
+            const availableProducts = products.filter((product) => !blockedIds.includes(product.id));
 
             return (
               <Card key={row.id} className="space-y-3 bg-white/70">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-[var(--jam-ink)]">
-                    Produto {index + 1}
-                  </p>
+                  <p className="text-sm font-semibold text-[var(--jam-ink)]">Produto {index + 1}</p>
                   {rows.length > 1 ? (
                     <Button
                       type="button"
                       variant="ghost"
                       className="min-h-0 px-0 text-xs"
                       onClick={() => {
-                        setRows((currentRows) =>
-                          currentRows.filter((entry) => entry.id !== row.id),
-                        );
+                        setRows((currentRows) => currentRows.filter((entry) => entry.id !== row.id));
                       }}
                     >
                       Remover
@@ -236,9 +188,7 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                     value={row.productId}
                     onChange={(event) => {
                       setFormError(null);
-                      const selectedProduct = productById.get(
-                        event.target.value,
-                      );
+                      const selectedProduct = productById.get(event.target.value);
                       setRows((currentRows) =>
                         currentRows.map((entry) =>
                           entry.id === row.id
@@ -246,13 +196,10 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                                 ...entry,
                                 productId: event.target.value,
                                 unitCost:
-                                  selectedProduct?.costPrice !== null &&
-                                  selectedProduct?.costPrice !== undefined
-                                    ? String(selectedProduct.costPrice)
-                                    : "",
+                                  selectedProduct?.costPrice !== null && selectedProduct?.costPrice !== undefined ? String(selectedProduct.costPrice) : ""
                               }
-                            : entry,
-                        ),
+                            : entry
+                        )
                       );
                     }}
                   >
@@ -275,13 +222,7 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                       value={row.quantity}
                       onChange={(event) => {
                         setFormError(null);
-                        setRows((currentRows) =>
-                          currentRows.map((entry) =>
-                            entry.id === row.id
-                              ? { ...entry, quantity: event.target.value }
-                              : entry,
-                          ),
-                        );
+                        setRows((currentRows) => currentRows.map((entry) => (entry.id === row.id ? { ...entry, quantity: event.target.value } : entry)));
                       }}
                     />
                   </Field>
@@ -294,13 +235,7 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
                       value={row.unitCost}
                       onChange={(event) => {
                         setFormError(null);
-                        setRows((currentRows) =>
-                          currentRows.map((entry) =>
-                            entry.id === row.id
-                              ? { ...entry, unitCost: event.target.value }
-                              : entry,
-                          ),
-                        );
+                        setRows((currentRows) => currentRows.map((entry) => (entry.id === row.id ? { ...entry, unitCost: event.target.value } : entry)));
                       }}
                     />
                   </Field>
@@ -323,18 +258,9 @@ export function StockBatchPage({ mode, submitBatch }: StockBatchPageProps) {
 
         <Field
           label={pageCopy.noteLabel}
-          hint={
-            isInitialLoad
-              ? "Opcional, mas ajuda a registrar como o saldo inicial foi montado."
-              : "Opcional, para rastrear a origem da mercadoria."
-          }
+          hint={isInitialLoad ? "Opcional, mas ajuda a registrar como o saldo inicial foi montado." : "Opcional, para rastrear a origem da mercadoria."}
         >
-          <Textarea
-            placeholder={pageCopy.notePlaceholder}
-            value={note}
-            maxLength={500}
-            onChange={(event) => setNote(event.target.value)}
-          />
+          <Textarea placeholder={pageCopy.notePlaceholder} value={note} maxLength={500} onChange={(event) => setNote(event.target.value)} />
         </Field>
 
         <StickyActionBar>
@@ -367,12 +293,9 @@ function buildBatchItems(rows: StockBatchRow[]) {
     .map((row) => ({
       productId: row.productId,
       quantity: row.quantity.trim(),
-      unitCost: normalizeDecimalInput(row.unitCost),
+      unitCost: normalizeDecimalInput(row.unitCost)
     }))
-    .filter(
-      (row) =>
-        row.productId || row.quantity.length > 0 || row.unitCost.length > 0,
-    );
+    .filter((row) => row.productId || row.quantity.length > 0 || row.unitCost.length > 0);
 
   for (const item of items) {
     if (!item.productId) {
@@ -380,19 +303,11 @@ function buildBatchItems(rows: StockBatchRow[]) {
     }
 
     if (!/^\d+$/.test(item.quantity) || Number(item.quantity) <= 0) {
-      throw new Error(
-        "Informe quantidades inteiras maiores que zero para cada produto preenchido.",
-      );
+      throw new Error("Informe quantidades inteiras maiores que zero para cada produto preenchido.");
     }
 
-    if (
-      item.unitCost.length === 0 ||
-      Number.isNaN(Number(item.unitCost)) ||
-      Number(item.unitCost) < 0
-    ) {
-      throw new Error(
-        "Informe um custo unitário válido para cada produto preenchido.",
-      );
+    if (item.unitCost.length === 0 || Number.isNaN(Number(item.unitCost)) || Number(item.unitCost) < 0) {
+      throw new Error("Informe um custo unitário válido para cada produto preenchido.");
     }
   }
 
@@ -409,7 +324,7 @@ function buildBatchItems(rows: StockBatchRow[]) {
   return items.map((item) => ({
     productId: item.productId,
     quantity: Number(item.quantity),
-    unitCost: Number(item.unitCost),
+    unitCost: Number(item.unitCost)
   }));
 }
 
@@ -418,6 +333,6 @@ function createEmptyRow(): StockBatchRow {
     id: window.crypto.randomUUID(),
     productId: "",
     quantity: "",
-    unitCost: "",
+    unitCost: ""
   };
 }

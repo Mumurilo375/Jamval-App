@@ -44,17 +44,32 @@ export function PageHeader({
 }
 
 export function FormPage({
-  title, backTo, backLabel, subtitle, children
+  title,
+  backTo,
+  backLabel,
+  subtitle,
+  children
 }: PropsWithChildren<{ title: string; backTo: string; backLabel: string; subtitle?: string }>) {
-  return <div className="space-y-4">
-    <PageHeader title={title} backTo={backTo} backLabel={backLabel} subtitle={subtitle} />
-    {children}
-  </div>;
+  return (
+    <div className="space-y-4">
+      <PageHeader title={title} backTo={backTo} backLabel={backLabel} subtitle={subtitle} />
+      {children}
+    </div>
+  );
 }
 
 function BackArrowIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M15 18l-6-6 6-6" />
     </svg>
   );
@@ -154,12 +169,7 @@ export function DrawerPanel({
 
   return (
     <div className="fixed inset-0 z-[90]">
-      <button
-        type="button"
-        className="absolute inset-0 bg-[rgba(15,23,42,0.46)] backdrop-blur-[2px]"
-        onClick={onClose}
-        aria-label="Fechar painel"
-      />
+      <button type="button" className="absolute inset-0 bg-[rgba(15,23,42,0.46)] backdrop-blur-[2px]" onClick={onClose} aria-label="Fechar painel" />
 
       <div className="absolute inset-0 flex items-end justify-end sm:items-stretch">
         <section
@@ -176,8 +186,14 @@ export function DrawerPanel({
         >
           <div className="flex items-start justify-between gap-3 border-b border-[var(--jam-border)] px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="min-w-0">
-              <p id={titleId} className="text-[15px] font-semibold text-[var(--jam-ink)] sm:text-base">{title}</p>
-              {description ? <p id={descriptionId} className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-sm">{description}</p> : null}
+              <p id={titleId} className="text-[15px] font-semibold text-[var(--jam-ink)] sm:text-base">
+                {title}
+              </p>
+              {description ? (
+                <p id={descriptionId} className="mt-1 text-[12px] leading-5 text-[var(--jam-subtle)] sm:text-sm">
+                  {description}
+                </p>
+              ) : null}
             </div>
 
             <button
@@ -246,12 +262,7 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      <button
-        type="button"
-        className="absolute inset-0 bg-[rgba(15,23,42,0.52)] backdrop-blur-[2px]"
-        onClick={onCancel}
-        aria-label="Cancelar confirmação"
-      />
+      <button type="button" className="absolute inset-0 bg-[rgba(15,23,42,0.52)] backdrop-blur-[2px]" onClick={onCancel} aria-label="Cancelar confirmação" />
       <section
         role="alertdialog"
         aria-modal="true"
@@ -284,8 +295,12 @@ export function ConfirmDialog({
         }}
         className="relative w-full max-w-[420px] rounded-2xl border border-[var(--jam-border)] bg-[var(--jam-panel)] p-4 shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:p-5"
       >
-        <h2 id={titleId} className="text-base font-semibold text-[var(--jam-ink)]">{title}</h2>
-        <p id={messageId} className="mt-2 text-[13px] leading-5 text-[var(--jam-subtle)]">{message}</p>
+        <h2 id={titleId} className="text-base font-semibold text-[var(--jam-ink)]">
+          {title}
+        </h2>
+        <p id={messageId} className="mt-2 text-[13px] leading-5 text-[var(--jam-subtle)]">
+          {message}
+        </p>
         <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={onCancel}>
             Continuar editando
@@ -318,7 +333,7 @@ export function Button({
         ? "border border-[var(--jam-border)] bg-white text-[var(--jam-ink)]"
         : variant === "danger"
           ? "bg-[rgba(180,35,24,0.08)] text-[var(--jam-danger)]"
-        : "bg-transparent text-[var(--jam-subtle)]";
+          : "bg-transparent text-[var(--jam-subtle)]";
 
   return (
     <button
@@ -419,15 +434,7 @@ type DateInputProps = {
   max?: string;
 };
 
-export function DateInput({
-  value,
-  onValueChange,
-  placeholder = "Selecionar data",
-  className,
-  disabled,
-  min,
-  max
-}: DateInputProps) {
+export function DateInput({ value, onValueChange, placeholder = "Selecionar data", className, disabled, min, max }: DateInputProps) {
   return (
     <DateValuePicker
       mode="date"
@@ -442,15 +449,7 @@ export function DateInput({
   );
 }
 
-export function DateTimeInput({
-  value,
-  onValueChange,
-  placeholder = "Selecionar data e hora",
-  className,
-  disabled,
-  min,
-  max
-}: DateInputProps) {
+export function DateTimeInput({ value, onValueChange, placeholder = "Selecionar data e hora", className, disabled, min, max }: DateInputProps) {
   return (
     <DateValuePicker
       mode="datetime-local"
@@ -465,28 +464,10 @@ export function DateTimeInput({
   );
 }
 
-function DateValuePicker({
-  mode,
-  value,
-  onValueChange,
-  placeholder,
-  className,
-  disabled,
-  min,
-  max
-}: DateInputProps & { mode: "date" | "datetime-local" }) {
-  const selectedDate = useMemo(
-    () => (mode === "date" ? parseDateValue(value) : parseDateTimeLocalValue(value)),
-    [mode, value]
-  );
-  const minDate = useMemo(
-    () => (mode === "date" ? parseDateValue(min) : parseDateTimeLocalValue(min)),
-    [mode, min]
-  );
-  const maxDate = useMemo(
-    () => (mode === "date" ? parseDateValue(max) : parseDateTimeLocalValue(max)),
-    [mode, max]
-  );
+function DateValuePicker({ mode, value, onValueChange, placeholder, className, disabled, min, max }: DateInputProps & { mode: "date" | "datetime-local" }) {
+  const selectedDate = useMemo(() => (mode === "date" ? parseDateValue(value) : parseDateTimeLocalValue(value)), [mode, value]);
+  const minDate = useMemo(() => (mode === "date" ? parseDateValue(min) : parseDateTimeLocalValue(min)), [mode, min]);
+  const maxDate = useMemo(() => (mode === "date" ? parseDateValue(max) : parseDateTimeLocalValue(max)), [mode, max]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState<Date>(() => {
@@ -619,7 +600,9 @@ function DateValuePicker({
             >
               <ChevronLeftIcon />
             </button>
-            <p className="text-[14px] font-semibold text-[var(--jam-ink)] sm:text-[13px]">{MONTH_LABELS[viewDate.getMonth()]} {viewDate.getFullYear()}</p>
+            <p className="text-[14px] font-semibold text-[var(--jam-ink)] sm:text-[13px]">
+              {MONTH_LABELS[viewDate.getMonth()]} {viewDate.getFullYear()}
+            </p>
             <button
               type="button"
               aria-label="Próximo mês"
@@ -780,10 +763,7 @@ export function Checkbox({
 }) {
   return (
     <label
-      className={cx(
-        "flex items-start gap-3 rounded-xl border border-[var(--jam-border)] bg-white p-3 text-[13px] text-[var(--jam-ink)] sm:text-sm",
-        className
-      )}
+      className={cx("flex items-start gap-3 rounded-xl border border-[var(--jam-border)] bg-white p-3 text-[13px] text-[var(--jam-ink)] sm:text-sm", className)}
     >
       <input {...props} type="checkbox" className="mt-1 h-4 w-4 accent-[var(--jam-accent)]" />
       <span>
@@ -794,12 +774,7 @@ export function Checkbox({
   );
 }
 
-export function Field({
-  label,
-  hint,
-  error,
-  children
-}: PropsWithChildren<{ label: string; hint?: string; error?: string }>) {
+export function Field({ label, hint, error, children }: PropsWithChildren<{ label: string; hint?: string; error?: string }>) {
   return (
     <label className="block space-y-1.5">
       <span className="block text-[13px] font-medium text-[var(--jam-ink)] sm:text-sm">{label}</span>
@@ -811,7 +786,11 @@ export function Field({
 }
 
 export function ErrorBanner({ message }: { message: string }) {
-  return <p className="rounded-xl border border-[rgba(180,35,24,0.14)] bg-[rgba(180,35,24,0.06)] px-3.5 py-3 text-sm font-medium text-[var(--jam-danger)]">{message}</p>;
+  return (
+    <p className="rounded-xl border border-[rgba(180,35,24,0.14)] bg-[rgba(180,35,24,0.06)] px-3.5 py-3 text-sm font-medium text-[var(--jam-danger)]">
+      {message}
+    </p>
+  );
 }
 
 export function WarningBanner({ message }: { message: string }) {
@@ -843,13 +822,7 @@ export function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
-export function ToneBadge({
-  label,
-  tone
-}: {
-  label: string;
-  tone: "neutral" | "warning" | "success" | "danger";
-}) {
+export function ToneBadge({ label, tone }: { label: string; tone: "neutral" | "warning" | "success" | "danger" }) {
   const toneClassName =
     tone === "success"
       ? "bg-[rgba(15,118,110,0.1)] text-[var(--jam-success)]"
@@ -862,15 +835,7 @@ export function ToneBadge({
   return <span className={cx("rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]", toneClassName)}>{label}</span>;
 }
 
-export function SectionHeader({
-  title,
-  subtitle,
-  action
-}: {
-  title: string;
-  subtitle?: string;
-  action?: ReactNode;
-}) {
+export function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
@@ -911,13 +876,7 @@ export function PaginationControls({
       </p>
 
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:flex sm:items-center">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => onPageChange(page - 1)}
-          disabled={page <= 1}
-          className="min-w-[96px]"
-        >
+        <Button type="button" variant="secondary" onClick={() => onPageChange(page - 1)} disabled={page <= 1} className="min-w-[96px]">
           Anterior
         </Button>
 
@@ -925,13 +884,7 @@ export function PaginationControls({
           Página {page} de {totalPages}
         </p>
 
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => onPageChange(page + 1)}
-          disabled={page >= totalPages}
-          className="min-w-[96px]"
-        >
+        <Button type="button" variant="secondary" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} className="min-w-[96px]">
           Próxima
         </Button>
       </div>
@@ -939,15 +892,7 @@ export function PaginationControls({
   );
 }
 
-export function RetryableErrorState({
-  title,
-  message,
-  onRetry
-}: {
-  title: string;
-  message: string;
-  onRetry: () => void;
-}) {
+export function RetryableErrorState({ title, message, onRetry }: { title: string; message: string; onRetry: () => void }) {
   return (
     <EmptyState
       title={title}
@@ -961,13 +906,7 @@ export function RetryableErrorState({
   );
 }
 
-export function ListSkeleton({
-  rows = 4,
-  className
-}: {
-  rows?: number;
-  className?: string;
-}) {
+export function ListSkeleton({ rows = 4, className }: { rows?: number; className?: string }) {
   return (
     <Card className={cx("space-y-3", className)}>
       {Array.from({ length: rows }).map((_, index) => (
@@ -989,17 +928,7 @@ export function StickyActionBar({ children }: PropsWithChildren) {
   );
 }
 
-export function CompactLinkRow({
-  title,
-  subtitle,
-  right,
-  className
-}: {
-  title: string;
-  subtitle?: string;
-  right?: ReactNode;
-  className?: string;
-}) {
+export function CompactLinkRow({ title, subtitle, right, className }: { title: string; subtitle?: string; right?: ReactNode; className?: string }) {
   return (
     <div
       className={cx(
@@ -1016,15 +945,7 @@ export function CompactLinkRow({
   );
 }
 
-export function EmptyState({
-  title,
-  message,
-  action
-}: {
-  title: string;
-  message: string;
-  action?: React.ReactNode;
-}) {
+export function EmptyState({ title, message, action }: { title: string; message: string; action?: React.ReactNode }) {
   return (
     <Card className="text-center">
       <h2 className="font-display text-lg font-bold">{title}</h2>
@@ -1037,9 +958,7 @@ export function EmptyState({
 export function PageLoader({ label = "Carregando..." }: { label?: string }) {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <div className="rounded-full border border-[var(--jam-border)] bg-white px-4 py-3 text-sm font-medium text-[var(--jam-subtle)] shadow-sm">
-        {label}
-      </div>
+      <div className="rounded-full border border-[var(--jam-border)] bg-white px-4 py-3 text-sm font-medium text-[var(--jam-subtle)] shadow-sm">{label}</div>
     </div>
   );
 }
@@ -1055,7 +974,16 @@ function CloseIcon() {
 
 function ChevronLeftIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="m15 18-6-6 6-6" />
     </svg>
   );
@@ -1063,27 +991,23 @@ function ChevronLeftIcon() {
 
 function ChevronRightIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="m9 18 6-6-6-6" />
     </svg>
   );
 }
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
-const MONTH_LABELS = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro"
-];
+const MONTH_LABELS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, minute) => String(minute).padStart(2, "0"));
 
@@ -1118,15 +1042,7 @@ function parseDateTimeLocalValue(value?: string): Date | null {
     return null;
   }
 
-  const date = new Date(
-    Number(match[1]),
-    Number(match[2]) - 1,
-    Number(match[3]),
-    Number(match[4]),
-    Number(match[5]),
-    0,
-    0
-  );
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), 0, 0);
 
   if (Number.isNaN(date.getTime())) {
     return null;

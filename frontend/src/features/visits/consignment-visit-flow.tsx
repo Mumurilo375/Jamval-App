@@ -71,11 +71,7 @@ type AvailableProductOption = {
   suggestedPrevious: number | null;
 };
 
-type PendingConsignmentAction =
-  | { type: "CONCLUDE" }
-  | { type: "REMOVE_ITEM"; itemId: string; itemName: string }
-  | { type: "CANCEL" }
-  | null;
+type PendingConsignmentAction = { type: "CONCLUDE" } | { type: "REMOVE_ITEM"; itemId: string; itemName: string } | { type: "CANCEL" } | null;
 
 type RowViewModel = {
   item: VisitItem;
@@ -229,21 +225,14 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
   );
   const receivedAmountValue = useMemo(() => parseMoneyInput(receivedAmountInput), [receivedAmountInput]);
   const safeReceivedAmount = Number.isNaN(receivedAmountValue) ? 0 : receivedAmountValue;
-  const pendingAmount = useMemo(
-    () => computeVisitPendingAmount(totals.totalAmount, safeReceivedAmount),
-    [safeReceivedAmount, totals.totalAmount]
-  );
+  const pendingAmount = useMemo(() => computeVisitPendingAmount(totals.totalAmount, safeReceivedAmount), [safeReceivedAmount, totals.totalAmount]);
   const metadataHasChanges =
-    normalizeMoneyValue(receivedAmountValue) !== normalizeMoneyValue(visitNumber(visit.receivedAmountOnVisit)) ||
-    visitNotesInput !== (visit.notes ?? "");
+    normalizeMoneyValue(receivedAmountValue) !== normalizeMoneyValue(visitNumber(visit.receivedAmountOnVisit)) || visitNotesInput !== (visit.notes ?? "");
   const itemsHaveChanges = rowViewModels.some((row) => row.hasChanges);
   const rowValidationErrors = rowViewModels.flatMap((row) => row.errors);
   const receivedAmountError = buildReceivedAmountError(receivedAmountValue, totals.totalAmount);
   const stockWarnings = isDraft ? rowViewModels.filter((row) => row.exceedsCentralStock) : [];
-  const suggestedPreviousByProductId = useMemo(
-    () => buildSuggestedPreviousByProductId(completedHistoryQuery.data ?? []),
-    [completedHistoryQuery.data]
-  );
+  const suggestedPreviousByProductId = useMemo(() => buildSuggestedPreviousByProductId(completedHistoryQuery.data ?? []), [completedHistoryQuery.data]);
   const availableProducts = useMemo<AvailableProductOption[]>(() => {
     if (!productsQuery.data) {
       return [];
@@ -304,12 +293,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
     visit.id
   ]);
 
-  const draftMutationError = resolveActiveError(
-    saveItemsMutation.error,
-    saveMetadataMutation.error,
-    deleteItemMutation.error,
-    cancelMutation.error
-  );
+  const draftMutationError = resolveActiveError(saveItemsMutation.error, saveMetadataMutation.error, deleteItemMutation.error, cancelMutation.error);
   const saveBusy = saveItemsMutation.isPending || saveMetadataMutation.isPending;
   const isBusy =
     saveBusy ||
@@ -656,9 +640,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                     </div>
                   </div>
 
-                  {row.errors.length > 0 ? (
-                    <p className="mt-3 text-sm font-medium text-[var(--jam-danger)]">{row.errors.join(" ")}</p>
-                  ) : null}
+                  {row.errors.length > 0 ? <p className="mt-3 text-sm font-medium text-[var(--jam-danger)]">{row.errors.join(" ")}</p> : null}
 
                   {isExpanded ? (
                     <div className="mt-3 space-y-3 rounded-xl bg-[var(--jam-panel-strong)] p-3">
@@ -776,10 +758,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
       </Card>
 
       <Card className="space-y-4">
-        <StepHeader
-          step="Etapa 2"
-          title="Receber"
-        />
+        <StepHeader step="Etapa 2" title="Receber" />
 
         <div className="grid gap-3 sm:grid-cols-3">
           <MetricCell label="Total do acerto" value={formatCurrency(totals.totalAmount)} emphasize />
@@ -790,10 +769,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
         {isDraft ? (
           <div className="max-w-md">
             <Field label="Valor recebido" error={receivedAmountError ?? undefined}>
-              <MoneyInput
-                value={receivedAmountInput}
-                onChange={(event) => setReceivedAmountInput(event.target.value)}
-              />
+              <MoneyInput value={receivedAmountInput} onChange={(event) => setReceivedAmountInput(event.target.value)} />
             </Field>
           </div>
         ) : (
@@ -802,11 +778,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
       </Card>
 
       <Card className="space-y-4">
-        <StepHeader
-          step="Etapa 3"
-          title="Repor e gerar nova base"
-          subtitle="Informe apenas o que vai hoje. A nova base sai automaticamente."
-        />
+        <StepHeader step="Etapa 3" title="Repor e gerar nova base" subtitle="Informe apenas o que vai hoje. A nova base sai automaticamente." />
 
         {visit.items.length === 0 ? (
           <p className="text-sm text-[var(--jam-subtle)]">A reposição aparece depois que você montar a conferência do período.</p>
@@ -825,9 +797,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                   <DataCell label="Produto">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{row.item.productSnapshotName}</p>
-                      {isDraft ? (
-                        <p className="mt-0.5 text-xs text-[var(--jam-subtle)]">Central disponível: {row.availableCentralQuantity}</p>
-                      ) : null}
+                      {isDraft ? <p className="mt-0.5 text-xs text-[var(--jam-subtle)]">Central disponível: {row.availableCentralQuantity}</p> : null}
                     </div>
                   </DataCell>
 
@@ -929,12 +899,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
       {isDraft ? (
         <Card className="space-y-3">
           <StepHeader step="Não finalizada" title="Ações da visita" />
-          <Button
-            variant="danger"
-            className="w-full"
-            disabled={cancelMutation.isPending}
-            onClick={() => setPendingAction({ type: "CANCEL" })}
-          >
+          <Button variant="danger" className="w-full" disabled={cancelMutation.isPending} onClick={() => setPendingAction({ type: "CANCEL" })}>
             {cancelMutation.isPending ? "Cancelando..." : "Cancelar visita"}
           </Button>
         </Card>
@@ -943,13 +908,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
       <DrawerPanel
         open={pendingAction !== null}
         onClose={() => setPendingAction(null)}
-        title={
-          pendingAction?.type === "REMOVE_ITEM"
-            ? "Remover produto"
-            : pendingAction?.type === "CANCEL"
-              ? "Cancelar visita"
-              : "Concluir visita"
-        }
+        title={pendingAction?.type === "REMOVE_ITEM" ? "Remover produto" : pendingAction?.type === "CANCEL" ? "Cancelar visita" : "Concluir visita"}
         description={
           pendingAction?.type === "REMOVE_ITEM"
             ? `O produto ${pendingAction.itemName} será removido desta visita não finalizada.`
@@ -994,9 +953,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
               <MetricCell label="Saldo" value={formatCurrency(pendingAmount)} />
             </div>
           ) : pendingAction?.type === "REMOVE_ITEM" ? (
-            <p className="text-sm text-[var(--jam-subtle)]">
-              Se este produto ainda precisa ficar na conferência do período, volte agora antes de remover.
-            </p>
+            <p className="text-sm text-[var(--jam-subtle)]">Se este produto ainda precisa ficar na conferência do período, volte agora antes de remover.</p>
           ) : (
             <p className="text-sm text-[var(--jam-subtle)]">
               Se você ainda precisa revisar conferência, recebimento ou reposição, volte agora antes de cancelar.
@@ -1017,12 +974,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
             </Button>
             <Button
               onClick={() => void onAddProduct()}
-              disabled={
-                addProductMutation.isPending ||
-                !selectedProductOption ||
-                Boolean(addProductQuantityError) ||
-                Boolean(addProductPriceError)
-              }
+              disabled={addProductMutation.isPending || !selectedProductOption || Boolean(addProductQuantityError) || Boolean(addProductPriceError)}
             >
               {addProductMutation.isPending ? "Adicionando..." : "Adicionar produto"}
             </Button>
@@ -1051,9 +1003,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
                     setAddProductId(nextProductId);
                     setAddProductUnitPriceInput(option ? String(option.unitPrice) : "");
                     setAddProductPreviousInput(
-                      option?.suggestedPrevious === null || option?.suggestedPrevious === undefined
-                        ? ""
-                        : String(option.suggestedPrevious)
+                      option?.suggestedPrevious === null || option?.suggestedPrevious === undefined ? "" : String(option.suggestedPrevious)
                     );
                   }}
                 >
@@ -1084,10 +1034,7 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
               </Field>
 
               <Field label="Preço" error={addProductPriceError}>
-                <MoneyInput
-                  value={addProductUnitPriceInput}
-                  onChange={(event) => setAddProductUnitPriceInput(event.target.value)}
-                />
+                <MoneyInput value={addProductUnitPriceInput} onChange={(event) => setAddProductUnitPriceInput(event.target.value)} />
               </Field>
 
               {selectedProductOption ? (
@@ -1209,9 +1156,7 @@ function ExchangeOption({
       }}
       className={cx(
         "rounded-xl border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--jam-blue)]",
-        checked
-          ? "border-[var(--jam-blue)] bg-[rgba(29,78,216,0.07)]"
-          : "border-[var(--jam-border)] bg-white",
+        checked ? "border-[var(--jam-blue)] bg-[rgba(29,78,216,0.07)]" : "border-[var(--jam-border)] bg-white",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
       )}
     >
@@ -1376,16 +1321,13 @@ function formatUnknownError(error: unknown): string | null {
   return null;
 }
 
-
-
 function formatCompletionError(error: ApiError, visit: VisitDetail): string {
   if (error.code !== "INSUFFICIENT_CENTRAL_STOCK") {
     return error.message;
   }
 
-  const rawItems = (
-    error.details as { visitProducts?: Array<{ productId: string; requiredQuantity: number; availableQuantity: number }> } | null
-  )?.visitProducts;
+  const rawItems = (error.details as { visitProducts?: Array<{ productId: string; requiredQuantity: number; availableQuantity: number }> } | null)
+    ?.visitProducts;
 
   if (!rawItems || rawItems.length === 0) {
     return "Estoque central insuficiente para concluir a visita.";

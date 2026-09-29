@@ -57,10 +57,7 @@ export function StockPage() {
   const [balancePage, setBalancePage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
   const [outflowPage, setOutflowPage] = useState(1);
-  const activeTab =
-    searchParams.get("tab") === "historico" || searchParams.get("tab") === "saidas"
-      ? searchParams.get("tab")!
-      : "saldo";
+  const activeTab = searchParams.get("tab") === "historico" || searchParams.get("tab") === "saidas" ? searchParams.get("tab")! : "saldo";
   const balanceSearch = searchParams.get("balanceSearch") ?? "";
   const legacyBalanceCategory = searchParams.get("balanceCategory") ?? "";
   const selectedCategories = useMemo(() => {
@@ -152,13 +149,8 @@ export function StockPage() {
   }
 
   const { summary, items } = overviewQuery.data;
-  const filteredProductsWithoutStock = filteredBalanceItems.filter(
-    (item) => item.currentQuantity <= 0
-  ).length;
-  const filteredUnitsTotal = filteredBalanceItems.reduce(
-    (total, item) => total + item.currentQuantity,
-    0
-  );
+  const filteredProductsWithoutStock = filteredBalanceItems.filter((item) => item.currentQuantity <= 0).length;
+  const filteredUnitsTotal = filteredBalanceItems.reduce((total, item) => total + item.currentQuantity, 0);
   const attentionItems = filteredBalanceItems.slice(0, ATTENTION_LIMIT);
   const highlightedItemIds = new Set(attentionItems.map((item) => item.productId));
   const selectedCategorySummary =
@@ -167,10 +159,7 @@ export function StockPage() {
       : selectedCategories.length <= 3
         ? selectedCategories.join(" • ")
         : `${selectedCategories.slice(0, 3).join(" • ")} +${selectedCategories.length - 3}`;
-  const categoryButtonLabel =
-    selectedCategories.length > 0
-      ? `Filtrar categorias (${selectedCategories.length})`
-      : "Filtrar categorias";
+  const categoryButtonLabel = selectedCategories.length > 0 ? `Filtrar categorias (${selectedCategories.length})` : "Filtrar categorias";
 
   const updateParams = (
     updates: Record<string, string>,
@@ -220,9 +209,7 @@ export function StockPage() {
       <Card className="overflow-hidden p-0">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(220px,0.8fr)_minmax(0,1fr)]">
           <section className="space-y-2 border-b border-[var(--jam-border)] px-4 py-3 lg:border-b-0 lg:border-r">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">
-              Resumo do recorte
-            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Resumo do recorte</p>
 
             <div className="grid grid-cols-3 gap-3">
               <CompactStat label="Produtos" value={String(filteredBalanceItems.length)} />
@@ -232,22 +219,13 @@ export function StockPage() {
           </section>
 
           <section className="space-y-2 border-b border-[var(--jam-border)] px-4 py-3 lg:border-b-0 lg:border-r">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">
-              Último lançamento
-            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Último lançamento</p>
 
             {summary.lastMovement ? (
               <div className="space-y-2">
-                <ToneBadge
-                  label={getCompactMovementLabel(summary.lastMovement.label)}
-                  tone={getMovementTone(summary.lastMovement.balanceEffect)}
-                />
-                <p className="text-base font-semibold text-[var(--jam-ink)]">
-                  {formatOperationalDateTime(summary.lastMovement.createdAt)}
-                </p>
-                <p className="text-sm text-[var(--jam-subtle)]">
-                  {getMovementEffectLabel(summary.lastMovement.balanceEffect)}
-                </p>
+                <ToneBadge label={getCompactMovementLabel(summary.lastMovement.label)} tone={getMovementTone(summary.lastMovement.balanceEffect)} />
+                <p className="text-base font-semibold text-[var(--jam-ink)]">{formatOperationalDateTime(summary.lastMovement.createdAt)}</p>
+                <p className="text-sm text-[var(--jam-subtle)]">{getMovementEffectLabel(summary.lastMovement.balanceEffect)}</p>
               </div>
             ) : (
               <p className="text-base font-semibold text-[var(--jam-ink)]">Sem lançamento ainda</p>
@@ -255,28 +233,12 @@ export function StockPage() {
           </section>
 
           <section className="space-y-2 px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">
-              Movimentar estoque
-            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--jam-subtle)]">Movimentar estoque</p>
 
             <div className="grid gap-2">
-              <ActionLink
-                to="/stock/manual-entry"
-                title="Entrada manual"
-                subtitle="Nova mercadoria"
-              />
-              <ActionLink
-                to="/stock/manual-adjustment"
-                title="Ajuste manual"
-                subtitle="Corrigir saldo"
-              />
-              {summary.canUseInitialLoad ? (
-                <ActionLink
-                  to="/stock/initial-load"
-                  title="Carga inicial"
-                  subtitle="Primeiro estoque"
-                />
-              ) : null}
+              <ActionLink to="/stock/manual-entry" title="Entrada manual" subtitle="Nova mercadoria" />
+              <ActionLink to="/stock/manual-adjustment" title="Ajuste manual" subtitle="Corrigir saldo" />
+              {summary.canUseInitialLoad ? <ActionLink to="/stock/initial-load" title="Carga inicial" subtitle="Primeiro estoque" /> : null}
             </div>
           </section>
         </div>
@@ -310,19 +272,13 @@ export function StockPage() {
                   <Input
                     placeholder="Produto ou categoria"
                     value={balanceSearch}
-                    onChange={(event) =>
-                      updateParams({ balanceSearch: event.target.value }, { balance: true })
-                    }
+                    onChange={(event) => updateParams({ balanceSearch: event.target.value }, { balance: true })}
                   />
                 </Field>
               </div>
 
               <div className="sm:pt-6">
-                <Button
-                  variant="secondary"
-                  className="w-full sm:w-auto"
-                  onClick={() => setIsCategoryDrawerOpen(true)}
-                >
+                <Button variant="secondary" className="w-full sm:w-auto" onClick={() => setIsCategoryDrawerOpen(true)}>
                   {categoryButtonLabel}
                 </Button>
               </div>
@@ -335,9 +291,7 @@ export function StockPage() {
                 <button
                   type="button"
                   className="text-sm font-medium text-[var(--jam-accent)]"
-                  onClick={() =>
-                    updateParams({ balanceCategories: "", balanceCategory: "" }, { balance: true })
-                  }
+                  onClick={() => updateParams({ balanceCategories: "", balanceCategory: "" }, { balance: true })}
                 >
                   Limpar
                 </button>
@@ -357,22 +311,16 @@ export function StockPage() {
             />
           ) : filteredBalanceItems.length === 0 ? (
             <Card>
-              <p className="text-sm text-[var(--jam-subtle)]">
-                Nenhum produto encontrado para os filtros atuais.
-              </p>
+              <p className="text-sm text-[var(--jam-subtle)]">Nenhum produto encontrado para os filtros atuais.</p>
             </Card>
           ) : (
             <>
               <Card className="space-y-3">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
-                      Precisando de reposicao
-                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Precisando de reposicao</p>
                   </div>
-                  <p className="text-sm font-medium text-[var(--jam-ink)]">
-                    {filteredProductsWithoutStock} sem saldo neste recorte
-                  </p>
+                  <p className="text-sm font-medium text-[var(--jam-ink)]">{filteredProductsWithoutStock} sem saldo neste recorte</p>
                 </div>
 
                 <div className="grid gap-2">
@@ -390,17 +338,13 @@ export function StockPage() {
                       className={cx(
                         "px-4 py-3 transition hover:bg-[rgba(15,23,42,0.02)]",
                         item.currentQuantity <= 0 && "bg-[rgba(180,35,24,0.04)]",
-                        item.currentQuantity > 0 &&
-                          highlightedItemIds.has(item.productId) &&
-                          "bg-[rgba(180,83,9,0.05)]"
+                        item.currentQuantity > 0 && highlightedItemIds.has(item.productId) && "bg-[rgba(180,83,9,0.05)]"
                       )}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">
-                              {item.name}
-                            </p>
+                            <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">{item.name}</p>
                             {!item.isActive ? <ToneBadge label="Inativo" tone="neutral" /> : null}
                             {item.currentQuantity <= 0 ? (
                               <ToneBadge label="Sem saldo" tone="danger" />
@@ -409,22 +353,14 @@ export function StockPage() {
                             ) : null}
                           </div>
 
-                          <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-                            {getCategoryLabel(item.category)}
-                          </p>
+                          <p className="mt-1 text-sm text-[var(--jam-subtle)]">{getCategoryLabel(item.category)}</p>
 
-                          <p className="mt-2 text-xs text-[var(--jam-subtle)]">
-                            {formatStockRowMovement(item.lastMovement)}
-                          </p>
+                          <p className="mt-2 text-xs text-[var(--jam-subtle)]">{formatStockRowMovement(item.lastMovement)}</p>
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <p className="text-lg font-semibold leading-none text-[var(--jam-ink)]">
-                            {item.currentQuantity}
-                          </p>
-                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
-                            un.
-                          </p>
+                          <p className="text-lg font-semibold leading-none text-[var(--jam-ink)]">{item.currentQuantity}</p>
+                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">un.</p>
                         </div>
                       </div>
                     </article>
@@ -453,19 +389,12 @@ export function StockPage() {
                 <Input
                   placeholder="Produto, referência ou observação"
                   value={historySearch}
-                  onChange={(event) =>
-                    updateParams({ historySearch: event.target.value }, { history: true })
-                  }
+                  onChange={(event) => updateParams({ historySearch: event.target.value }, { history: true })}
                 />
               </Field>
 
               <Field label="Tipo">
-                <Select
-                  value={historyMovementKind}
-                  onChange={(event) =>
-                    updateParams({ movementKind: event.target.value }, { history: true })
-                  }
-                >
+                <Select value={historyMovementKind} onChange={(event) => updateParams({ movementKind: event.target.value }, { history: true })}>
                   {movementKindOptions.map((option) => (
                     <option key={option.label} value={option.value}>
                       {option.label}
@@ -475,21 +404,11 @@ export function StockPage() {
               </Field>
 
               <Field label="De">
-                <DateInput
-                  value={historyDateFrom}
-                  onValueChange={(value) =>
-                    updateParams({ historyDateFrom: value }, { history: true })
-                  }
-                />
+                <DateInput value={historyDateFrom} onValueChange={(value) => updateParams({ historyDateFrom: value }, { history: true })} />
               </Field>
 
               <Field label="Até">
-                <DateInput
-                  value={historyDateTo}
-                  onValueChange={(value) =>
-                    updateParams({ historyDateTo: value }, { history: true })
-                  }
-                />
+                <DateInput value={historyDateTo} onValueChange={(value) => updateParams({ historyDateTo: value }, { history: true })} />
               </Field>
             </div>
           </Card>
@@ -499,12 +418,7 @@ export function StockPage() {
               type="button"
               variant="ghost"
               className="border border-[var(--jam-border)]"
-              onClick={() =>
-                updateParams(
-                  { historySearch: "", movementKind: "", historyDateFrom: "", historyDateTo: "" },
-                  { history: true }
-                )
-              }
+              onClick={() => updateParams({ historySearch: "", movementKind: "", historyDateFrom: "", historyDateTo: "" }, { history: true })}
             >
               Limpar filtros
             </Button>
@@ -522,9 +436,7 @@ export function StockPage() {
 
           {!movementsQuery.isPending && !movementsQuery.isError && (movementsQuery.data?.length ?? 0) === 0 ? (
             <Card>
-              <p className="text-sm text-[var(--jam-subtle)]">
-                Nenhuma movimentação encontrada para os filtros atuais.
-              </p>
+              <p className="text-sm text-[var(--jam-subtle)]">Nenhuma movimentação encontrada para os filtros atuais.</p>
             </Card>
           ) : null}
 
@@ -542,28 +454,18 @@ export function StockPage() {
                   <article key={movement.id} className="px-4 py-3">
                     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_160px_96px_148px] lg:items-start">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">
-                          {movement.productName}
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--jam-subtle)]">
-                          {getCategoryLabel(movement.productCategory)}
-                        </p>
+                        <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">{movement.productName}</p>
+                        <p className="mt-1 text-sm text-[var(--jam-subtle)]">{getCategoryLabel(movement.productCategory)}</p>
                       </div>
 
                       <MovementTypeBadge label={movement.movementLabel} />
                       <MovementQuantityBadge effect={movement.balanceEffect} quantity={movement.quantity} />
-                      <p className="text-sm text-[var(--jam-subtle)] lg:text-right">
-                        {formatDateTime(movement.createdAt)}
-                      </p>
+                      <p className="text-sm text-[var(--jam-subtle)] lg:text-right">{formatDateTime(movement.createdAt)}</p>
 
                       <div className="grid gap-1 text-sm text-[var(--jam-subtle)] lg:col-span-4">
                         <p>{movement.referenceLabel}</p>
                         {movement.note ? <p>{movement.note}</p> : null}
-                        {movement.unitCost !== null ? (
-                          <p className="font-medium text-[var(--jam-ink)]">
-                            {formatMovementCost(movement)}
-                          </p>
-                        ) : null}
+                        {movement.unitCost !== null ? <p className="font-medium text-[var(--jam-ink)]">{formatMovementCost(movement)}</p> : null}
                       </div>
                     </div>
                   </article>
@@ -588,21 +490,11 @@ export function StockPage() {
           <Card className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Visitas desde">
-                <DateInput
-                  value={outflowDateFrom}
-                  onValueChange={(value) =>
-                    updateParams({ outflowDateFrom: value }, { outflow: true })
-                  }
-                />
+                <DateInput value={outflowDateFrom} onValueChange={(value) => updateParams({ outflowDateFrom: value }, { outflow: true })} />
               </Field>
 
               <Field label="Visitas ate">
-                <DateInput
-                  value={outflowDateTo}
-                  onValueChange={(value) =>
-                    updateParams({ outflowDateTo: value }, { outflow: true })
-                  }
-                />
+                <DateInput value={outflowDateTo} onValueChange={(value) => updateParams({ outflowDateTo: value }, { outflow: true })} />
               </Field>
             </div>
           </Card>
@@ -630,9 +522,7 @@ export function StockPage() {
 
           {!outflowsQuery.isPending && !outflowsQuery.isError && (outflowsQuery.data?.length ?? 0) === 0 ? (
             <Card>
-              <p className="text-sm text-[var(--jam-subtle)]">
-                Nenhuma saída de visita encontrada nesse período.
-              </p>
+              <p className="text-sm text-[var(--jam-subtle)]">Nenhuma saída de visita encontrada nesse período.</p>
             </Card>
           ) : null}
 
@@ -640,31 +530,19 @@ export function StockPage() {
             <Card className="overflow-hidden p-0">
               <div className="divide-y divide-[var(--jam-border)]">
                 {paginatedOutflows.pageItems.map((group) => (
-                  <Link
-                    key={group.visitId}
-                    to={`/visits/${group.visitId}`}
-                    className="block px-4 py-3 transition hover:bg-[rgba(29,78,216,0.04)]"
-                  >
+                  <Link key={group.visitId} to={`/visits/${group.visitId}`} className="block px-4 py-3 transition hover:bg-[rgba(29,78,216,0.04)]">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">
-                          {group.clientTradeName}
-                        </p>
+                        <p className="truncate text-sm font-semibold text-[var(--jam-ink)] sm:text-base">{group.clientTradeName}</p>
                         <p className="mt-1 text-sm text-[var(--jam-subtle)]">
                           {formatDateTime(group.visitedAt)} • {group.visitCode}
                         </p>
-                        <div className="mt-2 text-sm text-[var(--jam-subtle)]">
-                          {renderOutflowItemsSummary(group.items)}
-                        </div>
+                        <div className="mt-2 text-sm text-[var(--jam-subtle)]">{renderOutflowItemsSummary(group.items)}</div>
                       </div>
 
                       <div className="text-left sm:min-w-[160px] sm:text-right">
-                        <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
-                          Total enviado
-                        </p>
-                        <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">
-                          {group.totalUnits} un.
-                        </p>
+                        <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jam-subtle)]">Total enviado</p>
+                        <p className="mt-1 text-base font-semibold text-[var(--jam-ink)]">{group.totalUnits} un.</p>
                         <p className="mt-2 text-xs font-medium text-[var(--jam-accent)]">Abrir visita</p>
                       </div>
                     </div>
@@ -692,12 +570,7 @@ export function StockPage() {
         description="Marque uma ou mais categorias para filtrar o saldo atual."
         footer={
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button
-              variant="ghost"
-              onClick={() =>
-                updateParams({ balanceCategories: "", balanceCategory: "" }, { balance: true })
-              }
-            >
+            <Button variant="ghost" onClick={() => updateParams({ balanceCategories: "", balanceCategory: "" }, { balance: true })}>
               Limpar
             </Button>
             <Button onClick={() => setIsCategoryDrawerOpen(false)}>Fechar</Button>
@@ -756,24 +629,18 @@ function PriorityRow({ item }: { item: CentralOverview["items"][number] }) {
     <div
       className={cx(
         "flex items-start justify-between gap-3 rounded-xl border px-3 py-3",
-        item.currentQuantity <= 0
-          ? "border-[rgba(180,35,24,0.18)] bg-[rgba(180,35,24,0.05)]"
-          : "border-[rgba(180,83,9,0.18)] bg-[rgba(180,83,9,0.05)]"
+        item.currentQuantity <= 0 ? "border-[rgba(180,35,24,0.18)] bg-[rgba(180,35,24,0.05)]" : "border-[rgba(180,83,9,0.18)] bg-[rgba(180,83,9,0.05)]"
       )}
     >
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-[var(--jam-ink)]">{item.name}</p>
         <p className="mt-0.5 text-xs text-[var(--jam-subtle)]">{getCategoryLabel(item.category)}</p>
-        <p className="mt-2 text-xs text-[var(--jam-subtle)]">
-          {item.currentQuantity <= 0 ? "Sem saldo no momento" : "Entre os menores saldos do recorte"}
-        </p>
+        <p className="mt-2 text-xs text-[var(--jam-subtle)]">{item.currentQuantity <= 0 ? "Sem saldo no momento" : "Entre os menores saldos do recorte"}</p>
       </div>
 
       <div className="text-right">
         <p className="text-lg font-semibold leading-none text-[var(--jam-ink)]">{item.currentQuantity}</p>
-        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
-          un.
-        </p>
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">un.</p>
       </div>
     </div>
   );
@@ -782,20 +649,14 @@ function PriorityRow({ item }: { item: CentralOverview["items"][number] }) {
 function CompactStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 border-l border-[var(--jam-border)] pl-3 first:border-l-0 first:pl-0">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">
-        {label}
-      </p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]">{label}</p>
       <p className="mt-1 truncate text-base font-semibold text-[var(--jam-ink)]">{value}</p>
     </div>
   );
 }
 
 function ColumnLabel({ children, className }: { children: string; className?: string }) {
-  return (
-    <p className={cx("text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]", className)}>
-      {children}
-    </p>
-  );
+  return <p className={cx("text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--jam-subtle)]", className)}>{children}</p>;
 }
 
 function MovementTypeBadge({ label }: { label: string }) {
@@ -816,7 +677,9 @@ function MovementQuantityBadge({ effect, quantity }: { effect: "IN" | "OUT" | "N
   const sign = effect === "IN" ? "+" : effect === "OUT" ? "-" : "i";
 
   return (
-    <span className={`inline-flex min-h-10 w-full items-center justify-center rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${className}`}>
+    <span
+      className={`inline-flex min-h-10 w-full items-center justify-center rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${className}`}
+    >
       {sign} {quantity}
     </span>
   );
@@ -846,9 +709,7 @@ function formatOperationalDateTime(value: string) {
   return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")} ${time}`;
 }
 
-function formatStockRowMovement(
-  movement: { label: string; createdAt: string } | null
-) {
+function formatStockRowMovement(movement: { label: string; createdAt: string } | null) {
   if (!movement) {
     return "Sem movimentacao ainda";
   }
@@ -867,17 +728,12 @@ function renderOutflowItemsSummary(items: Array<{ productName: string; quantity:
           <span className="font-semibold text-[var(--jam-ink)]">{item.productName}</span>
         </Fragment>
       ))}
-      {items.length > 2 ? (
-        <span className="text-[var(--jam-subtle)]">+{items.length - 2} item(ns)</span>
-      ) : null}
+      {items.length > 2 ? <span className="text-[var(--jam-subtle)]">+{items.length - 2} item(ns)</span> : null}
     </p>
   );
 }
 
-function compareItemsByOperationalPriority(
-  left: CentralOverview["items"][number],
-  right: CentralOverview["items"][number]
-) {
+function compareItemsByOperationalPriority(left: CentralOverview["items"][number], right: CentralOverview["items"][number]) {
   if (left.currentQuantity !== right.currentQuantity) {
     return left.currentQuantity - right.currentQuantity;
   }

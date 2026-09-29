@@ -55,13 +55,7 @@ type VisitItemFormProps = {
   suggestedPreviousByProductId?: Record<string, number>;
 };
 
-export function VisitItemForm({
-  mode,
-  visit,
-  productOptions,
-  item,
-  suggestedPreviousByProductId = {}
-}: VisitItemFormProps) {
+export function VisitItemForm({ mode, visit, productOptions, item, suggestedPreviousByProductId = {} }: VisitItemFormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const autoSeedRef = useRef<{ productId: string | null; quantityPrevious: string }>({
@@ -94,10 +88,7 @@ export function VisitItemForm({
   const quantityDefectiveReturnValue = useWatch({ control, name: "quantityDefectiveReturn" });
   const unitPriceValue = useWatch({ control, name: "unitPrice" });
   const restockedQuantityValue = useWatch({ control, name: "restockedQuantity" });
-  const selectedProduct = useMemo(
-    () => productOptions.find((entry) => entry.productId === selectedProductId) ?? null,
-    [productOptions, selectedProductId]
-  );
+  const selectedProduct = useMemo(() => productOptions.find((entry) => entry.productId === selectedProductId) ?? null, [productOptions, selectedProductId]);
   const selectedProductIdForBalance = selectedProduct?.productId ?? item?.productId ?? null;
   const suggestedPreviousQuantity = useMemo(() => {
     if (!selectedProduct) {
@@ -138,10 +129,7 @@ export function VisitItemForm({
     }
 
     const currentQuantityPrevious = getValues("quantityPrevious");
-    if (
-      nextSuggestedPrevious &&
-      (currentQuantityPrevious === "" || currentQuantityPrevious === autoSeedRef.current.quantityPrevious)
-    ) {
+    if (nextSuggestedPrevious && (currentQuantityPrevious === "" || currentQuantityPrevious === autoSeedRef.current.quantityPrevious)) {
       setValue("quantityPrevious", nextSuggestedPrevious, {
         shouldDirty: false,
         shouldValidate: true
@@ -153,10 +141,7 @@ export function VisitItemForm({
     }
   }, [getValues, mode, selectedProduct, setValue, suggestedPreviousQuantity]);
 
-  const availableCentralQuantity = useMemo(
-    () => centralBalanceQuery.data?.[0]?.currentQuantity ?? 0,
-    [centralBalanceQuery.data]
-  );
+  const availableCentralQuantity = useMemo(() => centralBalanceQuery.data?.[0]?.currentQuantity ?? 0, [centralBalanceQuery.data]);
   const unitPriceNumber = useMemo(() => {
     const parsed = parseDecimalInput(unitPriceValue || "0");
     return Number.isNaN(parsed) ? 0 : parsed;
@@ -273,10 +258,7 @@ export function VisitItemForm({
           )}
 
           <div className="space-y-3">
-            <SectionLabel
-              title="Base da conferência"
-              subtitle="Primeiro confirme qual era o saldo anterior do produto no cliente."
-            />
+            <SectionLabel title="Base da conferência" subtitle="Primeiro confirme qual era o saldo anterior do produto no cliente." />
 
             <div className="rounded-2xl border border-[rgba(29,78,216,0.18)] bg-[rgba(29,78,216,0.04)] p-4">
               <Field label="Anterior no cliente" hint={quantityPreviousHint} error={errors.quantityPrevious?.message}>
@@ -295,36 +277,18 @@ export function VisitItemForm({
           </div>
 
           <div className="space-y-3">
-            <SectionLabel
-              title="Conferência atual"
-              subtitle="Conte o que sobrou no local e informe apenas o que foi visto agora."
-            />
+            <SectionLabel title="Conferência atual" subtitle="Conte o que sobrou no local e informe apenas o que foi visto agora." />
 
             <div className="grid grid-cols-2 gap-3">
-              <NumberField
-                label="Restante na loja"
-                error={errors.quantityGoodRemaining?.message}
-                registration={register("quantityGoodRemaining")}
-              />
-              <NumberField
-                label="Trocas"
-                error={errors.quantityDefectiveReturn?.message}
-                registration={register("quantityDefectiveReturn")}
-              />
+              <NumberField label="Restante na loja" error={errors.quantityGoodRemaining?.message} registration={register("quantityGoodRemaining")} />
+              <NumberField label="Trocas" error={errors.quantityDefectiveReturn?.message} registration={register("quantityDefectiveReturn")} />
             </div>
           </div>
 
           <div className="space-y-3">
-            <SectionLabel
-              title="Reposição para a próxima visita"
-              subtitle="Defina o que está voltando para o cliente ainda nesta mesma visita."
-            />
+            <SectionLabel title="Reposição para a próxima visita" subtitle="Defina o que está voltando para o cliente ainda nesta mesma visita." />
 
-            <NumberField
-              label="Quantidade reposta"
-              error={errors.restockedQuantity?.message}
-              registration={register("restockedQuantity")}
-            />
+            <NumberField label="Quantidade reposta" error={errors.restockedQuantity?.message} registration={register("restockedQuantity")} />
 
             {stockWarningMessage ? <WarningBanner message={stockWarningMessage} /> : null}
           </div>
@@ -358,9 +322,7 @@ export function VisitItemForm({
         </div>
 
         {preview.quantitySold < 0 ? (
-          <p className="text-sm font-medium text-[var(--jam-danger)]">
-            A conta ficou negativa. Revise a contagem atual antes de salvar a conferência.
-          </p>
+          <p className="text-sm font-medium text-[var(--jam-danger)]">A conta ficou negativa. Revise a contagem atual antes de salvar a conferência.</p>
         ) : null}
       </Card>
     </div>
@@ -392,15 +354,7 @@ function SectionLabel({ title, subtitle }: { title: string; subtitle: string }) 
   );
 }
 
-function NumberField({
-  label,
-  error,
-  registration
-}: {
-  label: string;
-  error?: string;
-  registration: UseFormRegisterReturn;
-}) {
+function NumberField({ label, error, registration }: { label: string; error?: string; registration: UseFormRegisterReturn }) {
   return (
     <Field label={label} error={error}>
       <Input inputMode="numeric" placeholder="0" {...registration} />
