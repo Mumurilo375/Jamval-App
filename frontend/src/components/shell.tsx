@@ -93,6 +93,7 @@ export function AppShell() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(() => getInitialTheme());
   const firstName = user?.name.split(" ")[0] ?? "Admin";
+  const userInitial = firstName.charAt(0).toLocaleUpperCase("pt-BR");
   const isDarkTheme = theme === "dark";
   const activeNavigationItem = useMemo(
     () =>
@@ -137,12 +138,12 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-[var(--jam-bg)] text-[var(--jam-ink)]">
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-[var(--jam-border)] bg-[var(--jam-header-bg)] backdrop-blur">
-        <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center justify-between gap-2.5 px-2.5 sm:h-14 sm:px-4 md:px-6">
-          <div className="flex min-w-0 items-center gap-3">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-[var(--jam-border)] bg-[var(--jam-header-bg)]">
+        <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center justify-between gap-2 px-2.5 sm:h-14 sm:px-4 md:px-6">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <button
               type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-ink)] transition hover:bg-[var(--jam-panel-strong)] sm:h-9 sm:w-9 md:hidden"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-ink)] transition hover:border-[var(--jam-accent)] hover:bg-[var(--jam-accent-soft)] hover:text-[var(--jam-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--jam-accent)] md:hidden"
               onClick={() => setIsDrawerOpen(true)}
               aria-label="Abrir menu"
               aria-expanded={isDrawerOpen}
@@ -152,17 +153,17 @@ export function AppShell() {
             </button>
 
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--jam-subtle)]">Jamval</p>
-              <p className="truncate text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">
+              <p className="font-display text-sm font-semibold leading-tight tracking-[-0.02em] text-[var(--jam-ink)] sm:text-base">Jamval</p>
+              <p className="truncate text-[11px] font-medium leading-tight text-[var(--jam-subtle)] sm:text-xs">
                 {activeNavigationItem?.label ?? "Operação do consignado"}
               </p>
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button
               type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-ink)] transition hover:bg-[var(--jam-panel-strong)] sm:h-9 sm:w-9"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] text-[var(--jam-subtle)] transition hover:border-[var(--jam-accent)] hover:bg-[var(--jam-accent-soft)] hover:text-[var(--jam-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--jam-accent)]"
               onClick={() => setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"))}
               aria-label={isDarkTheme ? "Ativar tema claro" : "Ativar tema escuro"}
               title={isDarkTheme ? "Ativar tema claro" : "Ativar tema escuro"}
@@ -170,8 +171,11 @@ export function AppShell() {
               {isDarkTheme ? <SunIcon /> : <MoonIcon />}
             </button>
 
-            <div className="rounded-full border border-[var(--jam-border)] bg-[var(--jam-panel)] px-2.5 py-1 text-right sm:px-3 sm:py-1.5">
-              <p className="text-[12px] font-medium text-[var(--jam-ink)] sm:text-sm">{firstName}</p>
+            <div className="flex h-10 items-center gap-2 rounded-xl border border-[var(--jam-border)] bg-[var(--jam-panel)] py-1 pl-1 pr-2 sm:pl-1.5 sm:pr-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--jam-accent-soft)] text-xs font-semibold text-[var(--jam-accent)]">
+                {userInitial}
+              </span>
+              <p className="max-w-24 truncate text-xs font-medium text-[var(--jam-ink)] sm:text-sm">{firstName}</p>
             </div>
           </div>
         </div>
