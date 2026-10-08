@@ -139,7 +139,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-[var(--jam-bg)] text-[var(--jam-ink)]">
       <header className="fixed inset-x-0 top-0 z-40 border-b border-[var(--jam-border)] bg-[var(--jam-header-bg)]">
-        <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center justify-between gap-2 px-2.5 sm:h-14 sm:px-4 md:px-6">
+        <div className="flex h-[52px] w-full items-center justify-between gap-2 px-2.5 sm:h-14 sm:px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <button
               type="button"
@@ -198,7 +198,6 @@ export function AppShell() {
           aria-hidden={!isDrawerOpen}
         >
           <NavigationPanel
-            firstName={firstName}
             pathname={location.pathname}
             onNavigate={() => setIsDrawerOpen(false)}
             onClose={() => setIsDrawerOpen(false)}
@@ -214,7 +213,6 @@ export function AppShell() {
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-[var(--jam-border)] bg-[var(--jam-panel)] md:flex md:flex-col">
         <div className="h-14 shrink-0 border-b border-[var(--jam-border)]" />
         <NavigationPanel
-          firstName={firstName}
           pathname={location.pathname}
           onLogout={() => {
             void logoutMutation.mutateAsync();
@@ -234,14 +232,12 @@ export function AppShell() {
 
 function NavigationPanel({
   pathname,
-  firstName,
   onNavigate,
   onClose,
   onLogout,
   isLoggingOut
 }: {
   pathname: string;
-  firstName: string;
   onNavigate?: () => void;
   onClose?: () => void;
   onLogout: () => void;
@@ -271,12 +267,7 @@ function NavigationPanel({
             </button>
           ) : null}
         </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="font-display text-xl font-semibold text-[var(--jam-ink)]">Operação</p>
-          <p className="max-w-[112px] truncate rounded-full border border-[var(--jam-border)] bg-[var(--jam-panel-strong)] px-2.5 py-1 text-[12px] font-medium text-[var(--jam-ink)]">
-            {firstName}
-          </p>
-        </div>
+        <p className="mt-2 font-display text-xl font-semibold text-[var(--jam-ink)]">Operação</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-3.5">

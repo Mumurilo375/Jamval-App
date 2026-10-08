@@ -11,10 +11,12 @@ Na raiz do projeto:
 - `npm run build`
 - `npm run lint:frontend`
 
+Para gerar o bundle de produção neste ambiente, use `cd frontend && npx vite build`. Evite `npm run build`: ele executa `tsc -b` antes do Vite, etapa que pode exceder a memória disponível.
+
 Diretamente nesta pasta:
 
 - `npm run dev`
-- `npm run build`
+- `npx vite build` (build de produção recomendado neste ambiente)
 - `npm run lint`
 
 ## Ambiente

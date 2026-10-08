@@ -9,6 +9,7 @@ import {
   putVisitSignatureBodySchema,
   updateVisitBodySchema,
   visitIdParamSchema,
+  visitClientParamSchema,
   visitItemParamsSchema,
   visitListQuerySchema
 } from "./visit.schema";
@@ -46,6 +47,13 @@ export class VisitController {
     const visit = await this.service.getById(params.id);
 
     reply.send({ data: visit });
+  };
+
+  getRecentCompletedByClient = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const params = parseWithZod(visitClientParamSchema, request.params);
+    const visits = await this.service.listRecentCompletedByClient(params.clientId);
+
+    reply.send({ data: visits });
   };
 
   update = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {

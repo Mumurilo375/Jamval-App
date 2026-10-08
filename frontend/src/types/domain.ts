@@ -107,6 +107,7 @@ export type VisitItem = {
 
 export type VisitDetail = Visit & {
   items: VisitItem[];
+  client: Pick<Client, "id" | "tradeName">;
 };
 
 export type OperationalQueueMainAction = {

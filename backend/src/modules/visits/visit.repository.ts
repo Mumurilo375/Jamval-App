@@ -23,6 +23,12 @@ import type {
 const visitWithItemsInclude = {
   items: {
     orderBy: [{ createdAt: "asc" }]
+  },
+  client: {
+    select: {
+      id: true,
+      tradeName: true
+    }
   }
 } satisfies Prisma.VisitInclude;
 
@@ -70,6 +76,22 @@ export class VisitRepository {
     return db.visit.findMany({
       where,
       orderBy: [{ visitedAt: "desc" }]
+    });
+  }
+
+  async listRecentCompletedByClient(clientId: string, visitType: Visit["visitType"], limit: number, db: DbClient = prisma) {
+    return db.visit.findMany({
+      where: { clientId, visitType, status: "COMPLETED" },
+      select: {
+        items: {
+          select: {
+            productId: true,
+            resultingClientQuantity: true
+          }
+        }
+      },
+      orderBy: [{ visitedAt: "desc" }, { createdAt: "desc" }],
+      take: limit
     });
   }
 

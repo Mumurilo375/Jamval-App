@@ -17,6 +17,10 @@ export const visitIdParamSchema = z.object({
   id: z.string().uuid()
 });
 
+export const visitClientParamSchema = z.object({
+  clientId: z.string().uuid()
+});
+
 export const visitItemParamsSchema = z.object({
   id: z.string().uuid(),
   itemId: z.string().uuid()

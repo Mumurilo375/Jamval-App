@@ -89,15 +89,10 @@ export function getVisit(visitId: string) {
   return api.get<VisitDetail>(`/visits/${visitId}`);
 }
 
-export async function listCompletedVisitHistoryDetails(clientId: string, limit = 6, visitType?: VisitType) {
-  const visits = await listVisits({ clientId, status: "COMPLETED", visitType });
-  const recentVisitIds = visits.slice(0, limit).map((visit) => visit.id);
-
-  if (recentVisitIds.length === 0) {
-    return [];
-  }
-
-  return Promise.all(recentVisitIds.map((visitId) => getVisit(visitId)));
+export function listRecentCompletedVisitHistory(clientId: string) {
+  return api.get<Array<{ items: Array<Pick<VisitDetail["items"][number], "productId" | "resultingClientQuantity">> }>>(
+    `/visits/completed-history/${clientId}`
+  );
 }
 
 export function createVisit(payload: VisitPayload) {

@@ -21,7 +21,9 @@ export function computeVisitPendingAmount(totalAmount: number | string, received
   return Number(Math.max(total - received, 0).toFixed(2));
 }
 
-export function buildSuggestedPreviousByProductId(completedVisits: VisitDetail[]): Record<string, number> {
+export function buildSuggestedPreviousByProductId(
+  completedVisits: Array<{ items: Array<Pick<VisitDetail["items"][number], "productId" | "resultingClientQuantity">> }>
+): Record<string, number> {
   const map: Record<string, number> = {};
 
   for (const completedVisit of completedVisits) {

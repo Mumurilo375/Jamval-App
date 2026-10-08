@@ -120,6 +120,10 @@ export class VisitService {
     return visit;
   }
 
+  listRecentCompletedByClient(clientId: string, visitType: VisitListQuery["visitType"] = "CONSIGNMENT", limit = 6) {
+    return this.repository.listRecentCompletedByClient(clientId, visitType, limit);
+  }
+
   async create(input: CreateVisitInput): Promise<VisitWithItems> {
     ensureReceivedAmountWithinTotal(input.receivedAmountOnVisit ?? 0, 0);
 

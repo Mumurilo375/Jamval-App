@@ -8,6 +8,7 @@ export async function visitRoutes(app: FastifyInstance): Promise<void> {
   app.post("/", controller.create);
   app.get("/", controller.list);
   app.get("/operational-queue", controller.getOperationalQueue);
+  app.get("/completed-history/:clientId", controller.getRecentCompletedByClient);
   app.get("/:id", controller.getById);
   app.patch("/:id", controller.update);
   app.post("/:id/items/bulk-upsert", controller.bulkUpsertItems);

@@ -33,7 +33,7 @@ import {
   completeVisit,
   deleteVisitItem,
   listCentralBalances,
-  listCompletedVisitHistoryDetails,
+  listRecentCompletedVisitHistory,
   updateVisit
 } from "./visits-api";
 import {
@@ -125,8 +125,8 @@ function ConsignmentVisitFlowContent({ visit, clientName, backTo, backLabel }: C
     enabled: Boolean(isDraft)
   });
   const completedHistoryQuery = useQuery({
-    queryKey: ["visits", visit.clientId, "completed-history-details", "consignment-flow"],
-    queryFn: () => listCompletedVisitHistoryDetails(visit.clientId, 6, "CONSIGNMENT"),
+    queryKey: ["visits", visit.clientId, "completed-history", "consignment-flow"],
+    queryFn: () => listRecentCompletedVisitHistory(visit.clientId),
     enabled: Boolean(isDraft)
   });
   const productsQuery = useQuery({
