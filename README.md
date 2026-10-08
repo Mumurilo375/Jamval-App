@@ -47,10 +47,10 @@ o estoque, gera comprovantes em PDF e organiza as próximas visitas.
 
 <table>
   <tr>
-    <td align="center"><strong>🏪 Consignação</strong><br />Base anterior e reposição</td>
-    <td align="center"><strong>💰 Financeiro</strong><br />Pagamentos e recebíveis</td>
-    <td align="center"><strong>📦 Estoque</strong><br />Custos e movimentações</td>
-    <td align="center"><strong>🧾 Comprovantes</strong><br />PDF e assinatura</td>
+    <td align="center"><strong> Consignação</strong><br />Base anterior e reposição</td>
+    <td align="center"><strong> Financeiro</strong><br />Pagamentos e recebíveis</td>
+    <td align="center"><strong> Estoque</strong><br />Custos e movimentações</td>
+    <td align="center"><strong> Comprovantes</strong><br />PDF e assinatura</td>
   </tr>
 </table>
 
