@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import { Button, Card, DateTimeInput, ErrorBanner, Field, PageLoader, Select, StickyActionBar, Textarea } from "../../components/ui";
 import { ApiError } from "../../lib/api";
-import type { Client, VisitDetail } from "../../types/domain";
+import type { VisitDetail } from "../../types/domain";
 import { listClients } from "../clients/clients-api";
 import { createVisit, listVisits, updateVisit } from "./visits-api";
 
@@ -23,10 +23,9 @@ type VisitFormValues = z.infer<typeof visitFormSchema>;
 type VisitFormProps = {
   mode: "create" | "edit";
   visit?: VisitDetail;
-  client?: Client | null;
 };
 
-export function VisitForm({ mode, visit, client }: VisitFormProps) {
+export function VisitForm({ mode, visit }: VisitFormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const clientsQuery = useQuery({
@@ -120,7 +119,7 @@ export function VisitForm({ mode, visit, client }: VisitFormProps) {
         ) : (
           <Field label="Cliente">
             <div className="rounded-2xl border border-[var(--jam-border)] bg-white/80 px-4 py-3 text-sm font-medium text-[var(--jam-ink)]">
-              {client?.tradeName ?? visit?.clientId}
+              {visit?.client.tradeName ?? visit?.clientId}
             </div>
           </Field>
         )}

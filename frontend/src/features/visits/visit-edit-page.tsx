@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
-import { EmptyState, PageHeader, PageLoader } from "../../components/ui";
-import { getClient } from "../clients/clients-api";
+import { Button, EmptyState, PageHeader, PageLoader } from "../../components/ui";
+import { ApiError } from "../../lib/api";
 import { VisitForm } from "./visit-form";
 import { getVisit } from "./visits-api";
 
@@ -10,20 +10,26 @@ export function VisitEditPage() {
   const { visitId = "" } = useParams();
   const visitQuery = useQuery({
     queryKey: ["visit", visitId],
-    queryFn: () => getVisit(visitId)
-  });
-  const clientQuery = useQuery({
-    queryKey: ["client", visitQuery.data?.clientId],
-    queryFn: () => getClient(visitQuery.data!.clientId),
-    enabled: Boolean(visitQuery.data?.clientId)
+    queryFn: ({ signal }) => getVisit(visitId, signal),
+    networkMode: "always",
+    retry: false,
+    retryOnMount: false
   });
 
-  if (visitQuery.isPending || clientQuery.isPending) {
+  if (visitQuery.isPending) {
     return <PageLoader label="Carregando visita..." />;
   }
 
-  if (visitQuery.isError || !visitQuery.data || clientQuery.isError) {
-    return <EmptyState title="Visita não encontrada" message="Volte para a lista e tente abrir a visita não finalizada novamente." />;
+  if (visitQuery.isError || !visitQuery.data) {
+    const isNotFound = visitQuery.error instanceof ApiError && visitQuery.error.status === 404;
+
+    return (
+      <EmptyState
+        title={isNotFound ? "Visita não encontrada" : "Não foi possível carregar a visita"}
+        message={isNotFound ? "Volte para a lista e tente abrir a visita não finalizada novamente." : visitQuery.error?.message ?? "Tente novamente."}
+        action={isNotFound ? undefined : <Button onClick={() => void visitQuery.refetch()}>Tentar novamente</Button>}
+      />
+    );
   }
 
   return (
@@ -34,7 +40,7 @@ export function VisitEditPage() {
         title="Editar dados da visita"
         subtitle={`${visitQuery.data.visitCode} · conferência e financeiro ficam no detalhe`}
       />
-      <VisitForm mode="edit" visit={visitQuery.data} client={clientQuery.data ?? null} />
+      <VisitForm mode="edit" visit={visitQuery.data} />
     </div>
   );
 }

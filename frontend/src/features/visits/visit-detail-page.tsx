@@ -15,7 +15,8 @@ export function VisitDetailPage() {
     queryFn: ({ signal }) => getVisit(visitId, signal),
     // Let fetch report connectivity failures so a paused query cannot bypass the API timeout.
     networkMode: "always",
-    retry: false
+    retry: false,
+    retryOnMount: false
   });
   if (visitQuery.isPending) {
     return <PageLoader label="Carregando visita..." />;

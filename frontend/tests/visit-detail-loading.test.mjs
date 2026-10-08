@@ -10,6 +10,7 @@ import { createServer } from "vite";
 
 let server;
 let VisitDetailPage;
+let VisitEditPage;
 let ProtectedApp;
 let createAppQueryClient;
 let buildAutoPopulatedVisitItems;
@@ -32,6 +33,7 @@ before(async () => {
     appType: "custom"
   });
   ({ VisitDetailPage } = await server.ssrLoadModule("/src/features/visits/visit-detail-page.tsx"));
+  ({ VisitEditPage } = await server.ssrLoadModule("/src/features/visits/visit-edit-page.tsx"));
   ({ ProtectedApp } = await server.ssrLoadModule("/src/features/auth/route-guards.tsx"));
   ({ createAppQueryClient } = await server.ssrLoadModule("/src/app/query-client.ts"));
   ({ buildAutoPopulatedVisitItems, buildSuggestedPreviousByProductId } = await server.ssrLoadModule("/src/features/visits/visit-utils.ts"));
@@ -58,11 +60,11 @@ function visitFixture(visitType = "CONSIGNMENT", status = "COMPLETED") {
   };
 }
 
-function renderPage(client, protectedRoute = false) {
-  const visitRoute = React.createElement(Route, { path: "/visits/:visitId", element: React.createElement(VisitDetailPage) });
+function renderPage(client, protectedRoute = false, edit = false) {
+  const visitRoute = React.createElement(Route, { path: edit ? "/visits/:visitId/edit" : "/visits/:visitId", element: React.createElement(edit ? VisitEditPage : VisitDetailPage) });
   return renderToString(
     React.createElement(QueryClientProvider, { client },
-      React.createElement(MemoryRouter, { initialEntries: [`/visits/${visitId}`] },
+      React.createElement(MemoryRouter, { initialEntries: [`/visits/${visitId}${edit ? "/edit" : ""}`] },
         React.createElement(Routes, null,
           protectedRoute ? React.createElement(Route, { element: React.createElement(ProtectedApp) }, visitRoute) : visitRoute
         )
@@ -310,4 +312,47 @@ test("resposta com corpo interrompido também encerra o loading no timeout", asy
   assert.match(html, /O backend demorou para responder/);
   assert.match(html, /Tentar novamente/);
   assert.doesNotMatch(html, /Carregando visita/);
+});
+
+for (const edit of [false, true]) {
+  test(`${edit ? "edição" : "detalhe"} mantém o erro visível ao reabrir uma visita que falhou`, async (t) => {
+    const client = setupClient(t, async () => Response.json({ error: { code: "NOT_FOUND" } }, { status: 404 }));
+    const defaults = client.getDefaultOptions();
+    // Use the application's normal mount behavior instead of the SSR test override.
+    client.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retryOnMount: true } });
+    assert.match(renderPage(client, false, edit), /Carregando visita/);
+    assert.equal((await observeQuery(t, client, visitKey)).result.error.status, 404);
+    for (let reopen = 0; reopen < 2; reopen += 1) {
+      const html = renderPage(client, false, edit);
+      assert.match(html, /Visita não encontrada/);
+      assert.doesNotMatch(html, /Carregando visita/);
+    }
+  });
+}
+
+test("edição não fica esperando uma consulta de cliente desativada quando a visita falha", async (t) => {
+  const client = setupClient(t, async () => { throw new TypeError("Failed to fetch"); });
+  assert.match(renderPage(client, false, true), /Carregando visita/);
+  const { result } = await observeQuery(t, client, visitKey);
+  assert.equal(result.error.code, "NETWORK_ERROR");
+  const html = renderPage(client, false, true);
+  assert.match(html, /Não foi possível carregar a visita/);
+  assert.match(html, /Tentar novamente/);
+  assert.doesNotMatch(html, /Carregando visita/);
+});
+
+test("edição abre com o cliente da visita sem uma segunda requisição de cliente", async (t) => {
+  const visit = visitFixture("CONSIGNMENT", "DRAFT");
+  const requests = [];
+  const client = setupClient(t, async (url) => {
+    requests.push(new URL(url, "http://localhost").pathname);
+    return Response.json({ data: visit });
+  });
+  assert.match(renderPage(client, false, true), /Carregando visita/);
+  assert.equal((await observeQuery(t, client, visitKey)).result.isSuccess, true);
+  const html = renderPage(client, false, true);
+  assert.match(html, /Cliente da visita/);
+  assert.match(html, /Salvar visita/);
+  assert.doesNotMatch(html, /Carregando visita/);
+  assert.deepEqual(requests, [`/api/visits/${visitId}`]);
 });
