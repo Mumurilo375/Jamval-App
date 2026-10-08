@@ -132,8 +132,8 @@ export function ProductForm({ mode, product }: ProductFormProps) {
   });
 
   return (
-    <Card>
-      <form className="space-y-4" onSubmit={onSubmit}>
+    <form className="space-y-4" onSubmit={onSubmit}>
+      <Card>
         {mutation.error instanceof ApiError ? (
           <ErrorBanner message={mutation.error.message} />
         ) : null}
@@ -147,10 +147,10 @@ export function ProductForm({ mode, product }: ProductFormProps) {
             />
           </Field>
 
-        <Field label="Preço base" error={errors.basePrice?.message}>
-          <MoneyInput {...register("basePrice")} />
-        </Field>
-      </div>
+          <Field label="Preço base" error={errors.basePrice?.message}>
+            <MoneyInput {...register("basePrice")} />
+          </Field>
+        </div>
 
         <Field
           label="Custo de compra"
@@ -219,29 +219,29 @@ export function ProductForm({ mode, product }: ProductFormProps) {
             setValue("isActive", event.target.checked, { shouldDirty: true })
           }
         />
+      </Card>
 
-        <div className="mt-4 grid gap-2 border-t border-[var(--jam-border)] pt-3 sm:flex sm:justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full sm:w-auto"
-            onClick={() => navigate(-1)}
-          >
-            Voltar
-          </Button>
-          <Button
-            type="submit"
-            className="w-full sm:w-auto"
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending
-              ? "Salvando..."
-              : mode === "create"
-                ? "Criar produto"
-                : "Salvar alterações"}
-          </Button>
-        </div>
-      </form>
-    </Card>
+      <div className="grid gap-2 sm:flex sm:justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full sm:w-auto"
+          onClick={() => navigate(-1)}
+        >
+          Voltar
+        </Button>
+        <Button
+          type="submit"
+          className="w-full sm:w-auto"
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending
+            ? "Salvando..."
+            : mode === "create"
+              ? "Criar produto"
+              : "Salvar alterações"}
+        </Button>
+      </div>
+    </form>
   );
 }
