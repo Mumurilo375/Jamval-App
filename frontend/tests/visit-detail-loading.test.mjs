@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
+import { createServer as createHttpServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import React from "react";
 import { renderToString } from "react-dom/server";
@@ -70,13 +71,13 @@ function renderPage(client, protectedRoute = false) {
   );
 }
 
-function setupClient(t, fetchResponse, { offline = false } = {}) {
+function setupClient(t, fetchResponse, { offline = false, requestTimeout = 20 } = {}) {
   t.mock.method(globalThis, "fetch", fetchResponse);
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   const previouslyOnline = onlineManager.isOnline();
   // Exercise the real API deadline quickly without changing production code.
   globalThis.window = {
-    setTimeout: (callback, delay) => setTimeout(callback, delay === 30_000 ? 20 : delay),
+    setTimeout: (callback, delay) => setTimeout(callback, delay === 30_000 ? requestTimeout : delay),
     clearTimeout
   };
   onlineManager.setOnline(!offline);
@@ -129,6 +130,19 @@ async function loadVisit(t, fetchResponse, options = {}) {
   assert.match(renderPage(client), /Carregando visita/);
   const { result } = await observeQuery(t, client, visitKey);
   return { result, html: renderPage(client) };
+}
+
+async function serveApi(t, handler) {
+  const httpServer = createHttpServer(handler);
+  await new Promise((resolve, reject) => {
+    httpServer.once("error", reject);
+    httpServer.listen(0, "127.0.0.1", resolve);
+  });
+  t.after(() => new Promise((resolve) => {
+    httpServer.close(resolve);
+    httpServer.closeAllConnections();
+  }));
+  return `http://127.0.0.1:${httpServer.address().port}`;
 }
 
 for (const visitType of ["SALE", "CONSIGNMENT"]) {
@@ -259,6 +273,39 @@ test("requisição sem resposta termina no timeout e oferece nova tentativa", as
   const { result, html } = await loadVisit(t, (_url, { signal }) => new Promise((_resolve, reject) => {
     signal.addEventListener("abort", () => reject(signal.reason), { once: true });
   }), { offline: true });
+  assert.equal(result.error.code, "REQUEST_TIMEOUT");
+  assert.match(html, /O backend demorou para responder/);
+  assert.match(html, /Tentar novamente/);
+  assert.doesNotMatch(html, /Carregando visita/);
+});
+
+test("redirecionamento do deploy para login não é seguido e encerra o loading", async (t) => {
+  let loginRequests = 0;
+  const baseUrl = await serveApi(t, (request, response) => {
+    if (request.url === "/vercel-login") {
+      loginRequests += 1;
+      // A login page is not an API response and could wait indefinitely.
+      return;
+    }
+    response.writeHead(302, { Location: "/vercel-login" });
+    response.end();
+  });
+  const nativeFetch = globalThis.fetch;
+  const { result, html } = await loadVisit(t, (_url, options) => nativeFetch(`${baseUrl}/visit`, options), { requestTimeout: 200 });
+  assert.equal(loginRequests, 0);
+  assert.equal(result.error.code, "NETWORK_ERROR");
+  assert.match(html, /Não foi possível carregar a visita/);
+  assert.match(html, /Tentar novamente/);
+  assert.doesNotMatch(html, /Carregando visita/);
+});
+
+test("resposta com corpo interrompido também encerra o loading no timeout", async (t) => {
+  const baseUrl = await serveApi(t, (_request, response) => {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.write('{"data":');
+  });
+  const nativeFetch = globalThis.fetch;
+  const { result, html } = await loadVisit(t, (_url, options) => nativeFetch(`${baseUrl}/visit`, options), { requestTimeout: 200 });
   assert.equal(result.error.code, "REQUEST_TIMEOUT");
   assert.match(html, /O backend demorou para responder/);
   assert.match(html, /Tentar novamente/);

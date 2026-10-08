@@ -61,6 +61,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       headers,
       body: body as BodyInit | null | undefined,
       signal: controller.signal,
+      // API endpoints return JSON; deployment login redirects must fail immediately.
+      redirect: "error",
       credentials: "include"
     });
 

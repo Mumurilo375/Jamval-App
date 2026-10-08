@@ -25,4 +25,6 @@ Diretamente nesta pasta:
 - `VITE_API_PROXY_TARGET=http://127.0.0.1:3333`
 
 Em desenvolvimento, o frontend usa `/api` para manter a sessao same-origin e o Vite faz proxy para o backend.
-Na Vercel, `/api/*` e reescrito pelo `frontend/vercel.json` para o deploy do backend.
+Na Vercel, `/api/*` é reescrito pelo `frontend/vercel.json` para `https://jamval-app.vercel.app`, o domínio estável de produção do backend. URLs individuais de deploy podem exigir login na Vercel e devolver um redirecionamento em vez do JSON da API.
+
+Use `https://jamval-app-zjpk.vercel.app` para acessar a versão atual do frontend. URLs individuais de deploy continuam servindo a versão antiga mesmo depois de um novo push.
