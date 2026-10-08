@@ -139,7 +139,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-[var(--jam-bg)] text-[var(--jam-ink)]">
       <header className="fixed inset-x-0 top-0 z-40 border-b border-[var(--jam-border)] bg-[var(--jam-header-bg)]">
-        <div className="flex h-[52px] w-full items-center justify-between gap-2 px-2.5 sm:h-14 sm:px-4 md:px-6">
+        <div className="flex h-[52px] w-full items-center justify-between gap-2 px-2.5 sm:h-14 sm:pl-3.5 sm:pr-4 md:pr-6">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <button
               type="button"
@@ -152,7 +152,7 @@ export function AppShell() {
               <MenuIcon />
             </button>
 
-            <div className="min-w-0">
+            <div className="min-w-0 text-left">
               <p className="font-display text-sm font-semibold leading-tight tracking-[-0.02em] text-[var(--jam-ink)] sm:text-base">Jamval</p>
               <p className="truncate text-[11px] font-medium leading-tight text-[var(--jam-subtle)] sm:text-xs">
                 {activeNavigationItem?.label ?? "Operação do consignado"}
