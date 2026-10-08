@@ -22,7 +22,7 @@ de uma pequena distribuidora familiar de acessórios eletrônicos.
 
 | | |
 | --- | --- |
-| **Aplicação** | [Acessar a demo do Jamval App](https://jamval-frontend.vercel.app/) |
+| **Aplicação** | [Acessar a demo do Jamval App](https://jamval-app-zjpk-34n9oaq55-mumurilo375s-projects.vercel.app/) |
 | **E-mail** | `teste@gmail.com` |
 | **Senha** | `#Testelogin123!` |
 
