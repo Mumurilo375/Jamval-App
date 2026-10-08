@@ -12,7 +12,9 @@ export function VisitDetailPage() {
   const location = useLocation();
   const visitQuery = useQuery({
     queryKey: ["visit", visitId],
-    queryFn: () => getVisit(visitId),
+    queryFn: ({ signal }) => getVisit(visitId, signal),
+    // Let fetch report connectivity failures so a paused query cannot bypass the API timeout.
+    networkMode: "always",
     retry: false
   });
   if (visitQuery.isPending) {

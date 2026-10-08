@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useId } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -66,6 +67,7 @@ type ProductFormProps = {
 };
 
 export function ProductForm({ mode, product }: ProductFormProps) {
+  const formId = useId();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const {
@@ -132,93 +134,95 @@ export function ProductForm({ mode, product }: ProductFormProps) {
   });
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <div className="grid gap-4">
       <Card>
-        {mutation.error instanceof ApiError ? (
-          <ErrorBanner message={mutation.error.message} />
-        ) : null}
+        <form id={formId} className="grid gap-4" onSubmit={onSubmit}>
+          {mutation.error instanceof ApiError ? (
+            <ErrorBanner message={mutation.error.message} />
+          ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="SKU" error={errors.sku?.message}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="SKU" error={errors.sku?.message}>
+              <Input
+                placeholder="CABO-TYPEC-1M"
+                maxLength={120}
+                {...register("sku")}
+              />
+            </Field>
+
+            <Field label="Preço base" error={errors.basePrice?.message}>
+              <MoneyInput {...register("basePrice")} />
+            </Field>
+          </div>
+
+          <Field
+            label="Custo de compra"
+            hint="Opcional. Use como custo inicial de compra. O custo real usado na operação vem das entradas de estoque."
+            error={errors.costPrice?.message}
+          >
+            <MoneyInput {...register("costPrice")} />
+          </Field>
+
+          <Field label="Nome" error={errors.name?.message}>
             <Input
-              placeholder="CABO-TYPEC-1M"
-              maxLength={120}
-              {...register("sku")}
+              placeholder="Cabo Type-C 1m"
+              maxLength={200}
+              {...register("name")}
             />
           </Field>
 
-          <Field label="Preço base" error={errors.basePrice?.message}>
-            <MoneyInput {...register("basePrice")} />
-          </Field>
-        </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Categoria" error={errors.category?.message}>
+              <Input
+                placeholder="Cabos"
+                maxLength={120}
+                {...register("category")}
+              />
+            </Field>
 
-        <Field
-          label="Custo de compra"
-          hint="Opcional. Use como custo inicial de compra. O custo real usado na operação vem das entradas de estoque."
-          error={errors.costPrice?.message}
-        >
-          <MoneyInput {...register("costPrice")} />
-        </Field>
+            <Field label="Marca" error={errors.brand?.message}>
+              <Input
+                placeholder="Baseus"
+                maxLength={120}
+                {...register("brand")}
+              />
+            </Field>
 
-        <Field label="Nome" error={errors.name?.message}>
-          <Input
-            placeholder="Cabo Type-C 1m"
-            maxLength={200}
-            {...register("name")}
+            <Field label="Modelo" error={errors.model?.message}>
+              <Input
+                placeholder="Fast Charge"
+                maxLength={120}
+                {...register("model")}
+              />
+            </Field>
+
+            <Field label="Cor" error={errors.color?.message}>
+              <Input placeholder="Preto" maxLength={80} {...register("color")} />
+            </Field>
+
+            <Field label="Voltagem" error={errors.voltage?.message}>
+              <Input placeholder="5V" maxLength={80} {...register("voltage")} />
+            </Field>
+
+            <Field label="Conector" error={errors.connectorType?.message}>
+              <Input
+                placeholder="USB-C"
+                maxLength={80}
+                {...register("connectorType")}
+              />
+            </Field>
+          </div>
+
+          <Checkbox
+            {...register("isActive")}
+            label="Produto ativo"
+            hint="Produtos inativos continuam no histórico, mas saem da operação diária."
+            checked={Boolean(isActive)}
+            onChange={(event) =>
+              setValue("isActive", event.target.checked, { shouldDirty: true })
+            }
           />
-        </Field>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Categoria" error={errors.category?.message}>
-            <Input
-              placeholder="Cabos"
-              maxLength={120}
-              {...register("category")}
-            />
-          </Field>
-
-          <Field label="Marca" error={errors.brand?.message}>
-            <Input
-              placeholder="Baseus"
-              maxLength={120}
-              {...register("brand")}
-            />
-          </Field>
-
-          <Field label="Modelo" error={errors.model?.message}>
-            <Input
-              placeholder="Fast Charge"
-              maxLength={120}
-              {...register("model")}
-            />
-          </Field>
-
-          <Field label="Cor" error={errors.color?.message}>
-            <Input placeholder="Preto" maxLength={80} {...register("color")} />
-          </Field>
-
-          <Field label="Voltagem" error={errors.voltage?.message}>
-            <Input placeholder="5V" maxLength={80} {...register("voltage")} />
-          </Field>
-
-          <Field label="Conector" error={errors.connectorType?.message}>
-            <Input
-              placeholder="USB-C"
-              maxLength={80}
-              {...register("connectorType")}
-            />
-          </Field>
-        </div>
-
-        <Checkbox
-          {...register("isActive")}
-          label="Produto ativo"
-          hint="Produtos inativos continuam no histórico, mas saem da operação diária."
-          checked={Boolean(isActive)}
-          onChange={(event) =>
-            setValue("isActive", event.target.checked, { shouldDirty: true })
-          }
-        />
+        </form>
       </Card>
 
       <div className="grid gap-2 sm:flex sm:justify-end">
@@ -232,6 +236,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         </Button>
         <Button
           type="submit"
+          form={formId}
           className="w-full sm:w-auto"
           disabled={mutation.isPending}
         >
@@ -242,6 +247,6 @@ export function ProductForm({ mode, product }: ProductFormProps) {
               : "Salvar alterações"}
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

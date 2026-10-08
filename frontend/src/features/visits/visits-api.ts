@@ -1,4 +1,4 @@
-import { api, downloadApiFile, previewApiPdf } from "../../lib/api";
+import { api, apiRequest, downloadApiFile, previewApiPdf } from "../../lib/api";
 import { buildQuery } from "../../lib/query";
 import type { OperationalVisitQueue, Visit, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
 
@@ -85,8 +85,8 @@ export function listOperationalVisitQueue() {
   return api.get<OperationalVisitQueue>("/visits/operational-queue");
 }
 
-export function getVisit(visitId: string) {
-  return api.get<VisitDetail>(`/visits/${visitId}`);
+export function getVisit(visitId: string, signal?: AbortSignal) {
+  return apiRequest<VisitDetail>(`/visits/${visitId}`, { signal });
 }
 
 export function listRecentCompletedVisitHistory(clientId: string) {
