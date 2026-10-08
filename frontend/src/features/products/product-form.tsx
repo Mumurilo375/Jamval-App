@@ -12,7 +12,6 @@ import {
   Field,
   Input,
   MoneyInput,
-  StickyActionBar,
 } from "../../components/ui";
 import { ApiError } from "../../lib/api";
 import { parseDecimalInput, toOptionalString } from "../../lib/forms";
@@ -221,7 +220,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
           }
         />
 
-        <StickyActionBar>
+        <div className="mt-4 grid gap-2 border-t border-[var(--jam-border)] pt-3 sm:flex sm:justify-end">
           <Button
             type="button"
             variant="ghost"
@@ -241,7 +240,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
                 ? "Criar produto"
                 : "Salvar alterações"}
           </Button>
-        </StickyActionBar>
+        </div>
       </form>
     </Card>
   );
