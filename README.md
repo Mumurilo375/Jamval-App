@@ -24,7 +24,7 @@ de uma pequena distribuidora familiar de acessórios eletrônicos.
 | --- | --- |
 | **Aplicação** | [Acessar a demo do Jamval App](https://jamval-frontend.vercel.app/) |
 | **E-mail** | `teste@gmail.com` |
-| **Senha** | `#Borabill67` |
+| **Senha** | `#Testelogin123!` |
 
 > O sistema foi projetado para uma operação de usuário único e não possui cadastro
 > público. As credenciais acima pertencem exclusivamente ao ambiente de demonstração.
