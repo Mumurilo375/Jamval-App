@@ -31,18 +31,18 @@ export function registerErrorHandler(app: FastifyInstance): void {
       return;
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (isDatabaseConnectionError(error.code)) {
-        reply.status(503).send({
-          error: {
-            code: "DATABASE_UNAVAILABLE",
-            message: "O sistema está temporariamente sem acesso ao banco de dados. Tente novamente mais tarde.",
-            details: null
-          }
-        });
-        return;
-      }
+    if (isDatabaseUnavailableError(error)) {
+      reply.status(503).send({
+        error: {
+          code: "DATABASE_UNAVAILABLE",
+          message: "O sistema está temporariamente sem acesso ao banco de dados. Tente novamente mais tarde.",
+          details: null
+        }
+      });
+      return;
+    }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         reply.status(409).send({
           error: {
@@ -66,17 +66,6 @@ export function registerErrorHandler(app: FastifyInstance): void {
       }
     }
 
-    if (isPrismaInitializationConnectionError(error)) {
-      reply.status(503).send({
-        error: {
-          code: "DATABASE_UNAVAILABLE",
-          message: "O sistema está temporariamente sem acesso ao banco de dados. Tente novamente mais tarde.",
-          details: null
-        }
-      });
-      return;
-    }
-
     reply.status(500).send({
       error: {
         code: "INTERNAL_SERVER_ERROR",
@@ -88,15 +77,32 @@ export function registerErrorHandler(app: FastifyInstance): void {
 }
 
 function isDatabaseConnectionError(code: string): boolean {
-  return code === "P1001" || code === "P1002" || code === "P1003";
+  return ["P1001", "P1002", "P1003", "P1017", "P2024", "P2037"].includes(code);
 }
 
-function isPrismaInitializationConnectionError(error: unknown): boolean {
-  if (!(error instanceof Prisma.PrismaClientInitializationError)) {
+function isDatabaseUnavailableError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && isDatabaseConnectionError(error.code)) {
+    return true;
+  }
+
+  if (
+    error instanceof Prisma.PrismaClientInitializationError &&
+    error.errorCode &&
+    isDatabaseConnectionError(error.errorCode)
+  ) {
+    return true;
+  }
+
+  if (
+    !(error instanceof Prisma.PrismaClientInitializationError) &&
+    !(error instanceof Prisma.PrismaClientUnknownRequestError) &&
+    !(error instanceof Prisma.PrismaClientKnownRequestError)
+  ) {
     return false;
   }
 
-  return Boolean(error.errorCode && isDatabaseConnectionError(error.errorCode));
+  // Supavisor can report session exhaustion without a Prisma errorCode.
+  return /EMAXCONNSESSION|MaxClientsInSessionMode|too many clients already/i.test(error.message);
 }
 
 function formatUnexpectedError(error: unknown) {
