@@ -5,6 +5,9 @@
     "backend",
     "frontend"
   ],
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  },
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace backend",
