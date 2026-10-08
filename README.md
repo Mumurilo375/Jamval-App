@@ -293,6 +293,8 @@ npm run prisma:seed
 
 Na Vercel, o script `vercel-build` do backend aplica as migrations pendentes com `prisma migrate deploy` antes de gerar o Prisma Client. Isso mantém o banco de produção compatível com os campos usados pela API, incluindo `VisitItem.quantityExchangeOnVisit`. Uma falha na migration interrompe o deploy; previews apenas geram o client e não alteram o banco de produção. Para bancos com pooler, configure `DIRECT_URL` no ambiente de produção para a conexão usada nas migrations.
 
+O Prisma Client também gera o binário `rhel-openssl-3.0.x`, usado pelas funções da Vercel, e `backend/vercel.json` inclui os arquivos gerados no bundle mesmo quando o npm os instala na raiz do workspace.
+
 Para criar ou atualizar um administrador:
 
 ```bash
