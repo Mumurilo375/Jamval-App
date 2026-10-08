@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://jamval-app-backend-8flj.vercel.app/:path*"
+      "destination": "https://jamval-7j1g9acvs-mumurilo375s-projects.vercel.app/:path*"
     },
     {
       "source": "/:path*",
