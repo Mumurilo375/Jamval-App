@@ -1,4 +1,4 @@
-import type { Prisma, Visit } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { z } from "zod";
 
 import {
@@ -9,7 +9,6 @@ import {
   putVisitSignatureBodySchema,
   updateVisitBodySchema,
   visitDraftItemInputSchema,
-  visitItemParamsSchema,
   visitListQuerySchema
 } from "./visit.schema";
 
@@ -21,7 +20,6 @@ export type VisitListQuery = z.infer<typeof visitListQuerySchema>;
 export type VisitDraftItemInput = z.infer<typeof visitDraftItemInputSchema>;
 export type BulkUpsertVisitItemsInput = z.infer<typeof bulkUpsertVisitItemsBodySchema>;
 export type PatchVisitItemInput = z.infer<typeof patchVisitItemBodySchema>;
-export type VisitItemParams = z.infer<typeof visitItemParamsSchema>;
 
 export type VisitWithItems = Prisma.VisitGetPayload<{
   include: {
@@ -146,8 +144,6 @@ export type OperationalVisitQueue = {
   inProgress: OperationalInProgressVisit[];
   recentHistory: OperationalHistoryVisit[];
 };
-
-export type VisitDraftMetadata = Pick<Visit, "visitType" | "visitedAt" | "notes" | "receivedAmountOnVisit" | "dueDate">;
 
 export type DraftVisitComputedItem = {
   clientProductId: string | null;

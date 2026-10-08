@@ -13,6 +13,7 @@ import {
 import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
 import { AppError } from "../../shared/errors/app-error";
+import { endOfDay, startOfDay } from "../../shared/utils/date-range";
 
 type CreateCentralStockMovementInput = {
   productId: string;
@@ -519,14 +520,6 @@ export class StockRepository {
   ): Promise<ConsignedStockMovement> {
     return db.consignedStockMovement.create({ data });
   }
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
-}
-
-function endOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }
 
 function isMissingCentralStockCostColumnsError(error: unknown): boolean {

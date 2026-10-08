@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import { buildQuery } from "../../lib/query";
 import type { PaymentMethod, PaymentRecord, ReceivableDetail, ReceivableListItem, ReceivableStatus } from "../../types/domain";
 
 export type ListReceivablesFilters = {
@@ -17,21 +18,6 @@ export type CreateReceivablePaymentResponse = {
   payment: PaymentRecord;
   receivable: ReceivableDetail;
 };
-
-function buildQuery(filters: ListReceivablesFilters): string {
-  const params = new URLSearchParams();
-
-  if (filters.clientId) {
-    params.set("clientId", filters.clientId);
-  }
-
-  if (filters.status) {
-    params.set("status", filters.status);
-  }
-
-  const query = params.toString();
-  return query ? `?${query}` : "";
-}
 
 export function listReceivables(filters: ListReceivablesFilters = {}) {
   return api.get<ReceivableListItem[]>(`/receivables${buildQuery(filters)}`);

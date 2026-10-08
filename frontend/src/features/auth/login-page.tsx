@@ -44,7 +44,7 @@ export function LoginPage() {
 
         <Card className="space-y-4">
           <form className="space-y-4" onSubmit={onSubmit}>
-            {loginMutation.error instanceof ApiError ? <ErrorBanner message={loginMutation.error.message} /> : null}
+            {loginMutation.error ? <ErrorBanner message={getLoginErrorMessage(loginMutation.error)} /> : null}
 
             <Field label="E-mail" error={errors.email?.message}>
               <Input type="email" placeholder="admin@jamval.local" autoComplete="email" {...register("email")} />
@@ -62,4 +62,20 @@ export function LoginPage() {
       </div>
     </div>
   );
+}
+
+function getLoginErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.code === "DATABASE_UNAVAILABLE") {
+    return "Não foi possível entrar porque o sistema está temporariamente sem acesso ao banco de dados. Tente novamente mais tarde.";
+  }
+
+  if (error instanceof ApiError && error.status >= 500) {
+    return "Não foi possível entrar agora. O serviço pode estar temporariamente indisponível. Tente novamente em instantes.";
+  }
+
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  return "Não foi possível entrar. Confira sua conexão e tente novamente.";
 }

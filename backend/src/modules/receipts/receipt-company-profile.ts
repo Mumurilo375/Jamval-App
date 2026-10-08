@@ -18,10 +18,6 @@ export type ReceiptCompanyProfileInput = {
   contactName?: string | null;
 };
 
-export function getDefaultReceiptCompanyProfile(): ReceiptCompanyProfile {
-  return resolveReceiptCompanyProfile();
-}
-
 export function resolveReceiptCompanyProfile(input?: ReceiptCompanyProfileInput | null): ReceiptCompanyProfile {
   const fallbackName = emptyToNull(env.COMPANY_NAME) ?? "Jamval Eletronicos";
   const fallbackDocument = emptyToNull(env.COMPANY_DOCUMENT) ?? "44.405.062/0001-03";

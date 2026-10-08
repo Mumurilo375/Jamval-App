@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import { buildQuery } from "../../lib/query";
 import type { Client } from "../../types/domain";
 
 export type ClientListFilters = {
@@ -22,21 +23,6 @@ export type ClientPayload = {
   requiresInvoice: boolean;
   isActive: boolean;
 };
-
-function buildQuery(filters: ClientListFilters): string {
-  const params = new URLSearchParams();
-
-  if (filters.search) {
-    params.set("search", filters.search);
-  }
-
-  if (filters.isActive !== undefined) {
-    params.set("isActive", String(filters.isActive));
-  }
-
-  const query = params.toString();
-  return query ? `?${query}` : "";
-}
 
 export function listClients(filters: ClientListFilters) {
   return api.get<Client[]>(`/clients${buildQuery(filters)}`);

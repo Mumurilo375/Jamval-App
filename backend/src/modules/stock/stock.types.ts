@@ -1,7 +1,6 @@
 import type { z } from "zod";
 
 import {
-  centralBalancesQuerySchema,
   centralInitialLoadBodySchema,
   centralManualAdjustmentBodySchema,
   centralManualEntryBodySchema,
@@ -9,7 +8,6 @@ import {
   centralVisitOutflowsQuerySchema
 } from "./stock.schema";
 
-export type CentralBalancesQuery = z.infer<typeof centralBalancesQuerySchema>;
 export type CentralMovementsQuery = z.infer<typeof centralMovementsQuerySchema>;
 export type CentralVisitOutflowsQuery = z.infer<typeof centralVisitOutflowsQuerySchema>;
 export type CentralInitialLoadInput = z.infer<typeof centralInitialLoadBodySchema>;

@@ -928,23 +928,6 @@ export function StickyActionBar({ children }: PropsWithChildren) {
   );
 }
 
-export function CompactLinkRow({ title, subtitle, right, className }: { title: string; subtitle?: string; right?: ReactNode; className?: string }) {
-  return (
-    <div
-      className={cx(
-        "flex flex-col gap-2 rounded-xl border border-[var(--jam-border)] bg-white px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-3.5 sm:py-3",
-        className
-      )}
-    >
-      <div className="min-w-0">
-        <p className="truncate text-[13px] font-medium text-[var(--jam-ink)] sm:text-sm">{title}</p>
-        {subtitle ? <p className="mt-0.5 truncate text-[12px] text-[var(--jam-subtle)] sm:text-sm">{subtitle}</p> : null}
-      </div>
-      {right ? <div className="shrink-0 self-start sm:self-auto">{right}</div> : null}
-    </div>
-  );
-}
-
 export function EmptyState({ title, message, action }: { title: string; message: string; action?: React.ReactNode }) {
   return (
     <Card className="text-center">

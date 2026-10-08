@@ -26,8 +26,7 @@ import { StockPage } from "../features/stock/stock-page";
 import { VisitCreatePage } from "../features/visits/visit-create-page";
 import { VisitDetailPage } from "../features/visits/visit-detail-page";
 import { VisitEditPage } from "../features/visits/visit-edit-page";
-import { VisitItemCreatePage } from "../features/visits/visit-item-create-page";
-import { VisitItemEditPage } from "../features/visits/visit-item-edit-page";
+import { VisitItemRedirectPage } from "../features/visits/visit-item-redirect-page";
 import { VisitsListPage } from "../features/visits/visits-list-page";
 
 export const router = createBrowserRouter([
@@ -146,11 +145,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/visits/:visitId/items/new",
-        element: <VisitItemCreatePage />
+        element: <VisitItemRedirectPage notFoundTitle="Visita indisponível" notFoundMessage="Volte para a visita e tente novamente." />
       },
       {
         path: "/visits/:visitId/items/:itemId/edit",
-        element: <VisitItemEditPage />
+        element: <VisitItemRedirectPage notFoundTitle="Item não encontrado" notFoundMessage="Volte para os detalhes da visita e tente novamente." />
       },
       {
         path: "/admin/dashboard",

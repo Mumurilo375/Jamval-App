@@ -9,6 +9,7 @@ import {
 
 import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
+import { endOfDay, startOfDay } from "../../shared/utils/date-range";
 import type {
   DraftVisitComputedItem,
   OperationalCompletedConsignmentRecord,
@@ -376,12 +377,4 @@ export class VisitRepository {
 
     return result.count;
   }
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
-}
-
-function endOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }

@@ -1,4 +1,5 @@
 import { api, downloadApiFile, previewApiPdf } from "../../lib/api";
+import { buildQuery } from "../../lib/query";
 import type { OperationalVisitQueue, Visit, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
 
 export type VisitListFilters = {
@@ -29,7 +30,6 @@ export type VisitItemDraftPayload = {
   notes?: string;
 };
 
-export type VisitItemPatchPayload = Partial<VisitItemDraftPayload>;
 export type VisitInitialPaymentPayload = {
   paymentMethod: "CASH" | "PIX" | "CARD" | "BANK_TRANSFER" | "OTHER";
   reference?: string;
@@ -77,25 +77,6 @@ export type VisitReceiptSummary = {
   } | null;
 };
 
-function buildQuery(filters: VisitListFilters): string {
-  const params = new URLSearchParams();
-
-  if (filters.clientId) {
-    params.set("clientId", filters.clientId);
-  }
-
-  if (filters.status) {
-    params.set("status", filters.status);
-  }
-
-  if (filters.visitType) {
-    params.set("visitType", filters.visitType);
-  }
-
-  const query = params.toString();
-  return query ? `?${query}` : "";
-}
-
 export function listVisits(filters: VisitListFilters) {
   return api.get<Visit[]>(`/visits${buildQuery(filters)}`);
 }
@@ -129,10 +110,6 @@ export function updateVisit(visitId: string, payload: Partial<VisitPayload>) {
 
 export function bulkUpsertVisitItems(visitId: string, items: VisitItemDraftPayload[]) {
   return api.post<VisitDetail>(`/visits/${visitId}/items/bulk-upsert`, { items });
-}
-
-export function patchVisitItem(visitId: string, itemId: string, payload: VisitItemPatchPayload) {
-  return api.patch<VisitDetail>(`/visits/${visitId}/items/${itemId}`, payload);
 }
 
 export function deleteVisitItem(visitId: string, itemId: string) {

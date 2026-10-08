@@ -19,12 +19,12 @@ import {
   WarningBanner
 } from "../../components/ui";
 import { ApiError } from "../../lib/api";
-import { cx } from "../../lib/cx";
 import { formatCurrency, formatDate } from "../../lib/format";
 import type { Product, VisitDetail } from "../../types/domain";
 import { listProducts } from "../products/products-api";
 import { VisitReceiptCard } from "./visit-receipt-card";
-import { ColumnLabel, DataCell, formatPaymentMethod, handleVisitMutationSuccess, MetricCell, paymentMethods, ReadonlyValue, StepHeader } from "./visit-flow-ui";
+import { ColumnLabel, DataCell, MetricCell, ReadonlyValue, StepHeader } from "./visit-flow-ui";
+import { formatPaymentMethod, handleVisitMutationSuccess, paymentMethods } from "./visit-flow-utils";
 import { bulkUpsertVisitItems, cancelVisit, completeVisit, deleteVisitItem, updateVisit } from "./visits-api";
 import { parseDecimalInput, visitNumber, visitStatusLabel, visitStatusTone } from "./visit-utils";
 

@@ -25,7 +25,8 @@ import type { VisitDetail, VisitItem } from "../../types/domain";
 import { listClientCatalog } from "../client-catalog/catalog-api";
 import { listProducts } from "../products/products-api";
 import { VisitReceiptCard } from "./visit-receipt-card";
-import { ColumnLabel, DataCell, formatPaymentMethod, handleVisitMutationSuccess, MetricCell, paymentMethods, ReadonlyValue, StepHeader } from "./visit-flow-ui";
+import { ColumnLabel, DataCell, MetricCell, ReadonlyValue, StepHeader } from "./visit-flow-ui";
+import { formatPaymentMethod, handleVisitMutationSuccess, paymentMethods } from "./visit-flow-utils";
 import {
   bulkUpsertVisitItems,
   cancelVisit,

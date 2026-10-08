@@ -2,6 +2,7 @@ import { Prisma, ReceivableStatus, VisitType } from "@prisma/client";
 
 import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
+import { endOfDay, startOfDay } from "../../shared/utils/date-range";
 
 export class AdminRepository {
   async findCompanyProfileSettings(db: DbClient = prisma) {
@@ -357,12 +358,4 @@ export class AdminRepository {
       }
     });
   }
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
-}
-
-function endOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }

@@ -3,6 +3,7 @@ import { CentralStockMovementType, Prisma, StockReferenceType } from "@prisma/cl
 import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
 import { AppError } from "../../shared/errors/app-error";
+import { endOfDay, startOfDay } from "../../shared/utils/date-range";
 import { StockRepository } from "./stock.repository";
 import { formatMovementLabel, getBalanceEffect, toMovementSnapshot } from "./stock-movement";
 import type {
@@ -411,14 +412,6 @@ function isWithinDateRange(value: Date, dateFrom?: Date, dateTo?: Date): boolean
   }
 
   return true;
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
-}
-
-function endOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }
 
 function moneyToNumber(value: Prisma.Decimal): number {

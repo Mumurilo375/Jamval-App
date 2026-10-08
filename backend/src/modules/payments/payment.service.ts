@@ -4,6 +4,7 @@ import { prisma } from "../../db/prisma";
 import { AppError } from "../../shared/errors/app-error";
 import { NotFoundError } from "../../shared/errors/not-found-error";
 import { ClientRepository } from "../clients/client.repository";
+import { determineReceivableStatus, subtractMoney } from "../receivables/receivable-calculations";
 import { ReceivableRepository } from "../receivables/receivable.repository";
 import { PaymentRepository } from "./payment.repository";
 import type { CreatePaymentInput } from "./payment.types";
@@ -102,29 +103,4 @@ export class PaymentService {
       throw new NotFoundError("Client not found", { id: clientId });
     }
   }
-}
-
-function subtractMoney(totalAmount: Prisma.Decimal, amountReceived: Prisma.Decimal): Prisma.Decimal {
-  const difference = totalAmount.minus(amountReceived);
-
-  if (difference.lessThan(0)) {
-    return new Prisma.Decimal(0);
-  }
-
-  return difference;
-}
-
-function determineReceivableStatus(
-  amountReceived: Prisma.Decimal,
-  amountOutstanding: Prisma.Decimal
-): ReceivableStatus {
-  if (amountOutstanding.equals(0)) {
-    return ReceivableStatus.PAID;
-  }
-
-  if (amountReceived.greaterThan(0)) {
-    return ReceivableStatus.PARTIAL;
-  }
-
-  return ReceivableStatus.PENDING;
 }

@@ -1,5 +1,5 @@
 import type { ClientProduct, VisitDetail, VisitStatus, VisitType } from "../../types/domain";
-export { normalizeDecimalInput, parseDecimalInput } from "../../lib/forms";
+export { parseDecimalInput } from "../../lib/forms";
 import type { VisitItemDraftPayload } from "./visits-api";
 
 const visitLabels: Record<VisitStatus, string> = { DRAFT: "Não finalizada", COMPLETED: "Concluída", CANCELLED: "Cancelada" };
@@ -8,26 +8,6 @@ const visitTones: Record<VisitStatus, "warning" | "success" | "danger"> = { DRAF
 export const visitStatusLabel = (status: VisitStatus) => visitLabels[status];
 export const visitStatusTone = (status: VisitStatus) => visitTones[status];
 export const visitTypeLabel = (type: VisitType) => type === "SALE" ? "Venda" : "Consignação";
-
-export function computeVisitItemPreview(input: {
-  quantityPrevious: number;
-  quantitySold?: number;
-  quantityGoodRemaining: number;
-  quantityDefectiveReturn: number;
-  quantityLoss?: number;
-  unitPrice: number;
-  restockedQuantity: number;
-}) {
-  const quantitySold =
-    input.quantitySold ??
-    (input.quantityPrevious - input.quantityGoodRemaining - input.quantityDefectiveReturn - (input.quantityLoss ?? 0));
-
-  return {
-    quantitySold,
-    subtotalAmount: Number((Math.max(quantitySold, 0) * input.unitPrice).toFixed(2)),
-    resultingClientQuantity: input.quantityGoodRemaining + input.restockedQuantity
-  };
-}
 
 export function visitNumber(value: number | string | null | undefined): number {
   const parsed = Number(value ?? 0);

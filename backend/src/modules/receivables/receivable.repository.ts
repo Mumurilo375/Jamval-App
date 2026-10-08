@@ -2,6 +2,7 @@ import type { Prisma, Receivable, ReceivableStatus } from "@prisma/client";
 
 import type { DbClient } from "../../db/db-client";
 import { prisma } from "../../db/prisma";
+import { endOfDay, startOfDay } from "../../shared/utils/date-range";
 import type { ReceivableDetailItem, ReceivableListItem, ReceivableListQuery } from "./receivable.types";
 
 const receivableListInclude = {
@@ -98,12 +99,4 @@ export class ReceivableRepository {
       data
     });
   }
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
-}
-
-function endOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 }

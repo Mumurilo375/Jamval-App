@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import { buildQuery } from "../../lib/query";
 
 export type CentralOverview = {
   summary: {
@@ -101,19 +102,6 @@ export type StockManualAdjustmentPayload = {
   quantity: number;
   reason: string;
 };
-
-function buildQuery(filters: Record<string, string | undefined>): string {
-  const params = new URLSearchParams();
-
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value) {
-      params.set(key, value);
-    }
-  });
-
-  const query = params.toString();
-  return query ? `?${query}` : "";
-}
 
 export function getCentralOverview() {
   return api.get<CentralOverview>("/stock/central-overview");

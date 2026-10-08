@@ -24,7 +24,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
       reply.status(400).send({
         error: {
           code: "VALIDATION_ERROR",
-          message: "Request validation failed",
+          message: "Os dados enviados são inválidos. Revise os campos e tente novamente.",
           details: error.flatten()
         }
       });
@@ -32,11 +32,22 @@ export function registerErrorHandler(app: FastifyInstance): void {
     }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (isDatabaseConnectionError(error.code)) {
+        reply.status(503).send({
+          error: {
+            code: "DATABASE_UNAVAILABLE",
+            message: "O sistema está temporariamente sem acesso ao banco de dados. Tente novamente mais tarde.",
+            details: null
+          }
+        });
+        return;
+      }
+
       if (error.code === "P2002") {
         reply.status(409).send({
           error: {
             code: "CONFLICT",
-            message: "A record with the same unique data already exists",
+            message: "Já existe um cadastro com esses dados.",
             details: error.meta ?? null
           }
         });
@@ -47,7 +58,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
         reply.status(404).send({
           error: {
             code: "NOT_FOUND",
-            message: "The requested record was not found",
+            message: "O registro solicitado não foi encontrado.",
             details: error.meta ?? null
           }
         });
@@ -55,14 +66,37 @@ export function registerErrorHandler(app: FastifyInstance): void {
       }
     }
 
+    if (isPrismaInitializationConnectionError(error)) {
+      reply.status(503).send({
+        error: {
+          code: "DATABASE_UNAVAILABLE",
+          message: "O sistema está temporariamente sem acesso ao banco de dados. Tente novamente mais tarde.",
+          details: null
+        }
+      });
+      return;
+    }
+
     reply.status(500).send({
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: "Unexpected server error",
+        message: "Não foi possível concluir esta operação agora. Tente novamente em instantes.",
         details: env.NODE_ENV === "production" ? null : formatUnexpectedError(error)
       }
     });
   });
+}
+
+function isDatabaseConnectionError(code: string): boolean {
+  return code === "P1001" || code === "P1002" || code === "P1003";
+}
+
+function isPrismaInitializationConnectionError(error: unknown): boolean {
+  if (!(error instanceof Prisma.PrismaClientInitializationError)) {
+    return false;
+  }
+
+  return Boolean(error.errorCode && isDatabaseConnectionError(error.errorCode));
 }
 
 function formatUnexpectedError(error: unknown) {

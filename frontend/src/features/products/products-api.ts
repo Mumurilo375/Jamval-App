@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import { buildQuery } from "../../lib/query";
 import type { Product } from "../../types/domain";
 
 export type ProductListFilters = {
@@ -19,21 +20,6 @@ export type ProductPayload = {
   costPrice?: number | null;
   isActive: boolean;
 };
-
-function buildQuery(filters: ProductListFilters): string {
-  const params = new URLSearchParams();
-
-  if (filters.search) {
-    params.set("search", filters.search);
-  }
-
-  if (filters.isActive !== undefined) {
-    params.set("isActive", String(filters.isActive));
-  }
-
-  const query = params.toString();
-  return query ? `?${query}` : "";
-}
 
 export function listProducts(filters: ProductListFilters) {
   return api.get<Product[]>(`/products${buildQuery(filters)}`);

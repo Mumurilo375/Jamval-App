@@ -59,7 +59,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiError(
       response.status,
       payload?.error?.code ?? "HTTP_ERROR",
-      payload?.error?.message ?? getFallbackErrorMessage(response, text),
+      getLocalizedErrorMessage(response.status, payload?.error?.code ?? "HTTP_ERROR"),
       payload?.error?.details ?? null
     );
   }
@@ -89,7 +89,7 @@ export async function downloadApiFile(path: string, fallbackFileName: string): P
     throw new ApiError(
       response.status,
       payload?.error?.code ?? "HTTP_ERROR",
-      payload?.error?.message ?? getFallbackErrorMessage(response, text),
+      getLocalizedErrorMessage(response.status, payload?.error?.code ?? "HTTP_ERROR"),
       payload?.error?.details ?? null
     );
   }
@@ -127,7 +127,7 @@ export async function previewApiPdf(path: string, previewWindow: Window | null):
       throw new ApiError(
         response.status,
         payload?.error?.code ?? "HTTP_ERROR",
-        payload?.error?.message ?? getFallbackErrorMessage(response, text),
+        getLocalizedErrorMessage(response.status, payload?.error?.code ?? "HTTP_ERROR"),
         payload?.error?.details ?? null
       );
     }
@@ -180,14 +180,44 @@ function parseResponsePayload<T>(response: Response, text: string): (ApiEnvelope
   }
 }
 
-function getFallbackErrorMessage(response: Response, text: string): string {
-  const trimmed = text.trim();
-
-  if (trimmed.length > 0) {
-    return trimmed;
+function getLocalizedErrorMessage(status: number, code: string): string {
+  if (code === "DATABASE_UNAVAILABLE") {
+    return "O sistema está temporariamente sem acesso ao banco de dados. Tente novamente mais tarde.";
   }
 
-  return response.statusText || "Falha na requisicao.";
+  if (code === "NETWORK_ERROR") {
+    return "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
+  }
+
+  if (code === "INVALID_CREDENTIALS") {
+    return "E-mail ou senha incorretos. Confira os dados e tente novamente.";
+  }
+
+  if (code === "VALIDATION_ERROR" || status === 400) {
+    return "Não foi possível processar os dados informados. Revise os campos e tente novamente.";
+  }
+
+  if (status === 401) {
+    return "Não foi possível autenticar. Confira seus dados e tente novamente.";
+  }
+
+  if (status === 403) {
+    return "Você não tem permissão para realizar esta ação.";
+  }
+
+  if (status === 404) {
+    return "O conteúdo solicitado não foi encontrado. Atualize a página e tente novamente.";
+  }
+
+  if (status === 409) {
+    return "Esta ação não pode ser concluída porque os dados foram alterados. Atualize a página e tente novamente.";
+  }
+
+  if (status >= 500) {
+    return "Não foi possível concluir esta operação agora. O serviço pode estar temporariamente indisponível. Tente novamente em instantes.";
+  }
+
+  return "Ocorreu um erro ao realizar esta ação. Tente novamente.";
 }
 
 function parseContentDisposition(contentDisposition: string | null): string | null {

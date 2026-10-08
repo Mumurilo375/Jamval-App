@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import { buildQuery } from "../../lib/query";
 
 export type AdminDashboardRange = "7d" | "30d" | "month";
 export type DashboardBalanceEffect = "IN" | "OUT" | "NEUTRAL";
@@ -202,37 +203,11 @@ type DashboardFilters = {
 };
 
 export function getAdminDashboard(filters: DashboardFilters = {}) {
-  const params = new URLSearchParams();
-
-  if (filters.range) {
-    params.set("range", filters.range);
-  }
-
-  if (filters.dateFrom) {
-    params.set("dateFrom", filters.dateFrom);
-  }
-
-  if (filters.dateTo) {
-    params.set("dateTo", filters.dateTo);
-  }
-
-  const query = params.toString();
-  return api.get<AdminDashboardResponse>(`/admin/dashboard${query ? `?${query}` : ""}`);
+  return api.get<AdminDashboardResponse>(`/admin/dashboard${buildQuery(filters)}`);
 }
 
 export function getAdminProfit(filters: ProfitFilters) {
-  const params = new URLSearchParams();
-
-  if (filters.dateFrom) {
-    params.set("dateFrom", filters.dateFrom);
-  }
-
-  if (filters.dateTo) {
-    params.set("dateTo", filters.dateTo);
-  }
-
-  const query = params.toString();
-  return api.get<AdminProfitResponse>(`/admin/profit${query ? `?${query}` : ""}`);
+  return api.get<AdminProfitResponse>(`/admin/profit${buildQuery(filters)}`);
 }
 
 export function getAdminIndicators() {

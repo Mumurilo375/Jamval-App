@@ -1,10 +1,4 @@
 import type { Prisma } from "@prisma/client";
-import type { z } from "zod";
-
-import { receiptDocumentParamsSchema, receiptVisitParamsSchema } from "./receipt.schema";
-
-export type ReceiptVisitParams = z.infer<typeof receiptVisitParamsSchema>;
-export type ReceiptDocumentParams = z.infer<typeof receiptDocumentParamsSchema>;
 
 export type VisitReceiptSource = Prisma.VisitGetPayload<{
   include: {
