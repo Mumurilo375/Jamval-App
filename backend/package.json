@@ -10,6 +10,8 @@
     "postinstall": "npm run prisma:generate",
     "prebuild": "npm run prisma:sync-client",
     "build": "tsc -p tsconfig.json",
+    "vercel-build": "node scripts/vercel-build.mjs",
+    "test": "node --test tests/*.test.mjs",
     "start": "node dist/server.js",
     "admin:create": "tsx src/scripts/create-admin.ts",
     "prisma:sync-client": "prisma generate",
