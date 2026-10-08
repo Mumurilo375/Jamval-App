@@ -16,6 +16,8 @@ type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
 };
 
+const API_REQUEST_TIMEOUT_MS = 30_000;
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly code: string;
@@ -39,36 +41,64 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     body = JSON.stringify(body);
   }
 
-  let response: Response;
+  const controller = new AbortController();
+  let timedOut = false;
+  const timeoutId = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, API_REQUEST_TIMEOUT_MS);
+  const abortFromCaller = () => controller.abort(options.signal?.reason);
+
+  if (options.signal?.aborted) {
+    abortFromCaller();
+  } else {
+    options.signal?.addEventListener("abort", abortFromCaller, { once: true });
+  }
 
   try {
-    response = await fetch(`${env.apiBaseUrl}${path}`, {
+    const response = await fetch(`${env.apiBaseUrl}${path}`, {
       ...options,
       headers,
       body: body as BodyInit | null | undefined,
+      signal: controller.signal,
       credentials: "include"
     });
-  } catch {
+
+    const text = await response.text();
+    const payload = parseResponsePayload<T>(response, text);
+
+    if (!response.ok) {
+      throw new ApiError(
+        response.status,
+        payload?.error?.code ?? "HTTP_ERROR",
+        getLocalizedErrorMessage(response.status, payload?.error?.code ?? "HTTP_ERROR"),
+        payload?.error?.details ?? null
+      );
+    }
+
+    if (!payload || !("data" in payload)) {
+      throw new ApiError(response.status, "INVALID_RESPONSE", "Resposta inválida do backend.", text || null);
+    }
+
+    return payload.data;
+  } catch (error) {
+    if (timedOut) {
+      throw new ApiError(0, "REQUEST_TIMEOUT", "O backend demorou para responder. Tente novamente.", null);
+    }
+
+    if (options.signal?.aborted) {
+      throw error;
+    }
+
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
     throw new ApiError(0, "NETWORK_ERROR", "Não foi possível conectar ao backend.", null);
+  } finally {
+    window.clearTimeout(timeoutId);
+    options.signal?.removeEventListener("abort", abortFromCaller);
   }
-
-  const text = await response.text();
-  const payload = parseResponsePayload<T>(response, text);
-
-  if (!response.ok) {
-    throw new ApiError(
-      response.status,
-      payload?.error?.code ?? "HTTP_ERROR",
-      getLocalizedErrorMessage(response.status, payload?.error?.code ?? "HTTP_ERROR"),
-      payload?.error?.details ?? null
-    );
-  }
-
-  if (!payload || !("data" in payload)) {
-    throw new ApiError(response.status, "INVALID_RESPONSE", "Resposta inválida do backend.", text || null);
-  }
-
-  return payload.data;
 }
 
 export async function downloadApiFile(path: string, fallbackFileName: string): Promise<void> {
